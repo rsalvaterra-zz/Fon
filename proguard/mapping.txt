@@ -1,0 +1,89 @@
+org.rsalvaterra.fon.HttpUtils -> org.rsalvaterra.fon.a:
+    org.apache.http.params.HttpParams HTTP_PARAMETERS -> a
+    java.lang.String getUrlCommon(org.apache.http.client.methods.HttpUriRequest) -> a
+    java.lang.String getUrl(java.lang.String) -> a
+    java.lang.String getUrlByPost(java.lang.String,java.util.ArrayList) -> a
+org.rsalvaterra.fon.HttpUtils$1 -> org.rsalvaterra.fon.b:
+    void process(org.apache.http.HttpRequest,org.apache.http.protocol.HttpContext) -> process
+org.rsalvaterra.fon.HttpUtils$2 -> org.rsalvaterra.fon.c:
+    void process(org.apache.http.HttpResponse,org.apache.http.protocol.HttpContext) -> process
+org.rsalvaterra.fon.HttpUtils$2$1 -> org.rsalvaterra.fon.d:
+    java.io.InputStream getContent() -> getContent
+    long getContentLength() -> getContentLength
+org.rsalvaterra.fon.IntentHandlingService -> org.rsalvaterra.fon.IntentHandlingService:
+    long[] VIBRATE_PATTERN_SUCCESS -> a
+    long[] VIBRATE_PATTERN_FAILURE -> b
+    java.util.Comparator BY_DESCENDING_LEVEL -> c
+    void cancelNotification(android.content.Context) -> a
+    java.lang.String cleanSSID(java.lang.String) -> a
+    android.net.wifi.WifiConfiguration[] getConfiguredNetworks(android.net.wifi.WifiManager) -> a
+    java.lang.String getFailureTone(android.content.Context) -> b
+    int getOtherId(android.net.wifi.WifiConfiguration[],android.net.wifi.ScanResult[],boolean) -> a
+    android.net.wifi.ScanResult[] getScanResults(android.net.wifi.WifiManager) -> b
+    void handleSuccess(android.content.Context,java.lang.String,int,java.lang.String) -> a
+    boolean isReconnectEnabled(android.content.Context) -> c
+    boolean isSecure(android.net.wifi.WifiConfiguration) -> a
+    void login(android.content.Context,android.net.wifi.WifiManager) -> a
+    void notify(android.content.Context,java.lang.String,long[],int,java.lang.String,java.lang.String,android.app.PendingIntent) -> a
+    void scheduleAction(android.content.Context,int,int) -> a
+    void onHandleIntent(android.content.Intent) -> onHandleIntent
+org.rsalvaterra.fon.IntentHandlingService$1 -> org.rsalvaterra.fon.e:
+    int compare(java.lang.Object,java.lang.Object) -> compare
+org.rsalvaterra.fon.WifiIntentReceiver -> org.rsalvaterra.fon.WifiIntentReceiver:
+    void onReceive(android.content.Context,android.content.Intent) -> onReceive
+org.rsalvaterra.fon.activity.AdvancedPreferences -> org.rsalvaterra.fon.activity.AdvancedPreferences:
+    android.preference.Preference$OnPreferenceChangeListener CHECKBOX_LISTENER -> a
+    android.preference.Preference$OnPreferenceChangeListener EDIT_TEXT_LISTENER -> b
+    android.preference.Preference$OnPreferenceChangeListener RINGTONE_LISTENER -> c
+    void bindRingtoneListener(android.preference.Preference) -> a
+    void onCreate(android.os.Bundle) -> onCreate
+    boolean onCreateOptionsMenu(android.view.Menu) -> onCreateOptionsMenu
+    boolean onOptionsItemSelected(android.view.MenuItem) -> onOptionsItemSelected
+org.rsalvaterra.fon.activity.AdvancedPreferences$1 -> org.rsalvaterra.fon.activity.a:
+    boolean onPreferenceChange(android.preference.Preference,java.lang.Object) -> onPreferenceChange
+org.rsalvaterra.fon.activity.AdvancedPreferences$2 -> org.rsalvaterra.fon.activity.b:
+    boolean onPreferenceChange(android.preference.Preference,java.lang.Object) -> onPreferenceChange
+org.rsalvaterra.fon.activity.AdvancedPreferences$3 -> org.rsalvaterra.fon.activity.c:
+    boolean onPreferenceChange(android.preference.Preference,java.lang.Object) -> onPreferenceChange
+org.rsalvaterra.fon.activity.BasicPreferences -> org.rsalvaterra.fon.activity.BasicPreferences:
+    void onCreate(android.os.Bundle) -> onCreate
+    boolean onCreateOptionsMenu(android.view.Menu) -> onCreateOptionsMenu
+    boolean onOptionsItemSelected(android.view.MenuItem) -> onOptionsItemSelected
+org.rsalvaterra.fon.login.FonInfoHandler -> org.rsalvaterra.fon.a.a:
+    java.lang.StringBuilder loginURL -> a
+    java.lang.StringBuilder messageType -> b
+    java.lang.StringBuilder responseCode -> c
+    java.lang.String currentTag -> d
+    java.lang.String getLoginURL() -> a
+    int getMessageType() -> b
+    int getResponseCode() -> c
+    void characters(char[],int,int) -> characters
+    void startElement(java.lang.String,java.lang.String,java.lang.String,org.xml.sax.Attributes) -> startElement
+org.rsalvaterra.fon.login.FonLogin -> org.rsalvaterra.fon.a.b:
+    int responseCode -> a
+    java.lang.String replyMessage -> b
+    java.lang.String logOffUrl -> c
+org.rsalvaterra.fon.login.FonResponseHandler -> org.rsalvaterra.fon.a.c:
+    java.lang.StringBuilder responseCode -> a
+    java.lang.StringBuilder logoffUrL -> b
+    java.lang.StringBuilder replyMessage -> c
+    java.lang.StringBuilder loginResultsUrl -> d
+    java.lang.StringBuilder fonResponseCode -> e
+    java.lang.String currentTag -> f
+    int getFonResponseCode() -> a
+    java.lang.String getLoginResultsURL() -> b
+    java.lang.String getLogoffURL() -> c
+    java.lang.String getReplyMessage() -> d
+    int getResponseCode() -> e
+    void characters(char[],int,int) -> characters
+    void startElement(java.lang.String,java.lang.String,java.lang.String,org.xml.sax.Attributes) -> startElement
+org.rsalvaterra.fon.login.LoginManager -> org.rsalvaterra.fon.a.d:
+    java.lang.String[] VALID_SUFFIX -> a
+    boolean isLivedoor(java.lang.String,java.lang.String) -> b
+    java.net.URL parseURL(java.lang.String) -> a
+    java.lang.String getFonXML(java.lang.String) -> b
+    java.lang.String getFonXMLByPost(java.lang.String,java.lang.String,java.lang.String) -> a
+    boolean isConnected() -> a
+    boolean parseFonXML(java.lang.String,org.xml.sax.ContentHandler) -> a
+    boolean isSupportedNetwork(java.lang.String,java.lang.String) -> a
+    org.rsalvaterra.fon.login.FonLogin login$3deca25d(android.content.Context,java.lang.String,java.lang.String) -> a

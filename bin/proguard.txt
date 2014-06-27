@@ -1,0 +1,12 @@
+# view AndroidManifest.xml #generated:32
+-keep class org.rsalvaterra.fon.IntentHandlingService { <init>(...); }
+
+# view AndroidManifest.xml #generated:24
+-keep class org.rsalvaterra.fon.WifiIntentReceiver { <init>(...); }
+
+# view AndroidManifest.xml #generated:22
+-keep class org.rsalvaterra.fon.activity.AdvancedPreferences { <init>(...); }
+
+# view AndroidManifest.xml #generated:15
+-keep class org.rsalvaterra.fon.activity.BasicPreferences { <init>(...); }
+

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<string name="app_name">Definições Fon</string>
+
+	<string name="close">Fechar</string>
+	<string name="advanced">Definições Avançadas</string>
+	<string name="basic">Definições Básicas</string>
+
+	<string name="username">Nome de utilizador</string>
+	<string name="usernameSummary">O seu nome de utilizador (email).</string>
+
+	<string name="password">Palavra-chave</string>
+	<string name="passwordSummary">A sua palavra-chave.</string>
+
+	<string name="autoconnect">Ligação Automática</string>
+	<string name="autoconnectSummary">Ligar automaticamente a uma rede Fon detectada.</string>
+
+	<string name="reconnect">Permitir Reconexão</string>
+	<string name="reconnectSummary">Desligar da rede Fon e ligar a uma rede preferida, se detectada.</string>
+
+	<string name="secure">Apenas seguras</string>
+	<string name="secureSummary">Apenas considerar redes seguras para reconexão.</string>
+
+	<string name="interval">Intervalo de Sondagem</string>
+
+	<string name="notifications">Notificações</string>
+
+	<string name="notify">Notificar</string>
+	
+	<string name="success">Toque (sucesso)</string>
+
+	<string name="failure">Toque (erro)</string>
+
+	<string name="vibration">Vibração</string>
+
+	<string name="notif_title_conn">Ligado a %s</string>
+	<string name="notif_title_9xx">Erro %d</string>
+	<string name="notif_title_10001">Sem credenciais</string>
+	<string name="notif_text_logoff">Toque para terminar.</string>
+	<string name="notif_text_config">Toque para configurar.</string>
+	<string name="intervalSummary">%s segundos</string>
+
+</resources>
