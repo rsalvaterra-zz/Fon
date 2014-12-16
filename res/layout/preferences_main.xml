@@ -1,35 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="fill_parent"
-	android:layout_height="fill_parent">
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
 
-	<PreferenceCategory android:title="@string/basic"
-	    android:layout_width="fill_parent"
-	    android:layout_height="fill_parent">
-		<CheckBoxPreference
-			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:key="@string/key_autoconnect"
-			android:title="@string/autoconnect"
-			android:summary="@string/autoconnectSummary"
-			android:defaultValue="true"
-			/>
-		<EditTextPreference 
-			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:key="@string/key_username"
-			android:title="@string/username"
-			android:summary="@string/usernameSummary"
-			android:inputType="textEmailAddress"
-			/>
+    <PreferenceCategory
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:title="@string/basic" >
 
-		<EditTextPreference 
-			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:key="@string/key_password"
-			android:title="@string/password"
-			android:summary="@string/passwordSummary"
-			android:inputType="textPassword"
-			/>
-	</PreferenceCategory>
+        <CheckBoxPreference
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:defaultValue="true"
+            android:key="@string/key_autoconnect"
+            android:summary="@string/autoconnectSummary"
+            android:title="@string/autoconnect" />
+
+        <EditTextPreference
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textEmailAddress"
+            android:key="@string/key_username"
+            android:summary="@string/usernameSummary"
+            android:title="@string/username" />
+
+        <EditTextPreference
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:key="@string/key_password"
+            android:summary="@string/passwordSummary"
+            android:title="@string/password" />
+    </PreferenceCategory>
+
 </PreferenceScreen>

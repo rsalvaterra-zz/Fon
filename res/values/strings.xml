@@ -1,53 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">Fon Settings</string>
 
-	<string name="close">Close</string>
-	<string name="advanced">Advanced Settings</string>
-	<string name="basic">Basic Settings</string>
-
-	<string translatable="false" name="key_username">username</string>
-	<string name="username">User Name</string>
-	<string name="usernameSummary">Your user name (email).</string>
-
-	<string translatable="false" name="key_password">password</string>
-	<string name="password">Password</string>
-	<string name="passwordSummary">Your password.</string>
-
-	<string translatable="false" name="key_autoconnect">autoconnect</string>
-	<string name="autoconnect">Connect Automatically</string>
-	<string name="autoconnectSummary">Automatically connect to any available Fon access point.</string>
-
-	<string translatable="false" name="key_reconnect">reconnect</string>
-	<string name="reconnect">Allow Reconnection</string>
-	<string name="reconnectSummary">Disconnect from Fon and connect to a preferred network, if found.</string>
-
-	<string translatable="false" name="key_secure">secure</string>
-	<string name="secure">Secure only</string>
-	<string name="secureSummary">Only consider secure networks for reconnection.</string>
-
-	<string translatable="false" name="key_interval">interval</string>
-	<string name="interval">Scanning Interval</string>
-
-	<string name="notifications">Notifications</string>
-
-	<string translatable="false" name="key_notify">notify</string>
-	<string name="notify">Notify</string>
-	
-	<string translatable="false" name="key_success">success</string>
-	<string name="success">Tone (success)</string>
-
-	<string translatable="false" name="key_failure">failure</string>
-	<string name="failure">Tone (error)</string>
-
-	<string translatable="false" name="key_vibration">vibrate</string>
-	<string name="vibration">Vibration</string>
-
-	<string name="notif_title_conn">Connected to %s</string>
-	<string name="notif_title_9xx">Error %d</string>
-	<string name="notif_title_10001">No credentials</string>
-	<string name="notif_text_logoff">Touch to logoff.</string>
-	<string name="notif_text_config">Touch to configure.</string>
-	<string name="intervalSummary">%s seconds</string>
+    <string name="app_name">Fon Settings</string>
+    <string name="app_credits">Automatic authenticator for Fon networks.\n\nCopyright © 2014 Rui Salvaterra\n\nThis application is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License (GPL) version 3, as published by the Free Software Foundation.\n\nSource code is available at https://github.com/rsalvaterra/Fon</string>
+    <string name="close">Close</string>
+    <string name="advanced">Advanced Settings</string>
+    <string name="basic">Basic Settings</string>
+    <string name="about">About</string>
+    <string name="key_username" translatable="false">username</string>
+    <string name="username">User Name</string>
+    <string name="usernameSummary">Your user name (email).</string>
+    <string name="key_password" translatable="false">password</string>
+    <string name="password">Password</string>
+    <string name="passwordSummary">Your password.</string>
+    <string name="key_autoconnect" translatable="false">autoconnect</string>
+    <string name="autoconnect">Connect Automatically</string>
+    <string name="autoconnectSummary">Automatically connect to any available Fon access point.</string>
+    <string name="key_reconnect" translatable="false">reconnect</string>
+    <string name="reconnect">Allow Reconnection</string>
+    <string name="reconnectSummary">Disconnect from Fon and connect to a preferred network, if found.</string>
+    <string name="key_secure" translatable="false">secure</string>
+    <string name="secure">Secure only</string>
+    <string name="secureSummary">Only consider secure networks for reconnection.</string>
+    <string name="key_interval" translatable="false">interval</string>
+    <string name="interval">Scanning Interval</string>
+    <string name="notifications">Notifications</string>
+    <string name="key_notify" translatable="false">notify</string>
+    <string name="notify">Notify</string>
+    <string name="key_success" translatable="false">success</string>
+    <string name="success">Tone (success)</string>
+    <string name="key_failure" translatable="false">failure</string>
+    <string name="failure">Tone (error)</string>
+    <string name="key_vibration" translatable="false">vibrate</string>
+    <string name="vibration">Vibration</string>
+    <string name="notif_title_conn">Connected to %s</string>
+    <string name="notif_title_9xx">Error %d</string>
+    <string name="notif_title_10001">No credentials</string>
+    <string name="notif_text_logoff">Touch to logoff.</string>
+    <string name="notif_text_config">Touch to configure.</string>
+    <string name="intervalSummary">%s seconds</string>
 
 </resources>
