@@ -38,7 +38,7 @@ public final class LoginManager {
 	}
 
 	private static boolean isBT(final String ssid) {
-		return ssid.equalsIgnoreCase("BTWiFi-with-FON");
+		return ssid.equalsIgnoreCase("BTWiFi-with-FON") || ssid.equalsIgnoreCase("BTWIFI");
 	}
 
 	private static boolean isDT(final String ssid) {
@@ -50,7 +50,7 @@ public final class LoginManager {
 	}
 
 	private static boolean isFonNetwork(final String ssid, final String bssid) {
-		return LoginManager.isZON(ssid) || LoginManager.isNETIA(ssid) || LoginManager.isFonera(ssid, bssid) || LoginManager.isHT(ssid) || LoginManager.isBT(ssid) || LoginManager.isOi(ssid) || LoginManager.isDT(ssid) || LoginManager.isST(ssid) || LoginManager.isOTE(ssid) || LoginManager.isMWEB(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isKPN(ssid) || LoginManager.isTTNET(ssid) || LoginManager.isOtherFon(ssid);
+		return LoginManager.isZON(ssid) || LoginManager.isNETIA(ssid) || LoginManager.isFonera(ssid, bssid) || LoginManager.isHT(ssid) || LoginManager.isBT(ssid) || LoginManager.isProximus(ssid) || LoginManager.isOi(ssid) || LoginManager.isDT(ssid) || LoginManager.isST(ssid) || LoginManager.isOTE(ssid) || LoginManager.isMWEB(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isKPN(ssid) || LoginManager.isTTNET(ssid) || LoginManager.isOtherFon(ssid);
 	}
 
 	private static boolean isFonWISPrURL(final URL url) {
@@ -87,6 +87,10 @@ public final class LoginManager {
 
 	private static boolean isOtherFon(final String ssid) {
 		return ssid.equalsIgnoreCase("FON") || ssid.equalsIgnoreCase("Fon WiFi") || ssid.equalsIgnoreCase("Fon WiFi 5GHz") || ssid.equalsIgnoreCase("Fon WiFi 5G") || ssid.equalsIgnoreCase("Fon Free WiFi");
+	}
+
+	private static boolean isProximus(final String ssid) {
+		return ssid.equalsIgnoreCase("PROXIMUS_FON");
 	}
 
 	private static boolean isRomtelecom(final String ssid) {
