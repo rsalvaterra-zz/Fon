@@ -41,6 +41,10 @@ public final class LoginManager {
 		return ssid.equalsIgnoreCase("BTWiFi-with-FON") || ssid.equalsIgnoreCase("BTWIFI");
 	}
 
+	private static boolean isDowntownBrooklyn(final String ssid) {
+		return ssid.equalsIgnoreCase("DowntownBrooklynWifi_Fon");
+	}
+
 	private static boolean isDT(final String ssid) {
 		return ssid.equalsIgnoreCase("Telekom_FON");
 	}
@@ -50,7 +54,7 @@ public final class LoginManager {
 	}
 
 	private static boolean isFonNetwork(final String ssid, final String bssid) {
-		return LoginManager.isZON(ssid) || LoginManager.isNETIA(ssid) || LoginManager.isFonera(ssid, bssid) || LoginManager.isHT(ssid) || LoginManager.isBT(ssid) || LoginManager.isProximus(ssid) || LoginManager.isOi(ssid) || LoginManager.isDT(ssid) || LoginManager.isST(ssid) || LoginManager.isOTE(ssid) || LoginManager.isMWEB(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isKPN(ssid) || LoginManager.isTTNET(ssid) || LoginManager.isOtherFon(ssid);
+		return LoginManager.isNOS(ssid) || LoginManager.isFonera(ssid, bssid) || LoginManager.isBT(ssid) || LoginManager.isProximus(ssid) || LoginManager.isKPN(ssid) || LoginManager.isDT(ssid) || LoginManager.isST(ssid) || LoginManager.isJT(ssid) || LoginManager.isHT(ssid) || LoginManager.isOTE(ssid) || LoginManager.isNETIA(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isTTNET(ssid) || LoginManager.isOtherFon(ssid) || LoginManager.isOi(ssid) || LoginManager.isDowntownBrooklyn(ssid) || LoginManager.isMWEB(ssid) || LoginManager.isTelstra(ssid);
 	}
 
 	private static boolean isFonWISPrURL(final URL url) {
@@ -59,6 +63,10 @@ public final class LoginManager {
 
 	private static boolean isHT(final String ssid) {
 		return ssid.equalsIgnoreCase("HotSpot Fon");
+	}
+
+	private static boolean isJT(final String ssid) {
+		return ssid.equalsIgnoreCase("JT Fon");
 	}
 
 	private static boolean isKPN(final String ssid) {
@@ -77,6 +85,10 @@ public final class LoginManager {
 		return ssid.equalsIgnoreCase("FON_NETIA_FREE_INTERNET");
 	}
 
+	private static boolean isNOS(final String ssid) {
+		return ssid.equalsIgnoreCase("FON_ZON_FREE_INTERNET");
+	}
+
 	private static boolean isOi(final String ssid) {
 		return ssid.toUpperCase(Locale.US).startsWith("OI_WIFI_FON") || ssid.equalsIgnoreCase("OI WIFI FON");
 	}
@@ -86,7 +98,7 @@ public final class LoginManager {
 	}
 
 	private static boolean isOtherFon(final String ssid) {
-		return ssid.equalsIgnoreCase("FON") || ssid.equalsIgnoreCase("Fon WiFi") || ssid.equalsIgnoreCase("Fon WiFi 5GHz") || ssid.equalsIgnoreCase("Fon WiFi 5G") || ssid.equalsIgnoreCase("Fon Free WiFi");
+		return ssid.equalsIgnoreCase("FON") || ssid.equalsIgnoreCase("Fon WiFi") || ssid.equalsIgnoreCase("Fon WiFi 5GHz") || ssid.equalsIgnoreCase("Fon WiFi 5G") || ssid.equalsIgnoreCase("Fon Free WiFi") || ssid.equalsIgnoreCase("Fon WiFi (free)");
 	}
 
 	private static boolean isProximus(final String ssid) {
@@ -109,12 +121,12 @@ public final class LoginManager {
 		return ssid.equalsIgnoreCase("Telekom FON");
 	}
 
-	private static boolean isTTNET(final String ssid) {
-		return ssid.equalsIgnoreCase("TTNET WiFi FON");
+	private static boolean isTelstra(final String ssid) {
+		return ssid.equalsIgnoreCase("Telstra Air");
 	}
 
-	private static boolean isZON(final String ssid) {
-		return ssid.equalsIgnoreCase("FON_ZON_FREE_INTERNET");
+	private static boolean isTTNET(final String ssid) {
+		return ssid.equalsIgnoreCase("TTNET WiFi FON");
 	}
 
 	private static URL parseURL(final String url) {
