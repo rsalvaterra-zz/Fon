@@ -23,7 +23,7 @@ public final class LoginManager {
 	private static final String TAG_WISPR = "WISPAccessGatewayParam";
 	private static final String TAG_WISPR_PASSWORD = "Password";
 	private static final String TAG_WISPR_USERNAME = "UserName";
-	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".neuf.fr", ".wifi.sfr.fr", ".livedoor.com" };
+	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".neuf.fr", ".wifi.sfr.fr", ".hotspotsvankpn.com", ".livedoor.com" };
 	static final String CONNECTED = "CONNECTED";
 	static final String CONNECTION_TEST_URL = "http://cm.fon.mobi/android.txt";
 	static final String DEFAULT_LOGOFF_URL = "http://192.168.3.1:80/logoff";
