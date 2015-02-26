@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">Definições Fon</string>
-    <string name="app_credits">Autenticador automático para redes Fon.\n\nCopyright © 2014 Rui Salvaterra\n\nEsta aplicação é software livre: pode redistribuí-la e/ou modificá-la segundo os termos da GNU General Public License (GPL) versão 3, tal como publicada pela Free Software Foundation.\n\nCódigo fonte disponível em https://github.com/rsalvaterra/Fon</string>
+    <string name="app_credits">Autenticador automático para redes Fon.\n\nCopyright © 2015 Rui Salvaterra\n\nEsta aplicação é software livre: pode redistribuí-la e/ou modificá-la segundo os termos da GNU General Public License (GPL) versão 3, tal como publicada pela Free Software Foundation.\n\nCódigo fonte disponível em https://github.com/rsalvaterra/Fon</string>
     <string name="close">Fechar</string>
     <string name="advanced">Definições Avançadas</string>
     <string name="basic">Definições Básicas</string>
