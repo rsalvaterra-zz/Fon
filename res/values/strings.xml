@@ -2,7 +2,9 @@
 <resources>
 
     <string name="app_name">Fon Settings</string>
-    <string name="app_credits">Automatic authenticator for Fon networks.\n\nCopyright © 2015 Rui Salvaterra\n\nThis application is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License (GPL) version 3, as published by the Free Software Foundation.\n\nSource code is available at https://github.com/rsalvaterra/Fon</string>
+    <string name="app_credits"><![CDATA[Automatic authenticator for Fon networks.<p>%1$s</p>This application is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License (GPL) version 3, as published by the Free Software Foundation.<p>Source code available on %2$s.</p>]]></string>
+    <string name="app_copyright" translatable="false">Copyright © 2015 Rui Salvaterra</string>
+    <string name="app_source" translatable="false"><![CDATA[<a href="https://github.com/rsalvaterra/Fon">GitHub</a>]]></string>
     <string name="close">Close</string>
     <string name="advanced">Advanced Settings</string>
     <string name="basic">Basic Settings</string>
