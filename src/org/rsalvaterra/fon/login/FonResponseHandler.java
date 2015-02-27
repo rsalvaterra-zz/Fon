@@ -40,7 +40,7 @@ final class FonResponseHandler extends DefaultHandler {
 
 	@Override
 	public void characters(final char ch[], final int start, final int length) {
-		if (currentTag.equals(LoginManager.TAG_RESPONSE_CODE)) {
+		if (currentTag.equals(FonInfoHandler.TAG_RESPONSE_CODE)) {
 			responseCode.append(ch, start, start + length);
 		} else if (currentTag.equals(FonResponseHandler.TAG_LOGOFF_URL)) {
 			logoffUrL.append(ch, start, start + length);

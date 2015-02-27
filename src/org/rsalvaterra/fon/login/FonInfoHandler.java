@@ -14,6 +14,8 @@ final class FonInfoHandler extends DefaultHandler {
 
 	private String currentTag;
 
+	static final String TAG_RESPONSE_CODE = "ResponseCode";
+
 	String getLoginURL() {
 		return loginURL.toString().trim();
 	}
@@ -32,7 +34,7 @@ final class FonInfoHandler extends DefaultHandler {
 			loginURL.append(ch, start, start + length);
 		} else if (currentTag.equals(FonInfoHandler.TAG_MESSAGE_TYPE)) {
 			messageType.append(ch, start, start + length);
-		} else if (currentTag.equals(LoginManager.TAG_RESPONSE_CODE)) {
+		} else if (currentTag.equals(FonInfoHandler.TAG_RESPONSE_CODE)) {
 			responseCode.append(ch, start, start + length);
 		}
 	}
