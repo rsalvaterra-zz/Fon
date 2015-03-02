@@ -40,6 +40,7 @@ public final class HttpUtils {
 		final DefaultHttpClient client = new DefaultHttpClient(HttpUtils.HTTP_PARAMETERS);
 		client.addRequestInterceptor(new HttpRequestInterceptor() {
 
+			@Override
 			public void process(final HttpRequest request, final HttpContext context) {
 				if (!request.containsHeader(HttpUtils.HEADER_ACCEPT_ENCODING)) {
 					request.addHeader(HttpUtils.HEADER_ACCEPT_ENCODING, HttpUtils.ENCODING_GZIP);
@@ -48,6 +49,7 @@ public final class HttpUtils {
 		});
 		client.addResponseInterceptor(new HttpResponseInterceptor() {
 
+			@Override
 			public void process(final HttpResponse response, final HttpContext context) {
 				// Inflate any responses compressed with gzip
 				final Header encoding = response.getEntity().getContentEncoding();
