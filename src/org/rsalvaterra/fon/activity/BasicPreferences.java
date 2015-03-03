@@ -7,8 +7,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 public final class BasicPreferences extends PreferenceActivity {
 
@@ -17,12 +19,7 @@ public final class BasicPreferences extends PreferenceActivity {
 	private static final int ABOUT_ID = BasicPreferences.ADVANCED_ID + 1;
 
 	private void showAbout() {
-		final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setIcon(R.drawable.ic_launcher);
-		builder.setTitle(R.string.app_name);
-		builder.setMessage(Html.fromHtml(getString(R.string.app_credits, getString(R.string.app_copyright), getString(R.string.app_source))));
-		builder.create();
-		builder.show();
+		((TextView) new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setTitle(R.string.app_name).setMessage(Html.fromHtml(getString(R.string.app_credits, getString(R.string.app_copyright), getString(R.string.app_source)))).show().findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
 	}
 
 	@Override
