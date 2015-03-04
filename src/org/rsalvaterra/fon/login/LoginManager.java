@@ -140,7 +140,7 @@ public final class LoginManager {
 	}
 
 	private static boolean isBT(final String ssid) {
-		return ssid.equalsIgnoreCase("BTWiFi-with-FON") || ssid.equalsIgnoreCase("BTWIFI");
+		return ssid.equals("BTWiFi") || ssid.equals("BTWiFi-with-FON") || ssid.equals("BTOpenzone-H") || ssid.equals("BTFON");
 	}
 
 	private static boolean isConnected() {
@@ -153,11 +153,11 @@ public final class LoginManager {
 	}
 
 	private static boolean isDT(final String ssid) {
-		return ssid.equalsIgnoreCase("Telekom_FON");
+		return ssid.equals("Telekom_FON");
 	}
 
 	private static boolean isFonera(final String ssid, final String bssid) {
-		return !LoginManager.isLivedoor(ssid, bssid) && ssid.toUpperCase(Locale.US).startsWith("FON_");
+		return !LoginManager.isLivedoor(ssid, bssid) && ssid.startsWith("FON_");
 	}
 
 	private static boolean isFonNetwork(final String ssid, final String bssid) {
@@ -169,7 +169,7 @@ public final class LoginManager {
 	}
 
 	private static boolean isHT(final String ssid) {
-		return ssid.equalsIgnoreCase("HotSpot Fon");
+		return ssid.equals("HotSpot Fon");
 	}
 
 	private static boolean isJT(final String ssid) {
@@ -177,7 +177,7 @@ public final class LoginManager {
 	}
 
 	private static boolean isKPN(final String ssid) {
-		return ssid.equalsIgnoreCase("KPN Fon");
+		return ssid.equals("KPN Fon");
 	}
 
 	private static boolean isLivedoor(final String ssid, final String bssid) {
@@ -185,43 +185,43 @@ public final class LoginManager {
 	}
 
 	private static boolean isMWEB(final String ssid) {
-		return ssid.equalsIgnoreCase("@MWEB Fon");
+		return ssid.equals("@MWEB FON");
 	}
 
 	private static boolean isNETIA(final String ssid) {
-		return ssid.equalsIgnoreCase("FON_NETIA_FREE_INTERNET");
+		return ssid.equals("FON_NETIA_FREE_INTERNET");
 	}
 
 	private static boolean isNOS(final String ssid) {
-		return ssid.equalsIgnoreCase("FON_ZON_FREE_INTERNET");
+		return ssid.equals("FON_ZON_FREE_INTERNET");
 	}
 
 	private static boolean isOi(final String ssid) {
-		return ssid.toUpperCase(Locale.US).startsWith("OI_WIFI_FON") || ssid.equalsIgnoreCase("OI WIFI FON");
+		return ssid.equals("Oi WiFi Fon") || ssid.startsWith("OI_WIFI_FON");
 	}
 
 	private static boolean isOTE(final String ssid) {
-		return ssid.equalsIgnoreCase("OTE WiFi Fon");
+		return ssid.equals("OTE WiFi Fon");
 	}
 
 	private static boolean isOtherFon(final String ssid) {
-		return ssid.equalsIgnoreCase("FON") || ssid.equalsIgnoreCase("Fon WiFi") || ssid.equalsIgnoreCase("Fon WiFi 5GHz") || ssid.equalsIgnoreCase("Fon WiFi 5G") || ssid.equalsIgnoreCase("Fon Free WiFi") || ssid.equalsIgnoreCase("Fon WiFi (free)");
+		return ssid.equalsIgnoreCase("Fon WiFi") || ssid.equalsIgnoreCase("Fon WiFi 5GHz") || ssid.equalsIgnoreCase("Fon WiFi 5G") || ssid.equalsIgnoreCase("Fon Free WiFi") || ssid.equalsIgnoreCase("Fon WiFi (free)");
 	}
 
 	private static boolean isProximus(final String ssid) {
-		return ssid.equalsIgnoreCase("PROXIMUS_FON");
+		return ssid.equals("PROXIMUS_FON") || ssid.equals("FON_BELGACOM");
 	}
 
 	private static boolean isRomtelecom(final String ssid) {
-		return ssid.equalsIgnoreCase("Romtelecom Fon");
+		return ssid.equals("Romtelecom Fon");
 	}
 
 	private static boolean isSFR(final String ssid) {
-		return ssid.equalsIgnoreCase("SFR WiFi FON");
+		return ssid.equals("SFR WiFi FON");
 	}
 
 	private static boolean isSoftBank(final String ssid) {
-		return ssid.equalsIgnoreCase("NOC_SOFTBANK");
+		return ssid.equalsIgnoreCase("NOC_SOFTBANK") || ssid.equals("FON");
 	}
 
 	private static boolean isST(final String ssid) {
