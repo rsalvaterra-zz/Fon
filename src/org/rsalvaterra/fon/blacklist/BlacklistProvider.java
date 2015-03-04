@@ -25,7 +25,7 @@ public final class BlacklistProvider extends ContentProvider {
 
 	private static final UriMatcher MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
-	private static final Uri BLACKLIST_URI = Uri.parse(new StringBuilder().append("content://").append(BlacklistProvider.AUTHORITY).append('/').append(BlacklistProvider.TABLE_BLACKLIST).append("/").toString());
+	private static final Uri BLACKLIST_URI = Uri.parse(new StringBuilder().append("content://").append(BlacklistProvider.AUTHORITY).append('/').append(BlacklistProvider.TABLE_BLACKLIST).toString());
 
 	static {
 		BlacklistProvider.MATCHER.addURI(BlacklistProvider.AUTHORITY, BlacklistProvider.TABLE_BLACKLIST, BlacklistProvider.MATCHES);
