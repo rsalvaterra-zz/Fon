@@ -30,9 +30,9 @@ public final class BasicPreferences extends PreferenceActivity {
 
 	@Override
 	public boolean onCreateOptionsMenu(final Menu menu) {
-		menu.add(Menu.NONE, BasicPreferences.CLOSE_ID, 0, R.string.close).setIcon(android.R.drawable.ic_menu_save);
-		menu.add(Menu.NONE, BasicPreferences.ADVANCED_ID, 1, R.string.advanced).setIcon(android.R.drawable.ic_menu_preferences);
-		menu.add(Menu.NONE, BasicPreferences.ABOUT_ID, 1, R.string.about).setIcon(android.R.drawable.ic_menu_info_details);
+		menu.add(Menu.NONE, BasicPreferences.CLOSE_ID, Menu.NONE, R.string.close).setIcon(android.R.drawable.ic_menu_save);
+		menu.add(Menu.NONE, BasicPreferences.ADVANCED_ID, Menu.NONE, R.string.advanced).setIcon(android.R.drawable.ic_menu_preferences);
+		menu.add(Menu.NONE, BasicPreferences.ABOUT_ID, Menu.NONE, R.string.about).setIcon(android.R.drawable.ic_menu_info_details);
 		return super.onCreateOptionsMenu(menu);
 	}
 
