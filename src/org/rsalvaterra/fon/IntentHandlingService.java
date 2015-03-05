@@ -23,6 +23,7 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 
@@ -34,6 +35,8 @@ public final class IntentHandlingService extends IntentService {
 
 	private static final long[] VIBRATE_PATTERN_SUCCESS = { 100, 250 };
 	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
+
+	private static volatile PowerManager.WakeLock WAKELOCK = null;
 
 	private static final Comparator<ScanResult> BY_DESCENDING_LEVEL = new Comparator<ScanResult>() {
 
@@ -174,6 +177,13 @@ public final class IntentHandlingService extends IntentService {
 		return PreferenceManager.getDefaultSharedPreferences(context).getString(context.getString(R.string.key_success), "");
 	}
 
+	private static synchronized PowerManager.WakeLock getWakeLock(final Context context) {
+		if (IntentHandlingService.WAKELOCK == null) {
+			IntentHandlingService.WAKELOCK = ((PowerManager) context.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, IntentHandlingService.class.getPackage().getName());
+		}
+		return (IntentHandlingService.WAKELOCK);
+	}
+
 	private static void handleSuccess(final Context context, final String ssid, final int flags, final String logoffUrl) {
 		IntentHandlingService.notifySuccess(context, ssid, flags, logoffUrl);
 		IntentHandlingService.scheduleConnectivityCheck(context);
@@ -280,7 +290,7 @@ public final class IntentHandlingService extends IntentService {
 	}
 
 	private static void notifySuccess(final Context context, final String ssid, final int flags, final String logoffUrl) {
-		IntentHandlingService.notify(context, context.getString(R.string.notif_title_conn, ssid), IntentHandlingService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR | flags, IntentHandlingService.getSuccessTone(context), context.getString(R.string.notif_text_logoff), PendingIntent.getService(context, IntentHandlingService.REQUEST_CODE, new Intent(context, IntentHandlingService.class).setAction(String.valueOf(Actions.ACTION_LOGOFF)).putExtra(Actions.ACTION_EXTRA_DATA_URL, logoffUrl), PendingIntent.FLAG_UPDATE_CURRENT));
+		IntentHandlingService.notify(context, context.getString(R.string.notif_title_conn, ssid), IntentHandlingService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR | flags, IntentHandlingService.getSuccessTone(context), context.getString(R.string.notif_text_logoff), PendingIntent.getService(context, IntentHandlingService.REQUEST_CODE, new Intent(context, IntentHandlingService.class).setAction(String.valueOf(Actions.ACTION_LOGOFF)).putExtra(String.valueOf(Actions.ACTION_EXTRA_DATA_URL), logoffUrl), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private static void purgeFonNetworks(final WifiManager wm) {
@@ -319,13 +329,18 @@ public final class IntentHandlingService extends IntentService {
 		IntentHandlingService.cancelNotification(context);
 	}
 
+	static void executeAction(final Context context, final int action) {
+		IntentHandlingService.getWakeLock(context).acquire();
+		context.startService(new Intent(context, IntentHandlingService.class).setAction(String.valueOf(action)));
+	}
+
 	@Override
 	protected void onHandleIntent(final Intent intent) {
 		final int action = Integer.parseInt(intent.getAction());
 		final WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		switch (action) {
 			case Actions.ACTION_LOGOFF:
-				IntentHandlingService.logoff(this, intent.getStringExtra(Actions.ACTION_EXTRA_DATA_URL), wm);
+				IntentHandlingService.logoff(this, intent.getStringExtra(String.valueOf(Actions.ACTION_EXTRA_DATA_URL)), wm);
 				break;
 			case Actions.ACTION_SCAN:
 				wm.startScan();
@@ -345,6 +360,15 @@ public final class IntentHandlingService extends IntentService {
 			default:
 				break;
 		}
+		IntentHandlingService.getWakeLock(this).release();
+	}
+
+	@Override
+	public void onStart(final Intent intent, final int startId) {
+		if (!IntentHandlingService.getWakeLock(this).isHeld()) {
+			IntentHandlingService.getWakeLock(this).acquire();
+		}
+		super.onStart(intent, startId);
 	}
 
 }
