@@ -31,8 +31,10 @@ public final class IntentHandlingService extends IntentService {
 	private static final int NOTIFICATION_ID = 1;
 	private static final int REQUEST_CODE = 1;
 	private static final int CONNECTIVITY_CHECK_INTERVAL = 60;
+
 	private static final long[] VIBRATE_PATTERN_SUCCESS = { 100, 250 };
 	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
+
 	private static final Comparator<ScanResult> BY_DESCENDING_LEVEL = new Comparator<ScanResult>() {
 
 		@Override

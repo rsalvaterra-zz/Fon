@@ -27,6 +27,7 @@ public final class LoginManager {
 	private static final String TAG_WISPR = "WISPAccessGatewayParam";
 	private static final String TAG_WISPR_PASSWORD = "Password";
 	private static final String TAG_WISPR_USERNAME = "UserName";
+
 	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".neuf.fr", ".wifi.sfr.fr", ".hotspotsvankpn.com", ".livedoor.com" };
 
 	private static LoginResult fonLogin(final String user, final String password) {

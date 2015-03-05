@@ -31,9 +31,11 @@ import org.apache.http.util.EntityUtils;
 public final class HttpUtils {
 
 	private static final int MAX_TRIES = 3;
+
 	private static final String USER_AGENT_STRING = "FONAccess; wispr; (Linux; U; Android)";
 	private static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
 	private static final String ENCODING_GZIP = "gzip";
+
 	private static final HttpParams HTTP_PARAMETERS = new BasicHttpParams().setParameter(CoreProtocolPNames.USER_AGENT, HttpUtils.USER_AGENT_STRING);
 
 	private static DefaultHttpClient getHttpClient() {

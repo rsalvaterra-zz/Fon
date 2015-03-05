@@ -3,6 +3,7 @@ package org.rsalvaterra.fon.login;
 public final class LoginResult {
 
 	private final int responseCode;
+
 	private final String replyMessage;
 	private final String logOffUrl;
 

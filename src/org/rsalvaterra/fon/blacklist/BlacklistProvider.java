@@ -99,7 +99,7 @@ public final class BlacklistProvider extends ContentProvider {
 
 			@Override
 			public void onCreate(final SQLiteDatabase db) {
-				db.execSQL("CREATE TABLE " + BlacklistProvider.TABLE_BLACKLIST + "(_ID INTEGER PRIMARY KEY ASC," + BlacklistProvider.KEY_BSSID + " TEXT UNIQUE NOT NULL," + BlacklistProvider.KEY_TIMESTAMP + " LONG NOT NULL)");
+				db.execSQL("CREATE TABLE " + BlacklistProvider.TABLE_BLACKLIST + " (_ID INTEGER PRIMARY KEY ASC, " + BlacklistProvider.KEY_BSSID + " TEXT UNIQUE NOT NULL, " + BlacklistProvider.KEY_TIMESTAMP + " LONG NOT NULL)");
 			}
 
 			@Override
