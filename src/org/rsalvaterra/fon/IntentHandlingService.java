@@ -24,6 +24,7 @@ import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 
@@ -177,11 +178,11 @@ public final class IntentHandlingService extends IntentService {
 		return PreferenceManager.getDefaultSharedPreferences(context).getString(context.getString(R.string.key_success), "");
 	}
 
-	private static synchronized PowerManager.WakeLock getWakeLock(final Context context) {
+	private static synchronized WakeLock getWakeLock(final Context context) {
 		if (IntentHandlingService.WAKELOCK == null) {
-			IntentHandlingService.WAKELOCK = ((PowerManager) context.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, IntentHandlingService.class.getPackage().getName());
+			IntentHandlingService.WAKELOCK = ((PowerManager) context.getApplicationContext().getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, IntentHandlingService.class.getPackage().getName());
 		}
-		return (IntentHandlingService.WAKELOCK);
+		return IntentHandlingService.WAKELOCK;
 	}
 
 	private static void handleSuccess(final Context context, final String ssid, final int flags, final String logoffUrl) {
@@ -334,6 +335,20 @@ public final class IntentHandlingService extends IntentService {
 		context.startService(new Intent(context, IntentHandlingService.class).setAction(String.valueOf(action)));
 	}
 
+	private void wakeLockAcquire() {
+		final WakeLock wakeLock = IntentHandlingService.getWakeLock(this);
+		if (!wakeLock.isHeld()) {
+			wakeLock.acquire();
+		}
+	}
+
+	private void wakeLockRelease() {
+		final WakeLock wakeLock = IntentHandlingService.getWakeLock(this);
+		if (wakeLock.isHeld()) {
+			wakeLock.release();
+		}
+	}
+
 	@Override
 	protected void onHandleIntent(final Intent intent) {
 		final int action = Integer.parseInt(intent.getAction());
@@ -360,14 +375,12 @@ public final class IntentHandlingService extends IntentService {
 			default:
 				break;
 		}
-		IntentHandlingService.getWakeLock(this).release();
+		wakeLockRelease();
 	}
 
 	@Override
 	public void onStart(final Intent intent, final int startId) {
-		if (!IntentHandlingService.getWakeLock(this).isHeld()) {
-			IntentHandlingService.getWakeLock(this).acquire();
-		}
+		wakeLockAcquire();
 		super.onStart(intent, startId);
 	}
 
