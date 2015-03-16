@@ -141,7 +141,7 @@ public final class LoginManager {
 	}
 
 	private static boolean isBT(final String ssid) {
-		return ssid.equals("BTWiFi") || ssid.equals("BTWiFi-with-FON") || ssid.equals("BTOpenzone-H") || ssid.equals("BTFON");
+		return ssid.equals("BTWiFi") || ssid.equals("BTWiFi-with-FON") || ssid.equals("BTOpenzone") || ssid.equals("BTOpenzone-H") || ssid.equals("BTOpenzone-B") || ssid.equals("BTOpenzone-M") || ssid.equals("BTFON");
 	}
 
 	private static boolean isConnected() {
