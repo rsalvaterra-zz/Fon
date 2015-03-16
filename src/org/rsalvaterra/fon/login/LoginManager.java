@@ -157,16 +157,16 @@ public final class LoginManager {
 		return ssid.equals("Telekom_FON");
 	}
 
-	private static boolean isFonera(final String ssid, final String bssid) {
-		return !LoginManager.isLivedoor(ssid, bssid) && ssid.startsWith("FON_");
-	}
-
 	private static boolean isFonNetwork(final String ssid, final String bssid) {
-		return LoginManager.isNOS(ssid) || LoginManager.isFonera(ssid, bssid) || LoginManager.isBT(ssid) || LoginManager.isProximus(ssid) || LoginManager.isKPN(ssid) || LoginManager.isDT(ssid) || LoginManager.isST(ssid) || LoginManager.isJT(ssid) || LoginManager.isHT(ssid) || LoginManager.isOTE(ssid) || LoginManager.isNETIA(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isTTNET(ssid) || LoginManager.isOtherFon(ssid) || LoginManager.isOi(ssid) || LoginManager.isDowntownBrooklyn(ssid) || LoginManager.isMWEB(ssid) || LoginManager.isTelstra(ssid);
+		return LoginManager.isGenericFon(ssid, bssid) || LoginManager.isBT(ssid) || LoginManager.isProximus(ssid) || LoginManager.isKPN(ssid) || LoginManager.isDT(ssid) || LoginManager.isST(ssid) || LoginManager.isJT(ssid) || LoginManager.isHT(ssid) || LoginManager.isOTE(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isTTNET(ssid) || LoginManager.isOtherFon(ssid) || LoginManager.isOi(ssid) || LoginManager.isDowntownBrooklyn(ssid) || LoginManager.isMWEB(ssid) || LoginManager.isTelstra(ssid);
 	}
 
 	private static boolean isFonWISPrURL(final URL url) {
 		return (url.getHost().contains("portal.fon.com") || url.getHost().contentEquals("www.btopenzone.com") || url.getHost().contains("wifi.sfr.fr")) && !(url.getHost().contains("belgacom") || url.getHost().contains("telekom"));
+	}
+
+	private static boolean isGenericFon(final String ssid, final String bssid) {
+		return !LoginManager.isLivedoor(ssid, bssid) && ssid.startsWith("FON_");
 	}
 
 	private static boolean isHT(final String ssid) {
@@ -189,14 +189,6 @@ public final class LoginManager {
 		return ssid.equals("@MWEB FON");
 	}
 
-	private static boolean isNETIA(final String ssid) {
-		return ssid.equals("FON_NETIA_FREE_INTERNET");
-	}
-
-	private static boolean isNOS(final String ssid) {
-		return ssid.equals("FON_ZON_FREE_INTERNET");
-	}
-
 	private static boolean isOi(final String ssid) {
 		return ssid.equals("Oi WiFi Fon") || ssid.startsWith("OI_WIFI_FON");
 	}
@@ -210,7 +202,7 @@ public final class LoginManager {
 	}
 
 	private static boolean isProximus(final String ssid) {
-		return ssid.equals("PROXIMUS_FON") || ssid.equals("FON_BELGACOM");
+		return ssid.equals("PROXIMUS_FON");
 	}
 
 	private static boolean isRomtelecom(final String ssid) {
