@@ -93,7 +93,7 @@ public final class IntentHandlingService extends IntentService {
 			} else if (wm.enableNetwork(id, true)) {
 				IntentHandlingService.cancelNotification(context);
 			}
-		} else if (IntentHandlingService.isConnected(ss) && IntentHandlingService.isReconnectEnabled(context) && LoginManager.isSupportedNetwork(IntentHandlingService.cleanSSID(wi.getSSID()), wi.getBSSID())) {
+		} else if (IntentHandlingService.isConnected(ss) && IntentHandlingService.isReconnectEnabled(context) && LoginManager.isSupportedNetwork(IntentHandlingService.cleanSSID(wi.getSSID()))) {
 			final int id = IntentHandlingService.getOtherId(IntentHandlingService.getConfiguredNetworks(wm), IntentHandlingService.getScanResults(wm), IntentHandlingService.isSecureEnabled(context));
 			if (id != -1) {
 				wm.enableNetwork(id, true);
@@ -123,13 +123,13 @@ public final class IntentHandlingService extends IntentService {
 		for (final WifiConfiguration wc : wca) {
 			if (!IntentHandlingService.isSecure(wc)) {
 				final String ssid = IntentHandlingService.cleanSSID(wc.SSID);
-				if (LoginManager.isSupportedNetwork(ssid, wc.BSSID)) {
+				if (LoginManager.isSupportedNetwork(ssid)) {
 					wcm.put(ssid, Integer.valueOf(wc.networkId));
 				}
 			}
 		}
 		for (final ScanResult sr : sra) {
-			if (LoginManager.isSupportedNetwork(sr.SSID, sr.BSSID)) {
+			if (LoginManager.isSupportedNetwork(sr.SSID)) {
 				final Integer id = wcm.get(sr.SSID);
 				if (id == null) {
 					final WifiConfiguration wc = new WifiConfiguration();
@@ -150,7 +150,7 @@ public final class IntentHandlingService extends IntentService {
 		final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
 		for (final WifiConfiguration wc : wca) {
 			final String ssid = IntentHandlingService.cleanSSID(wc.SSID);
-			if ((!secureOnly || (secureOnly && IntentHandlingService.isSecure(wc))) && !LoginManager.isSupportedNetwork(ssid, wc.BSSID)) {
+			if ((!secureOnly || (secureOnly && IntentHandlingService.isSecure(wc))) && !LoginManager.isSupportedNetwork(ssid)) {
 				wcm.put(ssid, Integer.valueOf(wc.networkId));
 			}
 		}
@@ -220,12 +220,12 @@ public final class IntentHandlingService extends IntentService {
 			return;
 		}
 		final String ssid = IntentHandlingService.cleanSSID(wi.getSSID());
-		if (!LoginManager.isSupportedNetwork(ssid, wi.getBSSID())) {
+		if (!LoginManager.isSupportedNetwork(ssid)) {
 			IntentHandlingService.cancelNotification(context);
 			IntentHandlingService.purgeFonNetworks(wm);
 			return;
 		}
-		final LoginResult result = LoginManager.login(context, ssid, wi.getBSSID());
+		final LoginResult result = LoginManager.login(context, ssid);
 		final int responseCode = result.getResponseCode();
 		switch (responseCode) {
 			case ResponseCodes.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
@@ -303,7 +303,7 @@ public final class IntentHandlingService extends IntentService {
 		for (final WifiConfiguration wc : wca) {
 			if (wc != null) {
 				final String ssid = IntentHandlingService.cleanSSID(wc.SSID);
-				if (LoginManager.isSupportedNetwork(ssid, wc.BSSID) && wm.removeNetwork(wc.networkId)) {
+				if (LoginManager.isSupportedNetwork(ssid) && wm.removeNetwork(wc.networkId)) {
 					configurationChanged = true;
 				}
 			}

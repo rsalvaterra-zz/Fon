@@ -21,14 +21,12 @@ public final class LoginManager {
 	private static final String CONNECTED = "CONNECTED";
 	private static final String CONNECTION_TEST_URL = "http://cm.fon.mobi/android.txt";
 	private static final String DEFAULT_LOGOFF_URL = "http://192.168.3.1:80/logoff";
-	private static final String FON_MAC_PREFIX = "00:18:84";
 	private static final String FON_USERNAME_PREFIX = "FON_WISPR/";
-	private static final String LIVEDOOR_TARGET_URL = "https://vauth.lw.livedoor.com/fauth/index";
 	private static final String TAG_WISPR = "WISPAccessGatewayParam";
 	private static final String TAG_WISPR_PASSWORD = "Password";
 	private static final String TAG_WISPR_USERNAME = "UserName";
 
-	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".neuf.fr", ".wifi.sfr.fr", ".hotspotsvankpn.com", ".livedoor.com" };
+	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".neuf.fr", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
 
 	private static LoginResult fonLogin(final String user, final String password) {
 		int responseCode = ResponseCodes.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
@@ -83,42 +81,32 @@ public final class LoginManager {
 	}
 
 	private static String getFonXMLByPost(final String url, final String user, final String password) {
-		final URL u = LoginManager.parseURL(url);
-		if (u != null) {
-			final ArrayList<BasicNameValuePair> p = new ArrayList<BasicNameValuePair>();
-			final String username;
-			if (LoginManager.isFonWISPrURL(u)) {
-				username = LoginManager.FON_USERNAME_PREFIX + user;
-			} else {
-				username = user;
-			}
-			p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_USERNAME, username));
-			p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_PASSWORD, password));
-			final String r = HttpUtils.getUrlByPost(url, p);
-			if (r != null) {
-				return LoginManager.getFonXML(r);
+		final URL u;
+		try {
+			u = new URL(url);
+		} catch (final MalformedURLException e) {
+			return null;
+		}
+		if (u.getProtocol().equals("https")) {
+			for (final String s : LoginManager.VALID_SUFFIX) {
+				if (u.getHost().toLowerCase(Locale.US).endsWith(s)) {
+					final ArrayList<BasicNameValuePair> p = new ArrayList<BasicNameValuePair>();
+					final String username;
+					if (LoginManager.isFonWISPrURL(u)) {
+						username = LoginManager.FON_USERNAME_PREFIX + user;
+					} else {
+						username = user;
+					}
+					p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_USERNAME, username));
+					p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_PASSWORD, password));
+					final String r = HttpUtils.getUrlByPost(url, p);
+					if (r != null) {
+						return LoginManager.getFonXML(r);
+					}
+				}
 			}
 		}
 		return null;
-	}
-
-	private static ArrayList<BasicNameValuePair> getLivedoorLoginParameters(final String user, final String password) {
-		final ArrayList<BasicNameValuePair> p = new ArrayList<BasicNameValuePair>();
-		final String sn;
-		final String res = HttpUtils.getUrl(LoginManager.CONNECTION_TEST_URL);
-		if (res == null) {
-			sn = "001";
-		} else {
-			sn = new String(res.substring(res.indexOf("name=\"sn\" value=\"") + 17, res.indexOf("\"", res.indexOf("name=\"sn\" value=\"") + 17)));
-		}
-		p.add(new BasicNameValuePair("sn", sn));
-		p.add(new BasicNameValuePair("original_url", LoginManager.CONNECTION_TEST_URL));
-		p.add(new BasicNameValuePair("name", user + "@fon"));
-		p.add(new BasicNameValuePair("password", password));
-		// Click coordinates on image button, really not needed
-		p.add(new BasicNameValuePair("x", "66"));
-		p.add(new BasicNameValuePair("y", "15"));
-		return p;
 	}
 
 	private static String getPassword(final Context context) {
@@ -157,16 +145,16 @@ public final class LoginManager {
 		return ssid.equals("Telekom_FON");
 	}
 
-	private static boolean isFonNetwork(final String ssid, final String bssid) {
-		return LoginManager.isGenericFon(ssid, bssid) || LoginManager.isBT(ssid) || LoginManager.isProximus(ssid) || LoginManager.isKPN(ssid) || LoginManager.isDT(ssid) || LoginManager.isST(ssid) || LoginManager.isJT(ssid) || LoginManager.isHT(ssid) || LoginManager.isOTE(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isTTNET(ssid) || LoginManager.isOtherFon(ssid) || LoginManager.isOi(ssid) || LoginManager.isDowntownBrooklyn(ssid) || LoginManager.isMWEB(ssid) || LoginManager.isTelstra(ssid);
+	private static boolean isFon(final String ssid) {
+		return LoginManager.isGenericFon(ssid) || LoginManager.isBT(ssid) || LoginManager.isProximus(ssid) || LoginManager.isKPN(ssid) || LoginManager.isDT(ssid) || LoginManager.isST(ssid) || LoginManager.isJT(ssid) || LoginManager.isHT(ssid) || LoginManager.isOTE(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isTTNET(ssid) || LoginManager.isOtherFon(ssid) || LoginManager.isOi(ssid) || LoginManager.isDowntownBrooklyn(ssid) || LoginManager.isMWEB(ssid) || LoginManager.isSoftBank(ssid) || LoginManager.isTelstra(ssid);
 	}
 
 	private static boolean isFonWISPrURL(final URL url) {
 		return (url.getHost().contains("portal.fon.com") || url.getHost().contentEquals("www.btopenzone.com") || url.getHost().contains("wifi.sfr.fr")) && !(url.getHost().contains("belgacom") || url.getHost().contains("telekom"));
 	}
 
-	private static boolean isGenericFon(final String ssid, final String bssid) {
-		return !LoginManager.isLivedoor(ssid, bssid) && ssid.startsWith("FON_");
+	private static boolean isGenericFon(final String ssid) {
+		return ssid.startsWith("FON_");
 	}
 
 	private static boolean isHT(final String ssid) {
@@ -179,10 +167,6 @@ public final class LoginManager {
 
 	private static boolean isKPN(final String ssid) {
 		return ssid.equals("KPN Fon");
-	}
-
-	private static boolean isLivedoor(final String ssid, final String bssid) {
-		return ((bssid == null) || !bssid.startsWith(LoginManager.FON_MAC_PREFIX)) && ssid.equalsIgnoreCase("FON_livedoor");
 	}
 
 	private static boolean isMWEB(final String ssid) {
@@ -229,19 +213,6 @@ public final class LoginManager {
 		return ssid.equalsIgnoreCase("TTNET WiFi FON");
 	}
 
-	private static LoginResult livedoorLogin(final String user, final String password) {
-		int res = ResponseCodes.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
-		if (!LoginManager.isConnected()) {
-			HttpUtils.getUrlByPost(LoginManager.LIVEDOOR_TARGET_URL, LoginManager.getLivedoorLoginParameters(user, password));
-			if (LoginManager.isConnected()) {
-				res = ResponseCodes.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
-			}
-		} else {
-			res = ResponseCodes.CUST_ALREADY_CONNECTED;
-		}
-		return new LoginResult(res, null, null);
-	}
-
 	private static boolean parseFonXML(final String xml, final ContentHandler handler) {
 		try {
 			Xml.parse(xml, handler);
@@ -249,23 +220,6 @@ public final class LoginManager {
 			return false;
 		}
 		return true;
-	}
-
-	private static URL parseURL(final String url) {
-		final URL u;
-		try {
-			u = new URL(url);
-		} catch (final MalformedURLException e) {
-			return null;
-		}
-		if (u.getProtocol().equals("https")) {
-			for (final String s : LoginManager.VALID_SUFFIX) {
-				if (u.getHost().toLowerCase(Locale.US).endsWith(s)) {
-					return u;
-				}
-			}
-		}
-		return null;
 	}
 
 	private static LoginResult sfrLogin(final String user, final String password) {
@@ -309,18 +263,16 @@ public final class LoginManager {
 		return new LoginResult(responseCode, null, logoffUrl);
 	}
 
-	public static boolean isSupportedNetwork(final String ssid, final String bssid) {
-		return LoginManager.isFonNetwork(ssid, bssid) || LoginManager.isSFR(ssid) || LoginManager.isSoftBank(ssid) || LoginManager.isLivedoor(ssid, bssid);
+	public static boolean isSupportedNetwork(final String ssid) {
+		return LoginManager.isFon(ssid) || LoginManager.isSFR(ssid);
 	}
 
-	public static LoginResult login(final Context context, final String ssid, final String bssid) {
+	public static LoginResult login(final Context context, final String ssid) {
 		final String user = LoginManager.getUsername(context);
 		final String password = LoginManager.getPassword(context);
 		final LoginResult r;
 		if ((user.length() == 0) || (password.length() == 0)) {
 			r = new LoginResult(ResponseCodes.CUST_CREDENTIALS_ERROR, null, null);
-		} else if (LoginManager.isLivedoor(ssid, bssid)) {
-			r = LoginManager.livedoorLogin(user, password);
 		} else if (LoginManager.isSFR(ssid)) {
 			r = LoginManager.sfrLogin(user, password);
 		} else {
