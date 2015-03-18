@@ -65,14 +65,6 @@ public final class IntentHandlingService extends IntentService {
 		alarmManager.cancel(PendingIntent.getService(context, Actions.ACTION_LOGIN, new Intent(context, IntentHandlingService.class).setAction(String.valueOf(Actions.ACTION_LOGIN)), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
-	private static String cleanSSID(final String ssid) {
-		final int length = ssid.length();
-		if ((length > 2) && (ssid.charAt(0) == '"') && (ssid.charAt(length - 1) == '"')) {
-			return new String(ssid.substring(1, length - 1));
-		}
-		return ssid;
-	}
-
 	private static void connect(final Context context, final WifiManager wm) {
 		final WifiInfo wi = wm.getConnectionInfo();
 		if (wi == null) {
@@ -93,7 +85,7 @@ public final class IntentHandlingService extends IntentService {
 			} else if (wm.enableNetwork(id, true)) {
 				IntentHandlingService.cancelNotification(context);
 			}
-		} else if (IntentHandlingService.isConnected(ss) && IntentHandlingService.isReconnectEnabled(context) && LoginManager.isSupportedNetwork(IntentHandlingService.cleanSSID(wi.getSSID()))) {
+		} else if (IntentHandlingService.isConnected(ss) && IntentHandlingService.isReconnectEnabled(context) && LoginManager.isSupportedNetwork(IntentHandlingService.stripQuotes(wi.getSSID()))) {
 			final int id = IntentHandlingService.getOtherId(IntentHandlingService.getConfiguredNetworks(wm), IntentHandlingService.getScanResults(wm), IntentHandlingService.isSecureEnabled(context));
 			if (id != -1) {
 				wm.enableNetwork(id, true);
@@ -122,7 +114,7 @@ public final class IntentHandlingService extends IntentService {
 		final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
 		for (final WifiConfiguration wc : wca) {
 			if (!IntentHandlingService.isSecure(wc)) {
-				final String ssid = IntentHandlingService.cleanSSID(wc.SSID);
+				final String ssid = IntentHandlingService.stripQuotes(wc.SSID);
 				if (LoginManager.isSupportedNetwork(ssid)) {
 					wcm.put(ssid, Integer.valueOf(wc.networkId));
 				}
@@ -149,7 +141,7 @@ public final class IntentHandlingService extends IntentService {
 		}
 		final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
 		for (final WifiConfiguration wc : wca) {
-			final String ssid = IntentHandlingService.cleanSSID(wc.SSID);
+			final String ssid = IntentHandlingService.stripQuotes(wc.SSID);
 			if ((!secureOnly || (secureOnly && IntentHandlingService.isSecure(wc))) && !LoginManager.isSupportedNetwork(ssid)) {
 				wcm.put(ssid, Integer.valueOf(wc.networkId));
 			}
@@ -219,7 +211,7 @@ public final class IntentHandlingService extends IntentService {
 		if ((wi == null) || (wi.getSSID() == null)) {
 			return;
 		}
-		final String ssid = IntentHandlingService.cleanSSID(wi.getSSID());
+		final String ssid = IntentHandlingService.stripQuotes(wi.getSSID());
 		if (!LoginManager.isSupportedNetwork(ssid)) {
 			IntentHandlingService.cancelNotification(context);
 			IntentHandlingService.purgeFonNetworks(wm);
@@ -302,7 +294,7 @@ public final class IntentHandlingService extends IntentService {
 		boolean configurationChanged = false;
 		for (final WifiConfiguration wc : wca) {
 			if (wc != null) {
-				final String ssid = IntentHandlingService.cleanSSID(wc.SSID);
+				final String ssid = IntentHandlingService.stripQuotes(wc.SSID);
 				if (LoginManager.isSupportedNetwork(ssid) && wm.removeNetwork(wc.networkId)) {
 					configurationChanged = true;
 				}
@@ -323,6 +315,14 @@ public final class IntentHandlingService extends IntentService {
 
 	private static void scheduleScan(final Context context) {
 		IntentHandlingService.scheduleAction(context, Actions.ACTION_SCAN, IntentHandlingService.getPeriod(context));
+	}
+
+	private static String stripQuotes(final String ssid) {
+		final int length = ssid.length();
+		if ((length > 2) && (ssid.charAt(0) == '"') && (ssid.charAt(length - 1) == '"')) {
+			return new String(ssid.substring(1, length - 1));
+		}
+		return ssid;
 	}
 
 	private static void tryToRecover(final Context context, final WifiManager wm, final WifiInfo wi) {
