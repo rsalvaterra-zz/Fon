@@ -24,7 +24,6 @@ import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 
@@ -36,6 +35,8 @@ public final class IntentHandlingService extends IntentService {
 
 	private static final long[] VIBRATE_PATTERN_SUCCESS = { 100, 250 };
 	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
+
+	private static final Object LOCK = IntentHandlingService.class;
 
 	private static volatile PowerManager.WakeLock WAKELOCK = null;
 
@@ -168,13 +169,6 @@ public final class IntentHandlingService extends IntentService {
 
 	private static String getSuccessTone(final Context context) {
 		return PreferenceManager.getDefaultSharedPreferences(context).getString(context.getString(R.string.key_success), "");
-	}
-
-	private static synchronized WakeLock getWakeLock(final Context context) {
-		if (IntentHandlingService.WAKELOCK == null) {
-			IntentHandlingService.WAKELOCK = ((PowerManager) context.getApplicationContext().getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, IntentHandlingService.class.getPackage().getName());
-		}
-		return IntentHandlingService.WAKELOCK;
 	}
 
 	private static void handleSuccess(final Context context, final String ssid, final int flags, final String logoffUrl) {
@@ -330,23 +324,28 @@ public final class IntentHandlingService extends IntentService {
 		IntentHandlingService.cancelNotification(context);
 	}
 
+	private static void wakeLockAcquire(final Context context) {
+		synchronized (IntentHandlingService.LOCK) {
+			if (IntentHandlingService.WAKELOCK == null) {
+				IntentHandlingService.WAKELOCK = ((PowerManager) context.getApplicationContext().getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, IntentHandlingService.class.getPackage().getName());
+			}
+			if (!IntentHandlingService.WAKELOCK.isHeld()) {
+				IntentHandlingService.WAKELOCK.acquire();
+			}
+		}
+	}
+
+	private static void wakeLockRelease() {
+		synchronized (IntentHandlingService.LOCK) {
+			if ((IntentHandlingService.WAKELOCK != null) && IntentHandlingService.WAKELOCK.isHeld()) {
+				IntentHandlingService.WAKELOCK.release();
+			}
+		}
+	}
+
 	static void executeAction(final Context context, final int action) {
-		IntentHandlingService.getWakeLock(context).acquire();
+		IntentHandlingService.wakeLockAcquire(context);
 		context.startService(new Intent(context, IntentHandlingService.class).setAction(String.valueOf(action)));
-	}
-
-	private void wakeLockAcquire() {
-		final WakeLock wakeLock = IntentHandlingService.getWakeLock(this);
-		if (!wakeLock.isHeld()) {
-			wakeLock.acquire();
-		}
-	}
-
-	private void wakeLockRelease() {
-		final WakeLock wakeLock = IntentHandlingService.getWakeLock(this);
-		if (wakeLock.isHeld()) {
-			wakeLock.release();
-		}
 	}
 
 	@Override
@@ -375,12 +374,12 @@ public final class IntentHandlingService extends IntentService {
 			default:
 				break;
 		}
-		wakeLockRelease();
+		IntentHandlingService.wakeLockRelease();
 	}
 
 	@Override
 	public void onStart(final Intent intent, final int startId) {
-		wakeLockAcquire();
+		IntentHandlingService.wakeLockAcquire(this);
 		super.onStart(intent, startId);
 	}
 
