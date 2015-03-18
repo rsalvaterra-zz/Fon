@@ -174,7 +174,7 @@ public final class LoginManager {
 	}
 
 	private static boolean isOi(final String ssid) {
-		return ssid.equals("Oi WiFi Fon") || ssid.startsWith("OI_WIFI_FON");
+		return ssid.equals("Oi WiFi Fon") || ssid.equals("OI_WIFI_FON");
 	}
 
 	private static boolean isOTE(final String ssid) {
