@@ -1,8 +1,8 @@
 package org.rsalvaterra.fon.activity;
 
-import org.rsalvaterra.fon.Actions;
-import org.rsalvaterra.fon.IntentHandlingService;
+import org.rsalvaterra.fon.Keys;
 import org.rsalvaterra.fon.R;
+import org.rsalvaterra.fon.WakefulIntentService;
 
 import android.app.Activity;
 import android.content.Context;
@@ -28,7 +28,7 @@ public final class AdvancedPreferences extends PreferenceActivity {
 		public final boolean onPreferenceChange(final Preference p, final Object v) {
 			if (((Boolean) v).booleanValue()) {
 				final Context context = p.getContext();
-				context.startService(new Intent(context, IntentHandlingService.class).setAction(String.valueOf(Actions.ACTION_SCAN)));
+				WakefulIntentService.start(context, new Intent(context, WakefulIntentService.class).setAction(Keys.KEY_SCAN));
 			}
 			return true;
 		}
