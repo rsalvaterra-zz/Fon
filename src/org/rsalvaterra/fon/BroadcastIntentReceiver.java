@@ -32,8 +32,8 @@ public final class BroadcastIntentReceiver extends BroadcastReceiver {
 			WakefulIntentService.start(context, new Intent(context, WakefulIntentService.class).setAction(Keys.KEY_CANCEL_NOTIFICATION));
 		} else if (action.equals(Keys.KEY_SCAN)) {
 			WakefulIntentService.start(context, new Intent(context, WakefulIntentService.class).setAction(Keys.KEY_SCAN));
-		} else if (action.equals(Keys.KEY_CONNECT)) {
-			WakefulIntentService.start(context, new Intent(context, WakefulIntentService.class).setAction(Keys.KEY_CONNECT));
+		} else if (action.equals(Keys.KEY_LOGIN)) {
+			WakefulIntentService.start(context, new Intent(context, WakefulIntentService.class).setAction(Keys.KEY_LOGIN));
 		}
 	}
 }
