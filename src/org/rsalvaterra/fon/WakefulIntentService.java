@@ -71,6 +71,21 @@ public final class WakefulIntentService extends IntentService {
 		alarmManager.cancel(PendingIntent.getBroadcast(context, WakefulIntentService.REQUEST_CODE, new Intent(context, BroadcastIntentReceiver.class).setAction(Keys.KEY_LOGIN), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
+	private static boolean completeWakefulIntent(final Intent intent) {
+		final int id = intent.getIntExtra(WakefulIntentService.KEY_WAKELOCK_ID, 0);
+		if (id == 0) {
+			return false;
+		}
+		synchronized (WakefulIntentService.ACTIVE_WAKELOCKS) {
+			final PowerManager.WakeLock wl = WakefulIntentService.ACTIVE_WAKELOCKS.get(id);
+			if (wl != null) {
+				wl.release();
+				WakefulIntentService.ACTIVE_WAKELOCKS.remove(id);
+			}
+			return true;
+		}
+	}
+
 	private static void connect(final Context context, final WifiManager wm) {
 		final WifiInfo wi = wm.getConnectionInfo();
 		if (wi == null) {
@@ -327,21 +342,6 @@ public final class WakefulIntentService extends IntentService {
 	private static void tryToRecover(final Context context, final WifiManager wm, final WifiInfo wi) {
 		wm.removeNetwork(wi.getNetworkId());
 		WakefulIntentService.cancelNotification(context);
-	}
-
-	public static boolean completeWakefulIntent(final Intent intent) {
-		final int id = intent.getIntExtra(WakefulIntentService.KEY_WAKELOCK_ID, 0);
-		if (id == 0) {
-			return false;
-		}
-		synchronized (WakefulIntentService.ACTIVE_WAKELOCKS) {
-			final PowerManager.WakeLock wl = WakefulIntentService.ACTIVE_WAKELOCKS.get(id);
-			if (wl != null) {
-				wl.release();
-				WakefulIntentService.ACTIVE_WAKELOCKS.remove(id);
-			}
-			return true;
-		}
 	}
 
 	public static ComponentName start(final Context context, final Intent intent) {
