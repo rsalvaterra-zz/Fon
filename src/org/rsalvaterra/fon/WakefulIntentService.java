@@ -67,8 +67,8 @@ public final class WakefulIntentService extends IntentService {
 
 	private static void cancelScheduledActions(final Context context) {
 		final AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-		alarmManager.cancel(PendingIntent.getBroadcast(context, WakefulIntentService.REQUEST_CODE, new Intent(context, BroadcastIntentReceiver.class).setAction(Keys.KEY_SCAN), PendingIntent.FLAG_UPDATE_CURRENT));
-		alarmManager.cancel(PendingIntent.getBroadcast(context, WakefulIntentService.REQUEST_CODE, new Intent(context, BroadcastIntentReceiver.class).setAction(Keys.KEY_LOGIN), PendingIntent.FLAG_UPDATE_CURRENT));
+		alarmManager.cancel(PendingIntent.getBroadcast(context, WakefulIntentService.REQUEST_CODE, new Intent(context, AlarmBroadcastReceiver.class).setAction(Keys.KEY_SCAN), PendingIntent.FLAG_UPDATE_CURRENT));
+		alarmManager.cancel(PendingIntent.getBroadcast(context, WakefulIntentService.REQUEST_CODE, new Intent(context, AlarmBroadcastReceiver.class).setAction(Keys.KEY_LOGIN), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private static boolean completeWakefulIntent(final Intent intent) {
@@ -320,7 +320,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private static void scheduleAction(final Context context, final String action, final int seconds) {
-		((AlarmManager) context.getSystemService(Context.ALARM_SERVICE)).set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + (seconds * 1000), PendingIntent.getBroadcast(context, WakefulIntentService.REQUEST_CODE, new Intent(context, BroadcastIntentReceiver.class).setAction(action), PendingIntent.FLAG_UPDATE_CURRENT));
+		((AlarmManager) context.getSystemService(Context.ALARM_SERVICE)).set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + (seconds * 1000), PendingIntent.getBroadcast(context, WakefulIntentService.REQUEST_CODE, new Intent(context, AlarmBroadcastReceiver.class).setAction(action), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private static void scheduleConnectivityCheck(final Context context) {

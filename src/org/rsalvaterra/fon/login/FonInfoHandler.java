@@ -8,13 +8,13 @@ final class FonInfoHandler extends DefaultHandler {
 	private static final String TAG_MESSAGE_TYPE = "MessageType";
 	private static final String TAG_LOGIN_URL = "LoginURL";
 
+	static final String TAG_RESPONSE_CODE = "ResponseCode";
+
 	private final StringBuilder loginURL = new StringBuilder();
 	private final StringBuilder messageType = new StringBuilder();
 	private final StringBuilder responseCode = new StringBuilder();
 
 	private String currentTag;
-
-	static final String TAG_RESPONSE_CODE = "ResponseCode";
 
 	String getLoginURL() {
 		return loginURL.toString().trim();

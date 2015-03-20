@@ -38,17 +38,21 @@
 			android:exported="false" />
 
 		<receiver
-			android:name=".BroadcastIntentReceiver"
-			android:enabled="true">
+			android:name=".WifiBroadcastReceiver"
+			android:enabled="true"
+			android:exported="true">
 			<intent-filter>
 				<action android:name="android.net.wifi.SCAN_RESULTS" />
 				<action android:name="android.net.wifi.STATE_CHANGE" />
 				<action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
 				<action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
-				<action android:name="org.rsalvaterra.fon.SCAN" />
-				<action android:name="org.rsalvaterra.fon.LOGIN" />
 			</intent-filter>
 		</receiver>
+
+		<receiver
+			android:name=".AlarmBroadcastReceiver"
+			android:enabled="true"
+			android:exported="false" />
 
 		<service android:name=".WakefulIntentService" />
 	</application>
