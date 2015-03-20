@@ -57,20 +57,6 @@ public final class WakefulIntentService extends IntentService {
 		super(WakefulIntentService.class.getName());
 	}
 
-	private static boolean areNotificationsEnabled(final Context context) {
-		return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(context.getString(R.string.key_notify), true);
-	}
-
-	private static void cancelNotification(final Context context) {
-		((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).cancel(WakefulIntentService.NOTIFICATION_ID);
-	}
-
-	private static void cancelScheduledActions(final Context context) {
-		final AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-		alarmManager.cancel(PendingIntent.getBroadcast(context, WakefulIntentService.REQUEST_CODE, new Intent(context, AlarmBroadcastReceiver.class).setAction(Keys.KEY_SCAN), PendingIntent.FLAG_UPDATE_CURRENT));
-		alarmManager.cancel(PendingIntent.getBroadcast(context, WakefulIntentService.REQUEST_CODE, new Intent(context, AlarmBroadcastReceiver.class).setAction(Keys.KEY_LOGIN), PendingIntent.FLAG_UPDATE_CURRENT));
-	}
-
 	private static boolean completeWakefulIntent(final Intent intent) {
 		final int id = intent.getIntExtra(WakefulIntentService.KEY_WAKELOCK_ID, 0);
 		if (id == 0) {
@@ -86,46 +72,12 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
-	private static void connect(final Context context, final WifiManager wm) {
-		final WifiInfo wi = wm.getConnectionInfo();
-		if (wi == null) {
-			return;
-		}
-		final SupplicantState ss = wi.getSupplicantState();
-		if (WakefulIntentService.isDisconnected(ss)) {
-			final WifiConfiguration[] wca = WakefulIntentService.getConfiguredNetworks(wm);
-			final ScanResult[] sra = WakefulIntentService.getScanResults(wm);
-			int id = WakefulIntentService.getOtherId(wca, sra, false);
-			if (id == -1) {
-				id = WakefulIntentService.getFonId(wca, sra, wm);
-				if (id == -1) {
-					WakefulIntentService.cancelNotification(context);
-				} else if (wm.enableNetwork(id, true) && WakefulIntentService.isReconnectEnabled(context)) {
-					WakefulIntentService.scheduleScan(context);
-				}
-			} else if (wm.enableNetwork(id, true)) {
-				WakefulIntentService.cancelNotification(context);
-			}
-		} else if (WakefulIntentService.isConnected(ss) && WakefulIntentService.isReconnectEnabled(context) && LoginManager.isSupportedNetwork(WakefulIntentService.stripQuotes(wi.getSSID()))) {
-			final int id = WakefulIntentService.getOtherId(WakefulIntentService.getConfiguredNetworks(wm), WakefulIntentService.getScanResults(wm), WakefulIntentService.isSecureEnabled(context));
-			if (id != -1) {
-				wm.enableNetwork(id, true);
-			} else {
-				WakefulIntentService.scheduleScan(context);
-			}
-		}
-	}
-
 	private static WifiConfiguration[] getConfiguredNetworks(final WifiManager wm) {
 		final List<WifiConfiguration> wcl = wm.getConfiguredNetworks();
 		if (wcl == null) {
 			return null;
 		}
 		return wcl.toArray(new WifiConfiguration[wcl.size()]);
-	}
-
-	private static String getFailureTone(final Context context) {
-		return PreferenceManager.getDefaultSharedPreferences(context).getString(context.getString(R.string.key_failure), "");
 	}
 
 	private static int getFonId(final WifiConfiguration[] wca, final ScanResult[] sra, final WifiManager wm) {
@@ -136,13 +88,13 @@ public final class WakefulIntentService extends IntentService {
 		for (final WifiConfiguration wc : wca) {
 			if (!WakefulIntentService.isSecure(wc)) {
 				final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
-				if (LoginManager.isSupportedNetwork(ssid)) {
+				if (LoginManager.isSupported(ssid)) {
 					wcm.put(ssid, Integer.valueOf(wc.networkId));
 				}
 			}
 		}
 		for (final ScanResult sr : sra) {
-			if (LoginManager.isSupportedNetwork(sr.SSID)) {
+			if (LoginManager.isSupported(sr.SSID)) {
 				final Integer id = wcm.get(sr.SSID);
 				if (id == null) {
 					final WifiConfiguration wc = new WifiConfiguration();
@@ -163,7 +115,7 @@ public final class WakefulIntentService extends IntentService {
 		final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
 		for (final WifiConfiguration wc : wca) {
 			final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
-			if ((!secureOnly || (secureOnly && WakefulIntentService.isSecure(wc))) && !LoginManager.isSupportedNetwork(ssid)) {
+			if ((!secureOnly || (secureOnly && WakefulIntentService.isSecure(wc))) && !LoginManager.isSupported(ssid)) {
 				wcm.put(ssid, Integer.valueOf(wc.networkId));
 			}
 		}
@@ -176,24 +128,11 @@ public final class WakefulIntentService extends IntentService {
 		return -1;
 	}
 
-	private static int getPeriod(final Context context) {
-		return Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(context).getString(context.getString(R.string.key_interval), "300"));
-	}
-
 	private static ScanResult[] getScanResults(final WifiManager wm) {
 		final List<ScanResult> srl = wm.getScanResults();
 		final ScanResult[] sra = srl.toArray(new ScanResult[srl.size()]);
 		Arrays.sort(sra, WakefulIntentService.BY_DESCENDING_LEVEL);
 		return sra;
-	}
-
-	private static String getSuccessTone(final Context context) {
-		return PreferenceManager.getDefaultSharedPreferences(context).getString(context.getString(R.string.key_success), "");
-	}
-
-	private static void handleSuccess(final Context context, final String ssid, final int flags, final String logoffUrl) {
-		WakefulIntentService.notifySuccess(context, ssid, flags, logoffUrl);
-		WakefulIntentService.scheduleConnectivityCheck(context);
 	}
 
 	private static boolean isConnected(final SupplicantState ss) {
@@ -204,100 +143,8 @@ public final class WakefulIntentService extends IntentService {
 		return (ss == SupplicantState.INACTIVE) || (ss == SupplicantState.DISCONNECTED) || (ss == SupplicantState.SCANNING);
 	}
 
-	private static boolean isReconnectEnabled(final Context context) {
-		return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(context.getString(R.string.key_reconnect), false);
-	}
-
 	private static boolean isSecure(final WifiConfiguration wc) {
 		return wc.allowedKeyManagement.get(KeyMgmt.WPA_PSK) || wc.allowedKeyManagement.get(KeyMgmt.WPA_EAP) || wc.allowedKeyManagement.get(KeyMgmt.IEEE8021X) || (wc.wepKeys[0] != null);
-	}
-
-	private static boolean isSecureEnabled(final Context context) {
-		return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(context.getString(R.string.key_secure), true);
-	}
-
-	private static boolean isVibrationEnabled(final Context context) {
-		return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(context.getString(R.string.key_vibration), false);
-	}
-
-	private static void login(final Context context, final WifiManager wm) {
-		final WifiInfo wi = wm.getConnectionInfo();
-		if ((wi == null) || (wi.getSSID() == null)) {
-			return;
-		}
-		final String ssid = WakefulIntentService.stripQuotes(wi.getSSID());
-		if (!LoginManager.isSupportedNetwork(ssid)) {
-			WakefulIntentService.cancelNotification(context);
-			WakefulIntentService.purgeFonNetworks(wm);
-			return;
-		}
-		final LoginResult result = LoginManager.login(context, ssid);
-		final int responseCode = result.getResponseCode();
-		switch (responseCode) {
-			case ResponseCodes.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
-			case ResponseCodes.CUST_WISPR_NOT_PRESENT:
-				WakefulIntentService.tryToRecover(context, wm, wi);
-				break;
-			case ResponseCodes.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
-				WakefulIntentService.handleSuccess(context, ssid, 0, result.getLogOffUrl());
-				break;
-			case ResponseCodes.CUST_ALREADY_CONNECTED:
-				WakefulIntentService.handleSuccess(context, ssid, Notification.FLAG_ONLY_ALERT_ONCE, result.getLogOffUrl());
-				break;
-			case ResponseCodes.CUST_CREDENTIALS_ERROR:
-				WakefulIntentService.notifyCredentialsError(context);
-				break;
-			case ResponseCodes.FON_INVALID_CREDENTIALS_ALT:
-			case ResponseCodes.FON_NOT_ENOUGH_CREDIT:
-			case ResponseCodes.FON_INVALID_CREDENTIALS:
-			case ResponseCodes.FON_USER_IN_BLACK_LIST:
-			case ResponseCodes.FON_SESSION_LIMIT_EXCEEDED:
-			case ResponseCodes.FON_SPOT_LIMIT_EXCEEDED:
-			case ResponseCodes.FON_NOT_AUTHORIZED:
-			case ResponseCodes.FON_CUSTOMIZED_ERROR:
-			case ResponseCodes.FON_INTERNAL_ERROR:
-			case ResponseCodes.FON_UNKNOWN_ERROR:
-			case ResponseCodes.FON_INVALID_TEMPORARY_CREDENTIAL:
-			case ResponseCodes.FON_AUTHORIZATION_CONNECTION_ERROR:
-				WakefulIntentService.notifyFonError(context, result.getReplyMessage(), responseCode);
-				break;
-			default:
-				break;
-		}
-
-	}
-
-	private static void logoff(final Context context, final String url, final WifiManager wm) {
-		if ((url != null) && (url.length() != 0)) {
-			HttpUtils.getUrl(url);
-		}
-		wm.removeNetwork(wm.getConnectionInfo().getNetworkId());
-		WakefulIntentService.cancelNotification(context);
-	}
-
-	private static void notify(final Context context, final String title, final long[] vibratePattern, final int flags, final String ringtone, final String text, final PendingIntent pendingIntent) {
-		final Notification notification = new Notification(R.drawable.ic_stat_fon, title, System.currentTimeMillis());
-		if (WakefulIntentService.areNotificationsEnabled(context)) {
-			if (WakefulIntentService.isVibrationEnabled(context)) {
-				notification.vibrate = vibratePattern;
-			}
-			notification.sound = Uri.parse(ringtone);
-		}
-		notification.flags |= flags;
-		notification.setLatestEventInfo(context, title, text, pendingIntent);
-		((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).notify(WakefulIntentService.NOTIFICATION_ID, notification);
-	}
-
-	private static void notifyCredentialsError(final Context context) {
-		WakefulIntentService.notify(context, context.getString(R.string.notif_title_10001), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, WakefulIntentService.getFailureTone(context), context.getString(R.string.notif_text_config), PendingIntent.getActivity(context, WakefulIntentService.REQUEST_CODE, new Intent(context, BasicPreferences.class), PendingIntent.FLAG_UPDATE_CURRENT));
-	}
-
-	private static void notifyFonError(final Context context, final String replyMessage, final int responseCode) {
-		WakefulIntentService.notify(context, context.getString(R.string.notif_title_9xx, Integer.valueOf(responseCode)), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, WakefulIntentService.getFailureTone(context), '"' + replyMessage + '"', PendingIntent.getActivity(context, WakefulIntentService.REQUEST_CODE, new Intent(context, BasicPreferences.class), PendingIntent.FLAG_UPDATE_CURRENT));
-	}
-
-	private static void notifySuccess(final Context context, final String ssid, final int flags, final String logoffUrl) {
-		WakefulIntentService.notify(context, context.getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR | flags, WakefulIntentService.getSuccessTone(context), context.getString(R.string.notif_text_logoff), PendingIntent.getService(context, WakefulIntentService.REQUEST_CODE, new Intent(context, WakefulIntentService.class).setAction(Keys.KEY_LOGOFF).putExtra(Keys.KEY_LOGOFF_URL, logoffUrl), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private static void purgeFonNetworks(final WifiManager wm) {
@@ -309,7 +156,7 @@ public final class WakefulIntentService extends IntentService {
 		for (final WifiConfiguration wc : wca) {
 			if (wc != null) {
 				final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
-				if (LoginManager.isSupportedNetwork(ssid) && wm.removeNetwork(wc.networkId)) {
+				if (LoginManager.isSupported(ssid) && wm.removeNetwork(wc.networkId)) {
 					configurationChanged = true;
 				}
 			}
@@ -319,29 +166,12 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
-	private static void scheduleAction(final Context context, final String action, final int seconds) {
-		((AlarmManager) context.getSystemService(Context.ALARM_SERVICE)).set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + (seconds * 1000), PendingIntent.getBroadcast(context, WakefulIntentService.REQUEST_CODE, new Intent(context, AlarmBroadcastReceiver.class).setAction(action), PendingIntent.FLAG_UPDATE_CURRENT));
-	}
-
-	private static void scheduleConnectivityCheck(final Context context) {
-		WakefulIntentService.scheduleAction(context, Keys.KEY_LOGIN, WakefulIntentService.CONNECTIVITY_CHECK_INTERVAL);
-	}
-
-	private static void scheduleScan(final Context context) {
-		WakefulIntentService.scheduleAction(context, Keys.KEY_SCAN, WakefulIntentService.getPeriod(context));
-	}
-
 	private static String stripQuotes(final String ssid) {
 		final int length = ssid.length();
 		if ((length > 2) && (ssid.charAt(0) == '"') && (ssid.charAt(length - 1) == '"')) {
 			return new String(ssid.substring(1, length - 1));
 		}
 		return ssid;
-	}
-
-	private static void tryToRecover(final Context context, final WifiManager wm, final WifiInfo wi) {
-		wm.removeNetwork(wi.getNetworkId());
-		WakefulIntentService.cancelNotification(context);
 	}
 
 	public static ComponentName start(final Context context, final Intent intent) {
@@ -359,21 +189,198 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
+	private boolean areNotificationsEnabled() {
+		return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_notify), true);
+	}
+
+	private void cancelNotification() {
+		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(WakefulIntentService.NOTIFICATION_ID);
+	}
+
+	private void cancelScheduledActions() {
+		final AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Keys.KEY_SCAN), PendingIntent.FLAG_UPDATE_CURRENT));
+		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Keys.KEY_LOGIN), PendingIntent.FLAG_UPDATE_CURRENT));
+	}
+
+	private void connect(final WifiManager wm) {
+		final WifiInfo wi = wm.getConnectionInfo();
+		if (wi == null) {
+			return;
+		}
+		final SupplicantState ss = wi.getSupplicantState();
+		if (WakefulIntentService.isDisconnected(ss)) {
+			final WifiConfiguration[] wca = WakefulIntentService.getConfiguredNetworks(wm);
+			final ScanResult[] sra = WakefulIntentService.getScanResults(wm);
+			int id = WakefulIntentService.getOtherId(wca, sra, false);
+			if (id == -1) {
+				id = WakefulIntentService.getFonId(wca, sra, wm);
+				if (id == -1) {
+					cancelNotification();
+				} else if (wm.enableNetwork(id, true) && isReconnectEnabled()) {
+					scheduleScan();
+				}
+			} else if (wm.enableNetwork(id, true)) {
+				cancelNotification();
+			}
+		} else if (WakefulIntentService.isConnected(ss) && isReconnectEnabled() && LoginManager.isSupported(WakefulIntentService.stripQuotes(wi.getSSID()))) {
+			final int id = WakefulIntentService.getOtherId(WakefulIntentService.getConfiguredNetworks(wm), WakefulIntentService.getScanResults(wm), isSecureEnabled());
+			if (id != -1) {
+				wm.enableNetwork(id, true);
+			} else {
+				scheduleScan();
+			}
+		}
+	}
+
+	private String getFailureTone() {
+		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_failure), "");
+	}
+
+	private String getPassword() {
+		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_password), "").trim();
+	}
+
+	private int getPeriod() {
+		return Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_interval), "300"));
+	}
+
+	private String getSuccessTone() {
+		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_success), "");
+	}
+
+	private String getUsername() {
+		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_username), "").trim();
+	}
+
+	private void handleSuccess(final String ssid, final int flags, final String logoffUrl) {
+		notifySuccess(ssid, flags, logoffUrl);
+		scheduleConnectivityCheck();
+	}
+
+	private boolean isReconnectEnabled() {
+		return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_reconnect), false);
+	}
+
+	private boolean isSecureEnabled() {
+		return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_secure), true);
+	}
+
+	private boolean isVibrationEnabled() {
+		return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_vibration), false);
+	}
+
+	private void login(final WifiManager wm) {
+		final WifiInfo wi = wm.getConnectionInfo();
+		if ((wi == null) || (wi.getSSID() == null)) {
+			return;
+		}
+		final String ssid = WakefulIntentService.stripQuotes(wi.getSSID());
+		if (!LoginManager.isSupported(ssid)) {
+			cancelNotification();
+			WakefulIntentService.purgeFonNetworks(wm);
+			return;
+		}
+		final LoginResult result = LoginManager.login(ssid, getUsername(), getPassword());
+		final int responseCode = result.getResponseCode();
+		switch (responseCode) {
+			case ResponseCodes.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
+			case ResponseCodes.CUST_WISPR_NOT_PRESENT:
+				tryToRecover(wm, wi);
+				break;
+			case ResponseCodes.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
+				handleSuccess(ssid, 0, result.getLogOffUrl());
+				break;
+			case ResponseCodes.CUST_ALREADY_CONNECTED:
+				handleSuccess(ssid, Notification.FLAG_ONLY_ALERT_ONCE, result.getLogOffUrl());
+				break;
+			case ResponseCodes.CUST_CREDENTIALS_ERROR:
+				notifyCredentialsError();
+				break;
+			case ResponseCodes.FON_INVALID_CREDENTIALS_ALT:
+			case ResponseCodes.FON_NOT_ENOUGH_CREDIT:
+			case ResponseCodes.FON_INVALID_CREDENTIALS:
+			case ResponseCodes.FON_USER_IN_BLACK_LIST:
+			case ResponseCodes.FON_SESSION_LIMIT_EXCEEDED:
+			case ResponseCodes.FON_SPOT_LIMIT_EXCEEDED:
+			case ResponseCodes.FON_NOT_AUTHORIZED:
+			case ResponseCodes.FON_CUSTOMIZED_ERROR:
+			case ResponseCodes.FON_INTERNAL_ERROR:
+			case ResponseCodes.FON_UNKNOWN_ERROR:
+			case ResponseCodes.FON_INVALID_TEMPORARY_CREDENTIAL:
+			case ResponseCodes.FON_AUTHORIZATION_CONNECTION_ERROR:
+				notifyFonError(result.getReplyMessage(), responseCode);
+				break;
+			default:
+				break;
+		}
+	}
+
+	private void logoff(final String url, final WifiManager wm) {
+		if ((url != null) && (url.length() != 0)) {
+			HttpUtils.getUrl(url);
+		}
+		wm.removeNetwork(wm.getConnectionInfo().getNetworkId());
+		cancelNotification();
+	}
+
+	private void notify(final String title, final long[] vibratePattern, final int flags, final String ringtone, final String text, final PendingIntent pendingIntent) {
+		final Notification notification = new Notification(R.drawable.ic_stat_fon, title, System.currentTimeMillis());
+		if (areNotificationsEnabled()) {
+			if (isVibrationEnabled()) {
+				notification.vibrate = vibratePattern;
+			}
+			notification.sound = Uri.parse(ringtone);
+		}
+		notification.flags |= flags;
+		notification.setLatestEventInfo(this, title, text, pendingIntent);
+		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).notify(WakefulIntentService.NOTIFICATION_ID, notification);
+	}
+
+	private void notifyCredentialsError() {
+		notify(getString(R.string.notif_title_10001), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), getString(R.string.notif_text_config), PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class), PendingIntent.FLAG_UPDATE_CURRENT));
+	}
+
+	private void notifyFonError(final String replyMessage, final int responseCode) {
+		notify(getString(R.string.notif_title_9xx, Integer.valueOf(responseCode)), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), '"' + replyMessage + '"', PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class), PendingIntent.FLAG_UPDATE_CURRENT));
+	}
+
+	private void notifySuccess(final String ssid, final int flags, final String logoffUrl) {
+		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR | flags, getSuccessTone(), getString(R.string.notif_text_logoff), PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Keys.KEY_LOGOFF).putExtra(Keys.KEY_LOGOFF_URL, logoffUrl), PendingIntent.FLAG_UPDATE_CURRENT));
+	}
+
+	private void scheduleAction(final String action, final int seconds) {
+		((AlarmManager) getSystemService(Context.ALARM_SERVICE)).set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + (seconds * 1000), PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(action), PendingIntent.FLAG_UPDATE_CURRENT));
+	}
+
+	private void scheduleConnectivityCheck() {
+		scheduleAction(Keys.KEY_LOGIN, WakefulIntentService.CONNECTIVITY_CHECK_INTERVAL);
+	}
+
+	private void scheduleScan() {
+		scheduleAction(Keys.KEY_SCAN, getPeriod());
+	}
+
+	private void tryToRecover(final WifiManager wm, final WifiInfo wi) {
+		wm.removeNetwork(wi.getNetworkId());
+		cancelNotification();
+	}
+
 	@Override
 	protected void onHandleIntent(final Intent intent) {
 		final String action = intent.getAction();
 		if (action.equals(Keys.KEY_LOGOFF)) {
-			WakefulIntentService.logoff(this, intent.getStringExtra(Keys.KEY_LOGOFF_URL), (WifiManager) getSystemService(Context.WIFI_SERVICE));
+			logoff(intent.getStringExtra(Keys.KEY_LOGOFF_URL), (WifiManager) getSystemService(Context.WIFI_SERVICE));
 		} else if (action.equals(Keys.KEY_SCAN)) {
 			((WifiManager) getSystemService(Context.WIFI_SERVICE)).startScan();
 		} else if (action.equals(Keys.KEY_CONNECT)) {
-			WakefulIntentService.connect(this, (WifiManager) getSystemService(Context.WIFI_SERVICE));
+			connect((WifiManager) getSystemService(Context.WIFI_SERVICE));
 		} else if (action.equals(Keys.KEY_LOGIN)) {
-			WakefulIntentService.login(this, (WifiManager) getSystemService(Context.WIFI_SERVICE));
+			login((WifiManager) getSystemService(Context.WIFI_SERVICE));
 		} else if (action.equals(Keys.KEY_CANCEL_NOTIFICATION)) {
-			WakefulIntentService.cancelNotification(this);
+			cancelNotification();
 		} else if (action.equals(Keys.KEY_CANCEL_SCHEDULED_ACTIONS)) {
-			WakefulIntentService.cancelScheduledActions(this);
+			cancelScheduledActions();
 		}
 		WakefulIntentService.completeWakefulIntent(intent);
 	}

@@ -7,13 +7,10 @@ import java.util.Locale;
 
 import org.apache.http.message.BasicNameValuePair;
 import org.rsalvaterra.fon.HttpUtils;
-import org.rsalvaterra.fon.R;
 import org.rsalvaterra.fon.ResponseCodes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
-import android.content.Context;
-import android.preference.PreferenceManager;
 import android.util.Xml;
 
 public final class LoginManager {
@@ -109,10 +106,6 @@ public final class LoginManager {
 		return null;
 	}
 
-	private static String getPassword(final Context context) {
-		return PreferenceManager.getDefaultSharedPreferences(context).getString(context.getString(R.string.key_password), "").trim();
-	}
-
 	private static String getSFRFonURL(final String source) {
 		final int start = source.indexOf("SFRLoginURL_JIL");
 		final int end = source.indexOf("-->", start);
@@ -122,10 +115,6 @@ public final class LoginManager {
 		final String url = source.substring(start, end);
 		return new String(url.substring(url.indexOf("https")).replace("&amp;", "&").replace("notyet", "smartclient"));
 
-	}
-
-	private static String getUsername(final Context context) {
-		return PreferenceManager.getDefaultSharedPreferences(context).getString(context.getString(R.string.key_username), "").trim();
 	}
 
 	private static boolean isBT(final String ssid) {
@@ -263,13 +252,11 @@ public final class LoginManager {
 		return new LoginResult(responseCode, null, logoffUrl);
 	}
 
-	public static boolean isSupportedNetwork(final String ssid) {
+	public static boolean isSupported(final String ssid) {
 		return LoginManager.isFon(ssid) || LoginManager.isSFR(ssid);
 	}
 
-	public static LoginResult login(final Context context, final String ssid) {
-		final String user = LoginManager.getUsername(context);
-		final String password = LoginManager.getPassword(context);
+	public static LoginResult login(final String ssid, final String user, final String password) {
 		final LoginResult r;
 		if ((user.length() == 0) || (password.length() == 0)) {
 			r = new LoginResult(ResponseCodes.CUST_CREDENTIALS_ERROR, null, null);
