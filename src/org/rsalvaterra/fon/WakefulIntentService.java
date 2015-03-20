@@ -351,15 +351,11 @@ public final class WakefulIntentService extends IntentService {
 				WakefulIntentService.NEXT_WAKELOCK_ID = 1;
 			}
 			intent.putExtra(WakefulIntentService.KEY_WAKELOCK_ID, id);
-			final ComponentName comp = context.startService(intent);
-			if (comp == null) {
-				return null;
-			}
-			final PowerManager.WakeLock wl = ((PowerManager) context.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "wake:" + comp.flattenToShortString());
+			final PowerManager.WakeLock wl = ((PowerManager) context.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "wake:" + WakefulIntentService.KEY_WAKELOCK_ID);
 			wl.setReferenceCounted(false);
 			wl.acquire(WakefulIntentService.WAKELOCK_TIMEOUT);
 			WakefulIntentService.ACTIVE_WAKELOCKS.put(id, wl);
-			return comp;
+			return context.startService(intent);
 		}
 	}
 
