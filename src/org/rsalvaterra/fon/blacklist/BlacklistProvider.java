@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
+import android.os.SystemClock;
 
 public final class BlacklistProvider extends ContentProvider {
 
@@ -41,7 +42,7 @@ public final class BlacklistProvider extends ContentProvider {
 				throw new AssertionError();
 			}
 			final ContentValues values = new ContentValues();
-			values.put(BlacklistProvider.KEY_TIMESTAMP, Long.valueOf(System.currentTimeMillis()));
+			values.put(BlacklistProvider.KEY_TIMESTAMP, Long.valueOf(SystemClock.elapsedRealtime()));
 			if (cursor.moveToFirst()) {
 				resolver.update(BlacklistProvider.BLACKLIST_URI, values, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid });
 			} else {
@@ -61,7 +62,7 @@ public final class BlacklistProvider extends ContentProvider {
 				throw new AssertionError();
 			}
 			if (cursor.moveToFirst()) {
-				if ((cursor.getLong(cursor.getColumnIndex(BlacklistProvider.KEY_TIMESTAMP)) + BlacklistProvider.BLACKLIST_PERIOD) > System.currentTimeMillis()) {
+				if ((cursor.getLong(cursor.getColumnIndex(BlacklistProvider.KEY_TIMESTAMP)) + BlacklistProvider.BLACKLIST_PERIOD) > SystemClock.elapsedRealtime()) {
 					blacklisted = true;
 				} else {
 					resolver.delete(BlacklistProvider.BLACKLIST_URI, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid });
