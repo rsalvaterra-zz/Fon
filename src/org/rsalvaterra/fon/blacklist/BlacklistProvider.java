@@ -45,7 +45,7 @@ public final class BlacklistProvider extends ContentProvider {
 		}
 	}
 
-	public static synchronized boolean isBlacklisted(final ContentResolver resolver, final String bssid) {
+	public static boolean isBlacklisted(final ContentResolver resolver, final String bssid) {
 		boolean blacklisted = false;
 		synchronized (BlacklistProvider.class) {
 			final Cursor cursor = resolver.query(BlacklistProvider.BLACKLIST_URI, new String[] { BlacklistProvider.KEY_BSSID, BlacklistProvider.KEY_TIMESTAMP }, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid }, null);
