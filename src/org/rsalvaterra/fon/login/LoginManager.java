@@ -2,10 +2,8 @@ package org.rsalvaterra.fon.login;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Locale;
 
-import org.apache.http.message.BasicNameValuePair;
 import org.rsalvaterra.fon.HttpUtils;
 import org.rsalvaterra.fon.ResponseCodes;
 import org.xml.sax.ContentHandler;
@@ -20,8 +18,6 @@ public final class LoginManager {
 	private static final String DEFAULT_LOGOFF_URL = "http://192.168.3.1:80/logoff";
 	private static final String FON_USERNAME_PREFIX = "FON_WISPR/";
 	private static final String TAG_WISPR = "WISPAccessGatewayParam";
-	private static final String TAG_WISPR_PASSWORD = "Password";
-	private static final String TAG_WISPR_USERNAME = "UserName";
 
 	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".neuf.fr", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
 
@@ -87,16 +83,13 @@ public final class LoginManager {
 		if (u.getProtocol().equals("https")) {
 			for (final String s : LoginManager.VALID_SUFFIX) {
 				if (u.getHost().toLowerCase(Locale.US).endsWith(s)) {
-					final ArrayList<BasicNameValuePair> p = new ArrayList<BasicNameValuePair>();
 					final String username;
 					if (LoginManager.isFonWISPrURL(u)) {
 						username = LoginManager.FON_USERNAME_PREFIX + user;
 					} else {
 						username = user;
 					}
-					p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_USERNAME, username));
-					p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_PASSWORD, password));
-					final String r = HttpUtils.getUrlByPost(url, p);
+					final String r = HttpUtils.getUrlByPost(url, username, password);
 					if (r != null) {
 						return LoginManager.getFonXML(r);
 					}

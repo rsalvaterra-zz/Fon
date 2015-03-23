@@ -35,6 +35,8 @@ public final class HttpUtils {
 	private static final String USER_AGENT_STRING = "FONAccess; wispr; (Linux; U; Android)";
 	private static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
 	private static final String ENCODING_GZIP = "gzip";
+	private static final String TAG_WISPR_PASSWORD = "Password";
+	private static final String TAG_WISPR_USERNAME = "UserName";
 
 	private static final HttpParams HTTP_PARAMETERS = new BasicHttpParams().setParameter(CoreProtocolPNames.USER_AGENT, HttpUtils.USER_AGENT_STRING);
 
@@ -101,15 +103,18 @@ public final class HttpUtils {
 		return HttpUtils.getUrlCommon(new HttpGet(url));
 	}
 
-	public static String getUrlByPost(final String url, final ArrayList<BasicNameValuePair> formParams) {
-		final UrlEncodedFormEntity form;
+	public static String getUrlByPost(final String url, final String username, final String password) {
+		final ArrayList<BasicNameValuePair> p = new ArrayList<BasicNameValuePair>();
+		p.add(new BasicNameValuePair(HttpUtils.TAG_WISPR_USERNAME, username));
+		p.add(new BasicNameValuePair(HttpUtils.TAG_WISPR_PASSWORD, password));
+		final UrlEncodedFormEntity f;
 		try {
-			form = new UrlEncodedFormEntity(formParams, HTTP.UTF_8);
+			f = new UrlEncodedFormEntity(p, HTTP.UTF_8);
 		} catch (final UnsupportedEncodingException e) {
 			return null;
 		}
 		final HttpPost httpreq = new HttpPost(url);
-		httpreq.setEntity(form);
+		httpreq.setEntity(f);
 		return HttpUtils.getUrlCommon(httpreq);
 	}
 }
