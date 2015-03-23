@@ -37,32 +37,28 @@ public final class BlacklistProvider extends ContentProvider {
 	public static void addToBlacklist(final ContentResolver resolver, final String bssid) {
 		final ContentValues values = new ContentValues();
 		values.put(BlacklistProvider.KEY_TIMESTAMP, Long.valueOf(SystemClock.elapsedRealtime()));
-		synchronized (BlacklistProvider.class) {
-			if (resolver.update(BlacklistProvider.BLACKLIST_URI, values, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid }) == 0) {
-				values.put(BlacklistProvider.KEY_BSSID, bssid);
-				resolver.insert(BlacklistProvider.BLACKLIST_URI, values);
-			}
+		if (resolver.update(BlacklistProvider.BLACKLIST_URI, values, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid }) == 0) {
+			values.put(BlacklistProvider.KEY_BSSID, bssid);
+			resolver.insert(BlacklistProvider.BLACKLIST_URI, values);
 		}
 	}
 
 	public static boolean isBlacklisted(final ContentResolver resolver, final String bssid) {
 		boolean blacklisted = false;
-		synchronized (BlacklistProvider.class) {
-			final Cursor cursor = resolver.query(BlacklistProvider.BLACKLIST_URI, new String[] { BlacklistProvider.KEY_BSSID, BlacklistProvider.KEY_TIMESTAMP }, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid }, null);
-			if (cursor != null) {
-				if (BuildConfig.DEBUG && (cursor.getCount() > 1)) {
-					cursor.close();
-					throw new AssertionError();
-				}
-				if (cursor.moveToFirst()) {
-					if ((cursor.getLong(cursor.getColumnIndex(BlacklistProvider.KEY_TIMESTAMP)) + BlacklistProvider.BLACKLIST_PERIOD) > SystemClock.elapsedRealtime()) {
-						blacklisted = true;
-					} else {
-						resolver.delete(BlacklistProvider.BLACKLIST_URI, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid });
-					}
-				}
+		final Cursor cursor = resolver.query(BlacklistProvider.BLACKLIST_URI, new String[] { BlacklistProvider.KEY_BSSID, BlacklistProvider.KEY_TIMESTAMP }, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid }, null);
+		if (cursor != null) {
+			if (BuildConfig.DEBUG && (cursor.getCount() > 1)) {
 				cursor.close();
+				throw new AssertionError();
 			}
+			if (cursor.moveToFirst()) {
+				if ((cursor.getLong(cursor.getColumnIndex(BlacklistProvider.KEY_TIMESTAMP)) + BlacklistProvider.BLACKLIST_PERIOD) > SystemClock.elapsedRealtime()) {
+					blacklisted = true;
+				} else {
+					resolver.delete(BlacklistProvider.BLACKLIST_URI, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid });
+				}
+			}
+			cursor.close();
 		}
 		return blacklisted;
 	}
