@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.rsalvaterra.fon.activity.BasicPreferences;
+import org.rsalvaterra.fon.blacklist.BlacklistProvider;
 import org.rsalvaterra.fon.login.LoginManager;
 import org.rsalvaterra.fon.login.LoginResult;
 
@@ -78,34 +79,6 @@ public final class WakefulIntentService extends IntentService {
 			return null;
 		}
 		return wcl.toArray(new WifiConfiguration[wcl.size()]);
-	}
-
-	private static int getFonId(final WifiConfiguration[] wca, final ScanResult[] sra, final WifiManager wm) {
-		if (wca == null) {
-			return -1;
-		}
-		final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
-		for (final WifiConfiguration wc : wca) {
-			if (!WakefulIntentService.isSecure(wc)) {
-				final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
-				if (LoginManager.isSupported(ssid)) {
-					wcm.put(ssid, Integer.valueOf(wc.networkId));
-				}
-			}
-		}
-		for (final ScanResult sr : sra) {
-			if (LoginManager.isSupported(sr.SSID)) {
-				final Integer id = wcm.get(sr.SSID);
-				if (id == null) {
-					final WifiConfiguration wc = new WifiConfiguration();
-					wc.SSID = '"' + sr.SSID + '"';
-					wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-					return wm.addNetwork(wc);
-				}
-				return id.intValue();
-			}
-		}
-		return -1;
 	}
 
 	private static int getOtherId(final WifiConfiguration[] wca, final ScanResult[] sra, final boolean secureOnly) {
@@ -214,7 +187,7 @@ public final class WakefulIntentService extends IntentService {
 			final ScanResult[] sra = WakefulIntentService.getScanResults(wm);
 			int id = WakefulIntentService.getOtherId(wca, sra, false);
 			if (id == -1) {
-				id = WakefulIntentService.getFonId(wca, sra, wm);
+				id = getFonId(wca, sra, wm);
 				if (id == -1) {
 					cancelNotification();
 				} else if (wm.enableNetwork(id, true) && isReconnectEnabled()) {
@@ -235,6 +208,34 @@ public final class WakefulIntentService extends IntentService {
 
 	private String getFailureTone() {
 		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_failure), "");
+	}
+
+	private int getFonId(final WifiConfiguration[] wca, final ScanResult[] sra, final WifiManager wm) {
+		if (wca == null) {
+			return -1;
+		}
+		final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
+		for (final WifiConfiguration wc : wca) {
+			if (!WakefulIntentService.isSecure(wc)) {
+				final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
+				if (LoginManager.isSupported(ssid)) {
+					wcm.put(ssid, Integer.valueOf(wc.networkId));
+				}
+			}
+		}
+		for (final ScanResult sr : sra) {
+			if (LoginManager.isSupported(sr.SSID) && !BlacklistProvider.isBlacklisted(getContentResolver(), sr.BSSID)) {
+				final Integer id = wcm.get(sr.SSID);
+				if (id == null) {
+					final WifiConfiguration wc = new WifiConfiguration();
+					wc.SSID = '"' + sr.SSID + '"';
+					wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+					return wm.addNetwork(wc);
+				}
+				return id.intValue();
+			}
+		}
+		return -1;
 	}
 
 	private String getPassword() {
@@ -284,25 +285,15 @@ public final class WakefulIntentService extends IntentService {
 		final LoginResult result = LoginManager.login(ssid, getUsername(), getPassword());
 		final int responseCode = result.getResponseCode();
 		switch (responseCode) {
-			case ResponseCodes.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
-			case ResponseCodes.CUST_WISPR_NOT_PRESENT:
-				tryToRecover(wm, wi);
-				break;
 			case ResponseCodes.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
 				handleSuccess(ssid, 0, result.getLogOffUrl());
 				break;
 			case ResponseCodes.CUST_ALREADY_CONNECTED:
 				handleSuccess(ssid, Notification.FLAG_ONLY_ALERT_ONCE, result.getLogOffUrl());
 				break;
-			case ResponseCodes.CUST_CREDENTIALS_ERROR:
-				notifyCredentialsError();
-				break;
 			case ResponseCodes.FON_INVALID_CREDENTIALS_ALT:
 			case ResponseCodes.FON_NOT_ENOUGH_CREDIT:
-			case ResponseCodes.FON_INVALID_CREDENTIALS:
 			case ResponseCodes.FON_USER_IN_BLACK_LIST:
-			case ResponseCodes.FON_SESSION_LIMIT_EXCEEDED:
-			case ResponseCodes.FON_SPOT_LIMIT_EXCEEDED:
 			case ResponseCodes.FON_NOT_AUTHORIZED:
 			case ResponseCodes.FON_CUSTOMIZED_ERROR:
 			case ResponseCodes.FON_INTERNAL_ERROR:
@@ -310,6 +301,17 @@ public final class WakefulIntentService extends IntentService {
 			case ResponseCodes.FON_INVALID_TEMPORARY_CREDENTIAL:
 			case ResponseCodes.FON_AUTHORIZATION_CONNECTION_ERROR:
 				notifyFonError(result.getReplyMessage(), responseCode);
+				break;
+			case ResponseCodes.FON_INVALID_CREDENTIALS:
+			case ResponseCodes.FON_SESSION_LIMIT_EXCEEDED:
+			case ResponseCodes.FON_SPOT_LIMIT_EXCEEDED:
+			case ResponseCodes.CUST_WISPR_NOT_PRESENT:
+				BlacklistProvider.addToBlacklist(getContentResolver(), wi.getBSSID());
+			case ResponseCodes.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
+				tryToRecover(wm, wi);
+				break;
+			case ResponseCodes.CUST_CREDENTIALS_ERROR:
+				notifyCredentialsError();
 				break;
 			default:
 				break;
