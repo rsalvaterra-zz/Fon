@@ -35,14 +35,14 @@ public final class WakefulIntentService extends IntentService {
 	private static final int NOTIFICATION_ID = 1;
 	private static final int REQUEST_CODE = 1;
 	private static final int CONNECTIVITY_CHECK_INTERVAL = 60;
-	private static final int WAKELOCK_TIMEOUT = 10 * 1000;
+	private static final int WAKELOCK_TIMEOUT = 30 * 1000;
+
+	private static final long[] VIBRATE_PATTERN_SUCCESS = { 100, 250 };
+	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
 
 	private static final String KEY_WAKELOCK_ID = WakefulIntentService.class.getPackage().getName();
 
 	private static final SparseArray<PowerManager.WakeLock> ACTIVE_WAKELOCKS = new SparseArray<PowerManager.WakeLock>();
-
-	private static final long[] VIBRATE_PATTERN_SUCCESS = { 100, 250 };
-	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
 
 	private static final Comparator<ScanResult> BY_DESCENDING_LEVEL = new Comparator<ScanResult>() {
 
@@ -58,8 +58,8 @@ public final class WakefulIntentService extends IntentService {
 		super(WakefulIntentService.class.getName());
 	}
 
-	private static boolean completeWakefulIntent(final Intent intent) {
-		final int id = intent.getIntExtra(WakefulIntentService.KEY_WAKELOCK_ID, 0);
+	private static boolean completeWakefulIntent(final Intent i) {
+		final int id = i.getIntExtra(WakefulIntentService.KEY_WAKELOCK_ID, 0);
 		if (id == 0) {
 			return false;
 		}
@@ -147,18 +147,21 @@ public final class WakefulIntentService extends IntentService {
 		return ssid;
 	}
 
-	public static ComponentName start(final Context context, final Intent intent) {
+	public static ComponentName start(final Context c, final Intent i) {
 		synchronized (WakefulIntentService.ACTIVE_WAKELOCKS) {
 			final int id = WakefulIntentService.NEXT_WAKELOCK_ID;
 			if (++WakefulIntentService.NEXT_WAKELOCK_ID <= 0) {
 				WakefulIntentService.NEXT_WAKELOCK_ID = 1;
 			}
-			intent.putExtra(WakefulIntentService.KEY_WAKELOCK_ID, id);
-			final PowerManager.WakeLock wl = ((PowerManager) context.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "wake:" + WakefulIntentService.KEY_WAKELOCK_ID);
-			wl.setReferenceCounted(false);
-			wl.acquire(WakefulIntentService.WAKELOCK_TIMEOUT);
-			WakefulIntentService.ACTIVE_WAKELOCKS.put(id, wl);
-			return context.startService(intent);
+			i.putExtra(WakefulIntentService.KEY_WAKELOCK_ID, id);
+			final ComponentName cn = c.startService(i);
+			if (cn != null) {
+				final PowerManager.WakeLock wl = ((PowerManager) c.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WakefulIntentService.KEY_WAKELOCK_ID);
+				wl.setReferenceCounted(false);
+				wl.acquire(WakefulIntentService.WAKELOCK_TIMEOUT);
+				WakefulIntentService.ACTIVE_WAKELOCKS.put(id, wl);
+			}
+			return cn;
 		}
 	}
 
@@ -370,22 +373,22 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	@Override
-	protected void onHandleIntent(final Intent intent) {
-		final String action = intent.getAction();
-		if (action.equals(Constants.KEY_LOGOFF)) {
-			logoff(intent.getStringExtra(Constants.KEY_LOGOFF_URL), (WifiManager) getSystemService(Context.WIFI_SERVICE));
-		} else if (action.equals(Constants.KEY_SCAN)) {
+	protected void onHandleIntent(final Intent i) {
+		final String a = i.getAction();
+		if (a.equals(Constants.KEY_LOGOFF)) {
+			logoff(i.getStringExtra(Constants.KEY_LOGOFF_URL), (WifiManager) getSystemService(Context.WIFI_SERVICE));
+		} else if (a.equals(Constants.KEY_SCAN)) {
 			((WifiManager) getSystemService(Context.WIFI_SERVICE)).startScan();
-		} else if (action.equals(Constants.KEY_CONNECT)) {
+		} else if (a.equals(Constants.KEY_CONNECT)) {
 			connect((WifiManager) getSystemService(Context.WIFI_SERVICE));
-		} else if (action.equals(Constants.KEY_LOGIN)) {
+		} else if (a.equals(Constants.KEY_LOGIN)) {
 			login((WifiManager) getSystemService(Context.WIFI_SERVICE));
-		} else if (action.equals(Constants.KEY_CANCEL_NOTIFICATION)) {
+		} else if (a.equals(Constants.KEY_CANCEL_NOTIFICATION)) {
 			cancelNotification();
-		} else if (action.equals(Constants.KEY_CANCEL_SCHEDULED_ACTIONS)) {
+		} else if (a.equals(Constants.KEY_CANCEL_SCHEDULED_ACTIONS)) {
 			cancelScheduledActions();
 		}
-		WakefulIntentService.completeWakefulIntent(intent);
+		WakefulIntentService.completeWakefulIntent(i);
 	}
 
 }
