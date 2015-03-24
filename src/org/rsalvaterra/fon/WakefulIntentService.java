@@ -206,6 +206,11 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
+	private void disconnect(final WifiManager wm, final WifiInfo wi) {
+		wm.removeNetwork(wi.getNetworkId());
+		cancelNotification();
+	}
+
 	private String getFailureTone() {
 		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_failure), "");
 	}
@@ -309,7 +314,7 @@ public final class WakefulIntentService extends IntentService {
 				BlacklistProvider.addToBlacklist(getContentResolver(), wi.getBSSID());
 				//$FALL-THROUGH$
 			case Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
-				tryToRecover(wm, wi);
+				disconnect(wm, wi);
 				break;
 			case Constants.CUST_CREDENTIALS_ERROR:
 				notifyCredentialsError();
@@ -321,7 +326,7 @@ public final class WakefulIntentService extends IntentService {
 
 	private void logoff(final String url, final WifiManager wm) {
 		if ((url != null) && (url.length() != 0)) {
-			HttpUtils.getUrl(url);
+			HttpUtils.get(url);
 		}
 		wm.removeNetwork(wm.getConnectionInfo().getNetworkId());
 		cancelNotification();
@@ -362,11 +367,6 @@ public final class WakefulIntentService extends IntentService {
 
 	private void scheduleScan() {
 		scheduleAction(Constants.KEY_SCAN, getPeriod());
-	}
-
-	private void tryToRecover(final WifiManager wm, final WifiInfo wi) {
-		wm.removeNetwork(wi.getNetworkId());
-		cancelNotification();
 	}
 
 	@Override

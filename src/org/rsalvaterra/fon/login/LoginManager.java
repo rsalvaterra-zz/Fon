@@ -21,21 +21,47 @@ public final class LoginManager {
 
 	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".neuf.fr", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
 
+	private static String doLogin(final String url, final String user, final String password) {
+		final URL u;
+		try {
+			u = new URL(url);
+		} catch (final MalformedURLException e) {
+			return null;
+		}
+		if (u.getProtocol().equals("https")) {
+			for (final String s : LoginManager.VALID_SUFFIX) {
+				if (u.getHost().toLowerCase(Locale.US).endsWith(s)) {
+					final String username;
+					if (LoginManager.isFonWisprUrl(u)) {
+						username = LoginManager.FON_USERNAME_PREFIX + user;
+					} else {
+						username = user;
+					}
+					final String r = HttpUtils.post(url, username, password);
+					if (r != null) {
+						return LoginManager.getXml(r);
+					}
+				}
+			}
+		}
+		return null;
+	}
+
 	private static LoginResult fonLogin(final String user, final String password) {
 		int responseCode = Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
 		String replyMessage = null;
 		String logoffUrl = null;
-		String content = HttpUtils.getUrl(LoginManager.CONNECTION_TEST_URL);
+		String content = HttpUtils.get(LoginManager.CONNECTION_TEST_URL);
 		if (content != null) {
 			if (!content.equals(LoginManager.CONNECTED)) {
-				content = LoginManager.getFonXML(content);
+				content = LoginManager.getXml(content);
 				if (content != null) {
 					final FonInfoHandler wih = new FonInfoHandler();
-					if (LoginManager.parseFonXML(content, wih) && (wih.getMessageType() == Constants.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (wih.getResponseCode() == Constants.WISPR_RESPONSE_CODE_NO_ERROR)) {
-						content = LoginManager.getFonXMLByPost(wih.getLoginURL(), user, password);
+					if (LoginManager.parseXml(content, wih) && (wih.getMessageType() == Constants.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (wih.getResponseCode() == Constants.WISPR_RESPONSE_CODE_NO_ERROR)) {
+						content = LoginManager.doLogin(wih.getLoginURL(), user, password);
 						if (content != null) {
 							final FonResponseHandler wrh = new FonResponseHandler();
-							if (LoginManager.parseFonXML(content, wrh)) {
+							if (LoginManager.parseXml(content, wrh)) {
 								responseCode = wrh.getResponseCode();
 								if (responseCode == Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
 									logoffUrl = wrh.getLogoffURL();
@@ -60,7 +86,18 @@ public final class LoginManager {
 		return new LoginResult(responseCode, replyMessage, logoffUrl);
 	}
 
-	private static String getFonXML(final String source) {
+	private static String getSfrUrl(final String source) {
+		final int start = source.indexOf("SFRLoginURL_JIL");
+		final int end = source.indexOf("-->", start);
+		if ((start == -1) || (end == -1)) {
+			return null;
+		}
+		final String url = source.substring(start, end);
+		return new String(url.substring(url.indexOf("https")).replace("&amp;", "&").replace("notyet", "smartclient"));
+
+	}
+
+	private static String getXml(final String source) {
 		final int start = source.indexOf("<" + LoginManager.TAG_WISPR);
 		final int end = source.indexOf("</" + LoginManager.TAG_WISPR + ">", start);
 		if ((start == -1) || (end == -1)) {
@@ -73,49 +110,12 @@ public final class LoginManager {
 		return res;
 	}
 
-	private static String getFonXMLByPost(final String url, final String user, final String password) {
-		final URL u;
-		try {
-			u = new URL(url);
-		} catch (final MalformedURLException e) {
-			return null;
-		}
-		if (u.getProtocol().equals("https")) {
-			for (final String s : LoginManager.VALID_SUFFIX) {
-				if (u.getHost().toLowerCase(Locale.US).endsWith(s)) {
-					final String username;
-					if (LoginManager.isFonWISPrURL(u)) {
-						username = LoginManager.FON_USERNAME_PREFIX + user;
-					} else {
-						username = user;
-					}
-					final String r = HttpUtils.getUrlByPost(url, username, password);
-					if (r != null) {
-						return LoginManager.getFonXML(r);
-					}
-				}
-			}
-		}
-		return null;
-	}
-
-	private static String getSFRFonURL(final String source) {
-		final int start = source.indexOf("SFRLoginURL_JIL");
-		final int end = source.indexOf("-->", start);
-		if ((start == -1) || (end == -1)) {
-			return null;
-		}
-		final String url = source.substring(start, end);
-		return new String(url.substring(url.indexOf("https")).replace("&amp;", "&").replace("notyet", "smartclient"));
-
-	}
-
-	private static boolean isBT(final String ssid) {
+	private static boolean isBt(final String ssid) {
 		return ssid.equals("BTWiFi") || ssid.equals("BTWiFi-with-FON") || ssid.equals("BTOpenzone") || ssid.equals("BTOpenzone-H") || ssid.equals("BTOpenzone-B") || ssid.equals("BTOpenzone-M") || ssid.equals("BTFON");
 	}
 
 	private static boolean isConnected() {
-		final String response = HttpUtils.getUrl(LoginManager.CONNECTION_TEST_URL);
+		final String response = HttpUtils.get(LoginManager.CONNECTION_TEST_URL);
 		return (response != null) && response.equals(LoginManager.CONNECTED);
 	}
 
@@ -123,15 +123,15 @@ public final class LoginManager {
 		return ssid.equalsIgnoreCase("DowntownBrooklynWifi_Fon");
 	}
 
-	private static boolean isDT(final String ssid) {
+	private static boolean isDt(final String ssid) {
 		return ssid.equals("Telekom_FON");
 	}
 
 	private static boolean isFon(final String ssid) {
-		return LoginManager.isGenericFon(ssid) || LoginManager.isBT(ssid) || LoginManager.isProximus(ssid) || LoginManager.isKPN(ssid) || LoginManager.isDT(ssid) || LoginManager.isST(ssid) || LoginManager.isJT(ssid) || LoginManager.isHT(ssid) || LoginManager.isOTE(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isTTNET(ssid) || LoginManager.isOtherFon(ssid) || LoginManager.isOi(ssid) || LoginManager.isDowntownBrooklyn(ssid) || LoginManager.isMWEB(ssid) || LoginManager.isSoftBank(ssid) || LoginManager.isTelstra(ssid);
+		return LoginManager.isGenericFon(ssid) || LoginManager.isBt(ssid) || LoginManager.isProximus(ssid) || LoginManager.isKpn(ssid) || LoginManager.isDt(ssid) || LoginManager.isSt(ssid) || LoginManager.isJt(ssid) || LoginManager.isHt(ssid) || LoginManager.isOte(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isTtnet(ssid) || LoginManager.isOtherFon(ssid) || LoginManager.isOi(ssid) || LoginManager.isDowntownBrooklyn(ssid) || LoginManager.isMweb(ssid) || LoginManager.isSoftBank(ssid) || LoginManager.isTelstra(ssid);
 	}
 
-	private static boolean isFonWISPrURL(final URL url) {
+	private static boolean isFonWisprUrl(final URL url) {
 		return (url.getHost().contains("portal.fon.com") || url.getHost().contentEquals("www.btopenzone.com") || url.getHost().contains("wifi.sfr.fr")) && !(url.getHost().contains("belgacom") || url.getHost().contains("telekom"));
 	}
 
@@ -139,19 +139,19 @@ public final class LoginManager {
 		return ssid.startsWith("FON_");
 	}
 
-	private static boolean isHT(final String ssid) {
+	private static boolean isHt(final String ssid) {
 		return ssid.equals("HotSpot Fon");
 	}
 
-	private static boolean isJT(final String ssid) {
+	private static boolean isJt(final String ssid) {
 		return ssid.equalsIgnoreCase("JT Fon");
 	}
 
-	private static boolean isKPN(final String ssid) {
+	private static boolean isKpn(final String ssid) {
 		return ssid.equals("KPN Fon");
 	}
 
-	private static boolean isMWEB(final String ssid) {
+	private static boolean isMweb(final String ssid) {
 		return ssid.equals("@MWEB FON");
 	}
 
@@ -159,7 +159,7 @@ public final class LoginManager {
 		return ssid.equals("Oi WiFi Fon") || ssid.equals("OI_WIFI_FON");
 	}
 
-	private static boolean isOTE(final String ssid) {
+	private static boolean isOte(final String ssid) {
 		return ssid.equals("OTE WiFi Fon");
 	}
 
@@ -175,7 +175,7 @@ public final class LoginManager {
 		return ssid.equals("Romtelecom Fon");
 	}
 
-	private static boolean isSFR(final String ssid) {
+	private static boolean isSfr(final String ssid) {
 		return ssid.equals("SFR WiFi FON");
 	}
 
@@ -183,7 +183,7 @@ public final class LoginManager {
 		return ssid.equalsIgnoreCase("NOC_SOFTBANK") || ssid.equals("FON");
 	}
 
-	private static boolean isST(final String ssid) {
+	private static boolean isSt(final String ssid) {
 		return ssid.equalsIgnoreCase("Telekom FON");
 	}
 
@@ -191,11 +191,11 @@ public final class LoginManager {
 		return ssid.equalsIgnoreCase("Telstra Air");
 	}
 
-	private static boolean isTTNET(final String ssid) {
+	private static boolean isTtnet(final String ssid) {
 		return ssid.equalsIgnoreCase("TTNET WiFi FON");
 	}
 
-	private static boolean parseFonXML(final String xml, final ContentHandler handler) {
+	private static boolean parseXml(final String xml, final ContentHandler handler) {
 		try {
 			Xml.parse(xml, handler);
 		} catch (final SAXException e) {
@@ -207,20 +207,20 @@ public final class LoginManager {
 	private static LoginResult sfrLogin(final String user, final String password) {
 		int responseCode = Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
 		String logoffUrl = null;
-		String content = HttpUtils.getUrl(LoginManager.CONNECTION_TEST_URL);
+		String content = HttpUtils.get(LoginManager.CONNECTION_TEST_URL);
 		if (content != null) {
 			if (!content.equals(LoginManager.CONNECTED)) {
-				content = LoginManager.getSFRFonURL(content);
+				content = LoginManager.getSfrUrl(content);
 				if (content != null) {
-					content = LoginManager.getFonXMLByPost(content, user, password);
+					content = LoginManager.doLogin(content, user, password);
 					if (content != null) {
 						FonResponseHandler wrh = new FonResponseHandler();
-						if (LoginManager.parseFonXML(content, wrh)) {
+						if (LoginManager.parseXml(content, wrh)) {
 							if (wrh.getResponseCode() == Constants.WISPR_RESPONSE_CODE_AUTH_PENDING) {
-								content = HttpUtils.getUrl(wrh.getLoginResultsURL());
+								content = HttpUtils.get(wrh.getLoginResultsURL());
 								if (content != null) {
 									wrh = new FonResponseHandler();
-									if (LoginManager.parseFonXML(content, wrh)) {
+									if (LoginManager.parseXml(content, wrh)) {
 										responseCode = wrh.getResponseCode();
 										logoffUrl = wrh.getLogoffURL();
 									}
@@ -246,14 +246,14 @@ public final class LoginManager {
 	}
 
 	public static boolean isSupported(final String ssid) {
-		return LoginManager.isFon(ssid) || LoginManager.isSFR(ssid);
+		return LoginManager.isFon(ssid) || LoginManager.isSfr(ssid);
 	}
 
 	public static LoginResult login(final String ssid, final String user, final String password) {
 		final LoginResult r;
 		if ((user.length() == 0) || (password.length() == 0)) {
 			r = new LoginResult(Constants.CUST_CREDENTIALS_ERROR, null, null);
-		} else if (LoginManager.isSFR(ssid)) {
+		} else if (LoginManager.isSfr(ssid)) {
 			r = LoginManager.sfrLogin(user, password);
 		} else {
 			r = LoginManager.fonLogin(user, password);

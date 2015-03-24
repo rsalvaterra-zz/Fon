@@ -99,11 +99,11 @@ public final class HttpUtils {
 		return null;
 	}
 
-	public static String getUrl(final String url) {
+	public static String get(final String url) {
 		return HttpUtils.getUrlCommon(new HttpGet(url));
 	}
 
-	public static String getUrlByPost(final String url, final String username, final String password) {
+	public static String post(final String url, final String username, final String password) {
 		final ArrayList<BasicNameValuePair> p = new ArrayList<BasicNameValuePair>();
 		p.add(new BasicNameValuePair(HttpUtils.TAG_WISPR_USERNAME, username));
 		p.add(new BasicNameValuePair(HttpUtils.TAG_WISPR_PASSWORD, password));
