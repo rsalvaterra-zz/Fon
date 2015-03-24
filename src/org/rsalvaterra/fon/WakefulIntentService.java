@@ -307,6 +307,7 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.FON_SPOT_LIMIT_EXCEEDED:
 			case Constants.CUST_WISPR_NOT_PRESENT:
 				BlacklistProvider.addToBlacklist(getContentResolver(), wi.getBSSID());
+				//$FALL-THROUGH$
 			case Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
 				tryToRecover(wm, wi);
 				break;
