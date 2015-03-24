@@ -24,11 +24,11 @@ public final class URLUtils {
 		} catch (final IOException e) {
 			return null;
 		}
-		final StringBuilder sb = new StringBuilder();
 		String s;
 		try {
-			for (String l = br.readLine(); l != null; l = br.readLine()) {
-				sb.append(l);
+			final StringBuilder sb = new StringBuilder();
+			while ((s = br.readLine()) != null) {
+				sb.append(s);
 			}
 			s = sb.toString();
 		} catch (final IOException e) {
