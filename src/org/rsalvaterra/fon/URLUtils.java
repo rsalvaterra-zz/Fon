@@ -44,7 +44,7 @@ public final class URLUtils {
 		} catch (final IOException e) {
 			return null;
 		}
-		if ((rc != HttpURLConnection.HTTP_OK) && ((rc == HttpURLConnection.HTTP_MOVED_TEMP) || (rc == HttpURLConnection.HTTP_MOVED_PERM) || (rc == HttpURLConnection.HTTP_SEE_OTHER))) {
+		if ((rc == HttpURLConnection.HTTP_MOVED_TEMP) || (rc == HttpURLConnection.HTTP_MOVED_PERM) || (rc == HttpURLConnection.HTTP_SEE_OTHER)) {
 			try {
 				u = new URL(uc.getHeaderField("Location"));
 			} catch (final MalformedURLException e) {
