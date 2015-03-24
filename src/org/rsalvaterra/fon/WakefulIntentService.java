@@ -172,8 +172,8 @@ public final class WakefulIntentService extends IntentService {
 
 	private void cancelScheduledActions() {
 		final AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Keys.KEY_SCAN), PendingIntent.FLAG_UPDATE_CURRENT));
-		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Keys.KEY_LOGIN), PendingIntent.FLAG_UPDATE_CURRENT));
+		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.KEY_SCAN), PendingIntent.FLAG_UPDATE_CURRENT));
+		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.KEY_LOGIN), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void connect(final WifiManager wm) {
@@ -285,32 +285,32 @@ public final class WakefulIntentService extends IntentService {
 		final LoginResult result = LoginManager.login(ssid, getUsername(), getPassword());
 		final int responseCode = result.getResponseCode();
 		switch (responseCode) {
-			case ResponseCodes.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
+			case Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
 				handleSuccess(ssid, 0, result.getLogOffUrl());
 				break;
-			case ResponseCodes.CUST_ALREADY_CONNECTED:
+			case Constants.CUST_ALREADY_CONNECTED:
 				handleSuccess(ssid, Notification.FLAG_ONLY_ALERT_ONCE, result.getLogOffUrl());
 				break;
-			case ResponseCodes.FON_INVALID_CREDENTIALS_ALT:
-			case ResponseCodes.FON_NOT_ENOUGH_CREDIT:
-			case ResponseCodes.FON_USER_IN_BLACK_LIST:
-			case ResponseCodes.FON_NOT_AUTHORIZED:
-			case ResponseCodes.FON_CUSTOMIZED_ERROR:
-			case ResponseCodes.FON_INTERNAL_ERROR:
-			case ResponseCodes.FON_UNKNOWN_ERROR:
-			case ResponseCodes.FON_INVALID_TEMPORARY_CREDENTIAL:
-			case ResponseCodes.FON_AUTHORIZATION_CONNECTION_ERROR:
+			case Constants.FON_INVALID_CREDENTIALS_ALT:
+			case Constants.FON_NOT_ENOUGH_CREDIT:
+			case Constants.FON_USER_IN_BLACK_LIST:
+			case Constants.FON_NOT_AUTHORIZED:
+			case Constants.FON_CUSTOMIZED_ERROR:
+			case Constants.FON_INTERNAL_ERROR:
+			case Constants.FON_UNKNOWN_ERROR:
+			case Constants.FON_INVALID_TEMPORARY_CREDENTIAL:
+			case Constants.FON_AUTHORIZATION_CONNECTION_ERROR:
 				notifyFonError(result.getReplyMessage(), responseCode);
 				break;
-			case ResponseCodes.FON_INVALID_CREDENTIALS:
-			case ResponseCodes.FON_SESSION_LIMIT_EXCEEDED:
-			case ResponseCodes.FON_SPOT_LIMIT_EXCEEDED:
-			case ResponseCodes.CUST_WISPR_NOT_PRESENT:
+			case Constants.FON_INVALID_CREDENTIALS:
+			case Constants.FON_SESSION_LIMIT_EXCEEDED:
+			case Constants.FON_SPOT_LIMIT_EXCEEDED:
+			case Constants.CUST_WISPR_NOT_PRESENT:
 				BlacklistProvider.addToBlacklist(getContentResolver(), wi.getBSSID());
-			case ResponseCodes.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
+			case Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
 				tryToRecover(wm, wi);
 				break;
-			case ResponseCodes.CUST_CREDENTIALS_ERROR:
+			case Constants.CUST_CREDENTIALS_ERROR:
 				notifyCredentialsError();
 				break;
 			default:
@@ -348,7 +348,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void notifySuccess(final String ssid, final int flags, final String logoffUrl) {
-		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR | flags, getSuccessTone(), getString(R.string.notif_text_logoff), PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Keys.KEY_LOGOFF).putExtra(Keys.KEY_LOGOFF_URL, logoffUrl), PendingIntent.FLAG_UPDATE_CURRENT));
+		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR | flags, getSuccessTone(), getString(R.string.notif_text_logoff), PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, logoffUrl), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void scheduleAction(final String action, final int seconds) {
@@ -356,11 +356,11 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void scheduleConnectivityCheck() {
-		scheduleAction(Keys.KEY_LOGIN, WakefulIntentService.CONNECTIVITY_CHECK_INTERVAL);
+		scheduleAction(Constants.KEY_LOGIN, WakefulIntentService.CONNECTIVITY_CHECK_INTERVAL);
 	}
 
 	private void scheduleScan() {
-		scheduleAction(Keys.KEY_SCAN, getPeriod());
+		scheduleAction(Constants.KEY_SCAN, getPeriod());
 	}
 
 	private void tryToRecover(final WifiManager wm, final WifiInfo wi) {
@@ -371,17 +371,17 @@ public final class WakefulIntentService extends IntentService {
 	@Override
 	protected void onHandleIntent(final Intent intent) {
 		final String action = intent.getAction();
-		if (action.equals(Keys.KEY_LOGOFF)) {
-			logoff(intent.getStringExtra(Keys.KEY_LOGOFF_URL), (WifiManager) getSystemService(Context.WIFI_SERVICE));
-		} else if (action.equals(Keys.KEY_SCAN)) {
+		if (action.equals(Constants.KEY_LOGOFF)) {
+			logoff(intent.getStringExtra(Constants.KEY_LOGOFF_URL), (WifiManager) getSystemService(Context.WIFI_SERVICE));
+		} else if (action.equals(Constants.KEY_SCAN)) {
 			((WifiManager) getSystemService(Context.WIFI_SERVICE)).startScan();
-		} else if (action.equals(Keys.KEY_CONNECT)) {
+		} else if (action.equals(Constants.KEY_CONNECT)) {
 			connect((WifiManager) getSystemService(Context.WIFI_SERVICE));
-		} else if (action.equals(Keys.KEY_LOGIN)) {
+		} else if (action.equals(Constants.KEY_LOGIN)) {
 			login((WifiManager) getSystemService(Context.WIFI_SERVICE));
-		} else if (action.equals(Keys.KEY_CANCEL_NOTIFICATION)) {
+		} else if (action.equals(Constants.KEY_CANCEL_NOTIFICATION)) {
 			cancelNotification();
-		} else if (action.equals(Keys.KEY_CANCEL_SCHEDULED_ACTIONS)) {
+		} else if (action.equals(Constants.KEY_CANCEL_SCHEDULED_ACTIONS)) {
 			cancelScheduledActions();
 		}
 		WakefulIntentService.completeWakefulIntent(intent);

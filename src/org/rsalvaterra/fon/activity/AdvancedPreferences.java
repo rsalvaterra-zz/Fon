@@ -1,6 +1,6 @@
 package org.rsalvaterra.fon.activity;
 
-import org.rsalvaterra.fon.Keys;
+import org.rsalvaterra.fon.Constants;
 import org.rsalvaterra.fon.R;
 import org.rsalvaterra.fon.WakefulIntentService;
 
@@ -28,7 +28,7 @@ public final class AdvancedPreferences extends PreferenceActivity {
 		public final boolean onPreferenceChange(final Preference p, final Object v) {
 			if (((Boolean) v).booleanValue()) {
 				final Context context = p.getContext();
-				WakefulIntentService.start(context, new Intent(context, WakefulIntentService.class).setAction(Keys.KEY_SCAN));
+				WakefulIntentService.start(context, new Intent(context, WakefulIntentService.class).setAction(Constants.KEY_SCAN));
 			}
 			return true;
 		}

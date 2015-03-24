@@ -4,8 +4,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
 
+import org.rsalvaterra.fon.Constants;
 import org.rsalvaterra.fon.HttpUtils;
-import org.rsalvaterra.fon.ResponseCodes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -22,7 +22,7 @@ public final class LoginManager {
 	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".neuf.fr", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
 
 	private static LoginResult fonLogin(final String user, final String password) {
-		int responseCode = ResponseCodes.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
+		int responseCode = Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
 		String replyMessage = null;
 		String logoffUrl = null;
 		String content = HttpUtils.getUrl(LoginManager.CONNECTION_TEST_URL);
@@ -31,29 +31,29 @@ public final class LoginManager {
 				content = LoginManager.getFonXML(content);
 				if (content != null) {
 					final FonInfoHandler wih = new FonInfoHandler();
-					if (LoginManager.parseFonXML(content, wih) && (wih.getMessageType() == ResponseCodes.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (wih.getResponseCode() == ResponseCodes.WISPR_RESPONSE_CODE_NO_ERROR)) {
+					if (LoginManager.parseFonXML(content, wih) && (wih.getMessageType() == Constants.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (wih.getResponseCode() == Constants.WISPR_RESPONSE_CODE_NO_ERROR)) {
 						content = LoginManager.getFonXMLByPost(wih.getLoginURL(), user, password);
 						if (content != null) {
 							final FonResponseHandler wrh = new FonResponseHandler();
 							if (LoginManager.parseFonXML(content, wrh)) {
 								responseCode = wrh.getResponseCode();
-								if (responseCode == ResponseCodes.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
+								if (responseCode == Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
 									logoffUrl = wrh.getLogoffURL();
-								} else if (responseCode == ResponseCodes.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
+								} else if (responseCode == Constants.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
 									responseCode = wrh.getFonResponseCode();
 									replyMessage = wrh.getReplyMessage();
 								}
 							}
 						} else if (LoginManager.isConnected()) {
-							responseCode = ResponseCodes.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
+							responseCode = Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
 							logoffUrl = LoginManager.DEFAULT_LOGOFF_URL;
 						}
 					}
 				} else {
-					responseCode = ResponseCodes.CUST_WISPR_NOT_PRESENT;
+					responseCode = Constants.CUST_WISPR_NOT_PRESENT;
 				}
 			} else {
-				responseCode = ResponseCodes.CUST_ALREADY_CONNECTED;
+				responseCode = Constants.CUST_ALREADY_CONNECTED;
 				logoffUrl = LoginManager.DEFAULT_LOGOFF_URL;
 			}
 		}
@@ -205,7 +205,7 @@ public final class LoginManager {
 	}
 
 	private static LoginResult sfrLogin(final String user, final String password) {
-		int responseCode = ResponseCodes.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
+		int responseCode = Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
 		String logoffUrl = null;
 		String content = HttpUtils.getUrl(LoginManager.CONNECTION_TEST_URL);
 		if (content != null) {
@@ -216,7 +216,7 @@ public final class LoginManager {
 					if (content != null) {
 						FonResponseHandler wrh = new FonResponseHandler();
 						if (LoginManager.parseFonXML(content, wrh)) {
-							if (wrh.getResponseCode() == ResponseCodes.WISPR_RESPONSE_CODE_AUTH_PENDING) {
+							if (wrh.getResponseCode() == Constants.WISPR_RESPONSE_CODE_AUTH_PENDING) {
 								content = HttpUtils.getUrl(wrh.getLoginResultsURL());
 								if (content != null) {
 									wrh = new FonResponseHandler();
@@ -231,14 +231,14 @@ public final class LoginManager {
 							}
 						}
 					} else if (LoginManager.isConnected()) {
-						responseCode = ResponseCodes.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
+						responseCode = Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
 						logoffUrl = LoginManager.DEFAULT_LOGOFF_URL;
 					}
 				} else {
-					responseCode = ResponseCodes.CUST_WISPR_NOT_PRESENT;
+					responseCode = Constants.CUST_WISPR_NOT_PRESENT;
 				}
 			} else {
-				responseCode = ResponseCodes.CUST_ALREADY_CONNECTED;
+				responseCode = Constants.CUST_ALREADY_CONNECTED;
 				logoffUrl = LoginManager.DEFAULT_LOGOFF_URL;
 			}
 		}
@@ -252,7 +252,7 @@ public final class LoginManager {
 	public static LoginResult login(final String ssid, final String user, final String password) {
 		final LoginResult r;
 		if ((user.length() == 0) || (password.length() == 0)) {
-			r = new LoginResult(ResponseCodes.CUST_CREDENTIALS_ERROR, null, null);
+			r = new LoginResult(Constants.CUST_CREDENTIALS_ERROR, null, null);
 		} else if (LoginManager.isSFR(ssid)) {
 			r = LoginManager.sfrLogin(user, password);
 		} else {
