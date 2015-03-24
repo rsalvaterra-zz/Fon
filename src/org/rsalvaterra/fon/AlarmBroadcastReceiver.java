@@ -7,8 +7,8 @@ import android.content.Intent;
 public final class AlarmBroadcastReceiver extends BroadcastReceiver {
 
 	@Override
-	public void onReceive(final Context context, final Intent intent) {
-		WakefulIntentService.start(context, new Intent(context, WakefulIntentService.class).setAction(intent.getAction()));
+	public void onReceive(final Context c, final Intent i) {
+		WakefulIntentService.start(c, new Intent(c, WakefulIntentService.class).setAction(i.getAction()));
 	}
 
 }
