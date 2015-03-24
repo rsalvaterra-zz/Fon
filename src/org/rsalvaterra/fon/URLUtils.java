@@ -1,71 +1,29 @@
 package org.rsalvaterra.fon;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import android.util.Log;
+import javax.net.ssl.HttpsURLConnection;
 
 public final class URLUtils {
 
-	private static final int TIMEOUT = 5 * 1000;
+	private static final int CONNECT_TIMEOUT = 5 * 1000;
+	private static final int READ_TIMEOUT = 10 * 1000;
 
 	private static final String USER_AGENT_STRING = "FONAccess; wispr; (Linux; U; Android)";
 
-	private static final String TAG_WISPR_PASSWORD = "Password";
-	private static final String TAG_WISPR_USERNAME = "UserName";
-
-	public static String getUrl(final String url) {
-		URL u;
+	private static String readConnectionStream(final HttpURLConnection uc) {
+		final BufferedReader br;
 		try {
-			u = new URL(url);
-		} catch (final MalformedURLException e) {
-			return null;
-		}
-		HttpURLConnection uc;
-		try {
-			uc = (HttpURLConnection) u.openConnection();
+			br = new BufferedReader(new InputStreamReader(uc.getInputStream()));
 		} catch (final IOException e) {
 			return null;
 		}
-		uc.setRequestProperty("User-Agent", URLUtils.USER_AGENT_STRING);
-		uc.setConnectTimeout(URLUtils.TIMEOUT);
-		uc.setReadTimeout(URLUtils.TIMEOUT);
-		int rc;
-		try {
-			rc = uc.getResponseCode();
-		} catch (final IOException e) {
-			return null;
-		}
-		if ((rc == HttpURLConnection.HTTP_MOVED_TEMP) || (rc == HttpURLConnection.HTTP_MOVED_PERM) || (rc == HttpURLConnection.HTTP_SEE_OTHER)) {
-			try {
-				u = new URL(uc.getHeaderField("Location"));
-			} catch (final MalformedURLException e) {
-				return null;
-			}
-			try {
-				uc = (HttpURLConnection) u.openConnection();
-			} catch (final IOException e) {
-				return null;
-			}
-			uc.setRequestProperty("User-Agent", URLUtils.USER_AGENT_STRING);
-			uc.setConnectTimeout(URLUtils.TIMEOUT);
-			uc.setReadTimeout(URLUtils.TIMEOUT);
-		}
-		final InputStream is;
-		try {
-			is = uc.getInputStream();
-		} catch (final IOException e) {
-			return null;
-		}
-		final BufferedReader br = new BufferedReader(new InputStreamReader(is));
 		final StringBuilder sb = new StringBuilder();
 		String s;
 		try {
@@ -85,53 +43,62 @@ public final class URLUtils {
 		return s;
 	}
 
-	public static String getUrlByPost(final String url, final String username, final String password) {
-		final URL u;
+	public static String get(final String url) {
+		HttpURLConnection uc;
 		try {
-			u = new URL(url);
-		} catch (final MalformedURLException e) {
+			uc = (HttpURLConnection) new URL(url).openConnection();
+			uc.setRequestProperty("User-Agent", URLUtils.USER_AGENT_STRING);
+			uc.setConnectTimeout(URLUtils.CONNECT_TIMEOUT);
+			uc.setReadTimeout(URLUtils.READ_TIMEOUT);
+			final int rc = uc.getResponseCode();
+			if ((rc == HttpURLConnection.HTTP_MOVED_TEMP) || (rc == HttpURLConnection.HTTP_MOVED_PERM) || (rc == HttpURLConnection.HTTP_SEE_OTHER)) {
+				uc = (HttpURLConnection) new URL(uc.getHeaderField("Location")).openConnection();
+				uc.setRequestProperty("User-Agent", URLUtils.USER_AGENT_STRING);
+				uc.setConnectTimeout(URLUtils.CONNECT_TIMEOUT);
+				uc.setReadTimeout(URLUtils.READ_TIMEOUT);
+			}
+		} catch (final IOException e) {
 			return null;
 		}
-		BufferedReader r = null;
-		BufferedWriter w = null;
-		HttpURLConnection c = null;
-		String s = null;
-		try {
-			c = (HttpURLConnection) u.openConnection();
-			c.setRequestProperty("User-Agent", URLUtils.USER_AGENT_STRING);
-			c.setConnectTimeout(URLUtils.TIMEOUT);
-			c.setReadTimeout(URLUtils.TIMEOUT);
-			c.setDoOutput(true);
-			c.setRequestMethod("POST");
-			c.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-			final String parameters = URLEncoder.encode(URLUtils.TAG_WISPR_USERNAME + "=" + username + "&" + URLUtils.TAG_WISPR_PASSWORD + "=" + password, "UTF-8");
-			c.setRequestProperty("Content-Length", String.valueOf(parameters.length()));
-			w = new BufferedWriter(new OutputStreamWriter(c.getOutputStream()));
-			w.write(parameters);
-			r = new BufferedReader(new InputStreamReader(c.getInputStream()));
-			final StringBuilder b = new StringBuilder();
-			for (String l = r.readLine(); l != null; l = r.readLine()) {
-				b.append(l);
-			}
-			s = b.toString();
-		} catch (final IOException e) {
-			Log.e(URLUtils.class.getName(), e.getMessage(), e);
-		} finally {
-			try {
-				if (w != null) {
-					w.close();
-				}
-				if (r != null) {
-					r.close();
-				}
-			} catch (final IOException e) {
-				Log.e(URLUtils.class.getName(), e.getMessage(), e);
-			}
-			if (c != null) {
-				c.disconnect();
-			}
-		}
-		return s;
+		return URLUtils.readConnectionStream(uc);
 	}
 
+	public static String post(final String url, final String username, final String password) {
+		final HttpsURLConnection uc;
+		final byte[] pc;
+		try {
+			uc = (HttpsURLConnection) new URL(url).openConnection();
+			uc.setRequestProperty("User-Agent", URLUtils.USER_AGENT_STRING);
+			uc.setConnectTimeout(URLUtils.CONNECT_TIMEOUT);
+			uc.setReadTimeout(URLUtils.READ_TIMEOUT);
+			uc.setDoOutput(true);
+			pc = URLEncoder.encode("UserName=" + username + "&Password=" + password, "UTF-8").getBytes();
+			uc.setRequestProperty("Content-Length", Integer.toString(pc.length));
+			uc.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		} catch (final IOException e) {
+			return null;
+		}
+		final OutputStream os;
+		try {
+			os = uc.getOutputStream();
+		} catch (final IOException e) {
+			return null;
+		}
+		boolean error = false;
+		try {
+			os.write(pc);
+		} catch (final IOException e) {
+			error = true;
+		} finally {
+			try {
+				os.close();
+			} catch (final IOException e) {
+				// Nothing can be done.
+			}
+			if (error) {
+				return null;
+			}
+		}
+		return URLUtils.readConnectionStream(uc);
+	}
 }
