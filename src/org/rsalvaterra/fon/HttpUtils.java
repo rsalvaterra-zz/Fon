@@ -8,7 +8,6 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
@@ -33,7 +32,6 @@ public final class HttpUtils {
 
 	private static final int CONNECT_TIMEOUT = 5 * 1000;
 	private static final int SOCKET_TIMEOUT = 5 * 1000;
-	private static final int MAX_TRIES = 3;
 
 	private static final String USER_AGENT_STRING = "FONAccess; wispr; (Linux; U; Android)";
 	private static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
@@ -87,20 +85,11 @@ public final class HttpUtils {
 	}
 
 	private static String getUrlCommon(final HttpUriRequest httpreq) {
-		final BasicHttpContext context = new BasicHttpContext();
-		final DefaultHttpClient client = HttpUtils.getHttpClient();
-		int tries = 0;
-		while (tries < HttpUtils.MAX_TRIES) {
-			try {
-				final HttpEntity entity = client.execute(httpreq, context).getEntity();
-				if (entity != null) {
-					return EntityUtils.toString(entity).trim();
-				}
-			} catch (final IOException se) {
-				++tries;
-			}
+		try {
+			return EntityUtils.toString(HttpUtils.getHttpClient().execute(httpreq, new BasicHttpContext()).getEntity()).trim();
+		} catch (final IOException se) {
+			return null;
 		}
-		return null;
 	}
 
 	public static String get(final String url) {
