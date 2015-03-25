@@ -58,21 +58,6 @@ public final class WakefulIntentService extends IntentService {
 		super(WakefulIntentService.class.getName());
 	}
 
-	private static boolean completeWakefulIntent(final Intent i) {
-		final int id = i.getIntExtra(WakefulIntentService.KEY_WAKELOCK_ID, 0);
-		if (id == 0) {
-			return false;
-		}
-		synchronized (WakefulIntentService.ACTIVE_WAKELOCKS) {
-			final PowerManager.WakeLock wl = WakefulIntentService.ACTIVE_WAKELOCKS.get(id);
-			if (wl != null) {
-				wl.release();
-				WakefulIntentService.ACTIVE_WAKELOCKS.remove(id);
-			}
-			return true;
-		}
-	}
-
 	private static WifiConfiguration[] getConfiguredNetworks(final WifiManager wm) {
 		final List<WifiConfiguration> wcl = wm.getConfiguredNetworks();
 		if (wcl == null) {
@@ -139,6 +124,18 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
+	private static void releaseWakeLock(final int i) {
+		if (i != 0) {
+			synchronized (WakefulIntentService.ACTIVE_WAKELOCKS) {
+				final PowerManager.WakeLock wl = WakefulIntentService.ACTIVE_WAKELOCKS.get(i);
+				if (wl != null) {
+					wl.release();
+					WakefulIntentService.ACTIVE_WAKELOCKS.remove(i);
+				}
+			}
+		}
+	}
+
 	private static String stripQuotes(final String ssid) {
 		final int length = ssid.length();
 		if ((length > 2) && (ssid.charAt(0) == '"') && (ssid.charAt(length - 1) == '"')) {
@@ -149,8 +146,8 @@ public final class WakefulIntentService extends IntentService {
 
 	public static ComponentName start(final Context c, final Intent i) {
 		synchronized (WakefulIntentService.ACTIVE_WAKELOCKS) {
-			final int id = WakefulIntentService.NEXT_WAKELOCK_ID;
-			if (++WakefulIntentService.NEXT_WAKELOCK_ID <= 0) {
+			final int id = WakefulIntentService.NEXT_WAKELOCK_ID++;
+			if (WakefulIntentService.NEXT_WAKELOCK_ID <= 0) {
 				WakefulIntentService.NEXT_WAKELOCK_ID = 1;
 			}
 			i.putExtra(WakefulIntentService.KEY_WAKELOCK_ID, id);
@@ -349,11 +346,11 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void notifyCredentialsError() {
-		notify(getString(R.string.notif_title_10001), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), getString(R.string.notif_text_config), PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class), PendingIntent.FLAG_UPDATE_CURRENT));
+		notify(getString(R.string.notif_title_10001), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), getString(R.string.notif_text_config), PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void notifyFonError(final String replyMessage, final int responseCode) {
-		notify(getString(R.string.notif_title_9xx, Integer.valueOf(responseCode)), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), '"' + replyMessage + '"', PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class), PendingIntent.FLAG_UPDATE_CURRENT));
+		notify(getString(R.string.notif_title_9xx, Integer.valueOf(responseCode)), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), '"' + replyMessage + '"', PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void notifySuccess(final String ssid, final int flags, final String logoffUrl) {
@@ -388,7 +385,7 @@ public final class WakefulIntentService extends IntentService {
 		} else if (a.equals(Constants.KEY_CANCEL_SCHEDULED_ACTIONS)) {
 			cancelScheduledActions();
 		}
-		WakefulIntentService.completeWakefulIntent(i);
+		WakefulIntentService.releaseWakeLock(i.getIntExtra(WakefulIntentService.KEY_WAKELOCK_ID, 0));
 	}
 
 }
