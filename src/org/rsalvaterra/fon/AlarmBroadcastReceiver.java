@@ -8,7 +8,7 @@ public final class AlarmBroadcastReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(final Context c, final Intent i) {
-		WakefulIntentService.start(c, new Intent(c, WakefulIntentService.class).setAction(i.getAction()));
+		WakefulIntentService.start(c, i.getAction());
 	}
 
 }

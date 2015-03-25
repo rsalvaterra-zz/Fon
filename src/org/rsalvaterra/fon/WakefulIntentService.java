@@ -144,14 +144,13 @@ public final class WakefulIntentService extends IntentService {
 		return ssid;
 	}
 
-	public static ComponentName start(final Context c, final Intent i) {
+	public static ComponentName start(final Context c, final String a) {
 		synchronized (WakefulIntentService.ACTIVE_WAKELOCKS) {
 			final int id = WakefulIntentService.NEXT_WAKELOCK_ID++;
 			if (WakefulIntentService.NEXT_WAKELOCK_ID <= 0) {
 				WakefulIntentService.NEXT_WAKELOCK_ID = 1;
 			}
-			i.putExtra(WakefulIntentService.KEY_WAKELOCK_ID, id);
-			final ComponentName cn = c.startService(i);
+			final ComponentName cn = c.startService(new Intent(c, WakefulIntentService.class).setAction(a).putExtra(WakefulIntentService.KEY_WAKELOCK_ID, id));
 			if (cn != null) {
 				final PowerManager.WakeLock wl = ((PowerManager) c.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WakefulIntentService.KEY_WAKELOCK_ID);
 				wl.setReferenceCounted(false);
