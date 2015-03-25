@@ -8,8 +8,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import javax.net.ssl.HttpsURLConnection;
-
 public final class URLUtils {
 
 	private static final int CONNECT_TIMEOUT = 5 * 1000;
@@ -66,10 +64,10 @@ public final class URLUtils {
 	}
 
 	public static String post(final String url, final String username, final String password) {
-		final HttpsURLConnection uc;
+		final HttpURLConnection uc;
 		final byte[] pc;
 		try {
-			uc = (HttpsURLConnection) new URL(url).openConnection();
+			uc = (HttpURLConnection) new URL(url).openConnection();
 			uc.setRequestProperty("User-Agent", URLUtils.USER_AGENT_STRING);
 			uc.setConnectTimeout(URLUtils.CONNECT_TIMEOUT);
 			uc.setReadTimeout(URLUtils.SOCKET_TIMEOUT);
