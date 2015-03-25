@@ -13,7 +13,7 @@ import javax.net.ssl.HttpsURLConnection;
 public final class URLUtils {
 
 	private static final int CONNECT_TIMEOUT = 5 * 1000;
-	private static final int READ_TIMEOUT = 10 * 1000;
+	private static final int SOCKET_TIMEOUT = 5 * 1000;
 
 	private static final String USER_AGENT_STRING = "FONAccess; wispr; (Linux; U; Android)";
 
@@ -49,13 +49,13 @@ public final class URLUtils {
 			uc = (HttpURLConnection) new URL(url).openConnection();
 			uc.setRequestProperty("User-Agent", URLUtils.USER_AGENT_STRING);
 			uc.setConnectTimeout(URLUtils.CONNECT_TIMEOUT);
-			uc.setReadTimeout(URLUtils.READ_TIMEOUT);
+			uc.setReadTimeout(URLUtils.SOCKET_TIMEOUT);
 			final int rc = uc.getResponseCode();
 			if ((rc == HttpURLConnection.HTTP_MOVED_TEMP) || (rc == HttpURLConnection.HTTP_MOVED_PERM) || (rc == HttpURLConnection.HTTP_SEE_OTHER)) {
 				uc = (HttpURLConnection) new URL(uc.getHeaderField("Location")).openConnection();
 				uc.setRequestProperty("User-Agent", URLUtils.USER_AGENT_STRING);
 				uc.setConnectTimeout(URLUtils.CONNECT_TIMEOUT);
-				uc.setReadTimeout(URLUtils.READ_TIMEOUT);
+				uc.setReadTimeout(URLUtils.SOCKET_TIMEOUT);
 			}
 		} catch (final IOException e) {
 			return null;
@@ -70,7 +70,7 @@ public final class URLUtils {
 			uc = (HttpsURLConnection) new URL(url).openConnection();
 			uc.setRequestProperty("User-Agent", URLUtils.USER_AGENT_STRING);
 			uc.setConnectTimeout(URLUtils.CONNECT_TIMEOUT);
-			uc.setReadTimeout(URLUtils.READ_TIMEOUT);
+			uc.setReadTimeout(URLUtils.SOCKET_TIMEOUT);
 			uc.setDoOutput(true);
 			pc = URLEncoder.encode("UserName=" + username + "&Password=" + password, "UTF-8").getBytes();
 			uc.setRequestProperty("Content-Length", Integer.toString(pc.length));

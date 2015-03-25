@@ -22,6 +22,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreProtocolPNames;
+import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HTTP;
@@ -30,6 +31,8 @@ import org.apache.http.util.EntityUtils;
 
 public final class HttpUtils {
 
+	private static final int CONNECT_TIMEOUT = 5 * 1000;
+	private static final int SOCKET_TIMEOUT = 5 * 1000;
 	private static final int MAX_TRIES = 3;
 
 	private static final String USER_AGENT_STRING = "FONAccess; wispr; (Linux; U; Android)";
@@ -38,10 +41,11 @@ public final class HttpUtils {
 	private static final String TAG_WISPR_PASSWORD = "Password";
 	private static final String TAG_WISPR_USERNAME = "UserName";
 
-	private static final HttpParams HTTP_PARAMETERS = new BasicHttpParams().setParameter(CoreProtocolPNames.USER_AGENT, HttpUtils.USER_AGENT_STRING);
-
 	private static DefaultHttpClient getHttpClient() {
-		final DefaultHttpClient client = new DefaultHttpClient(HttpUtils.HTTP_PARAMETERS);
+		final HttpParams p = new BasicHttpParams().setParameter(CoreProtocolPNames.USER_AGENT, HttpUtils.USER_AGENT_STRING);
+		HttpConnectionParams.setConnectionTimeout(p, HttpUtils.CONNECT_TIMEOUT);
+		HttpConnectionParams.setSoTimeout(p, HttpUtils.SOCKET_TIMEOUT);
+		final DefaultHttpClient client = new DefaultHttpClient(p);
 		client.addRequestInterceptor(new HttpRequestInterceptor() {
 
 			@Override
