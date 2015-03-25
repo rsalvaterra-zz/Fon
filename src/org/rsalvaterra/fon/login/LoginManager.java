@@ -15,7 +15,6 @@ public final class LoginManager {
 
 	private static final String CONNECTED = "CONNECTED";
 	private static final String CONNECTION_TEST_URL = "http://cm.fon.mobi/android.txt";
-	private static final String DEFAULT_LOGOFF_URL = "http://192.168.3.1:80/logoff";
 	private static final String FON_USERNAME_PREFIX = "FON_WISPR/";
 	private static final String TAG_WISPR = "WISPAccessGatewayParam";
 
@@ -72,7 +71,6 @@ public final class LoginManager {
 							}
 						} else if (LoginManager.isConnected()) {
 							responseCode = Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
-							logoffUrl = LoginManager.DEFAULT_LOGOFF_URL;
 						}
 					}
 				} else {
@@ -80,7 +78,6 @@ public final class LoginManager {
 				}
 			} else {
 				responseCode = Constants.CUST_ALREADY_CONNECTED;
-				logoffUrl = LoginManager.DEFAULT_LOGOFF_URL;
 			}
 		}
 		return new LoginResult(responseCode, replyMessage, logoffUrl);
@@ -232,14 +229,12 @@ public final class LoginManager {
 						}
 					} else if (LoginManager.isConnected()) {
 						responseCode = Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
-						logoffUrl = LoginManager.DEFAULT_LOGOFF_URL;
 					}
 				} else {
 					responseCode = Constants.CUST_WISPR_NOT_PRESENT;
 				}
 			} else {
 				responseCode = Constants.CUST_ALREADY_CONNECTED;
-				logoffUrl = LoginManager.DEFAULT_LOGOFF_URL;
 			}
 		}
 		return new LoginResult(responseCode, null, logoffUrl);
