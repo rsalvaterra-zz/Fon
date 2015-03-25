@@ -38,6 +38,8 @@ public final class URLUtils {
 				br.close();
 			} catch (final IOException e) {
 				// Nothing can be done.
+			} finally {
+				uc.disconnect();
 			}
 		}
 		return s;
