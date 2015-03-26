@@ -39,12 +39,16 @@ public final class HttpUtils {
 	private static final String TAG_WISPR_PASSWORD = "Password";
 	private static final String TAG_WISPR_USERNAME = "UserName";
 
-	private static DefaultHttpClient getHttpClient() {
+	private static final BasicHttpContext HTTP_CONTEXT = new BasicHttpContext();
+	private static final DefaultHttpClient HTTP_CLIENT;
+
+	static {
 		final HttpParams p = new BasicHttpParams().setParameter(CoreProtocolPNames.USER_AGENT, HttpUtils.USER_AGENT_STRING);
 		HttpConnectionParams.setConnectionTimeout(p, HttpUtils.CONNECT_TIMEOUT);
 		HttpConnectionParams.setSoTimeout(p, HttpUtils.SOCKET_TIMEOUT);
-		final DefaultHttpClient client = new DefaultHttpClient(p);
-		client.addRequestInterceptor(new HttpRequestInterceptor() {
+		HTTP_CLIENT = new DefaultHttpClient(p);
+		HttpUtils.HTTP_CLIENT.setCookieStore(null);
+		HttpUtils.HTTP_CLIENT.addRequestInterceptor(new HttpRequestInterceptor() {
 
 			@Override
 			public void process(final HttpRequest request, final HttpContext context) {
@@ -53,7 +57,7 @@ public final class HttpUtils {
 				}
 			}
 		});
-		client.addResponseInterceptor(new HttpResponseInterceptor() {
+		HttpUtils.HTTP_CLIENT.addResponseInterceptor(new HttpResponseInterceptor() {
 
 			@Override
 			public void process(final HttpResponse response, final HttpContext context) {
@@ -80,20 +84,18 @@ public final class HttpUtils {
 				}
 			}
 		});
-		client.setCookieStore(null);
-		return client;
 	}
 
-	private static String getUrlCommon(final HttpUriRequest httpreq) {
+	private static String request(final HttpUriRequest httpreq) {
 		try {
-			return EntityUtils.toString(HttpUtils.getHttpClient().execute(httpreq, new BasicHttpContext()).getEntity()).trim();
+			return EntityUtils.toString(HttpUtils.HTTP_CLIENT.execute(httpreq, HttpUtils.HTTP_CONTEXT).getEntity()).trim();
 		} catch (final IOException se) {
 			return null;
 		}
 	}
 
 	public static String get(final String url) {
-		return HttpUtils.getUrlCommon(new HttpGet(url));
+		return HttpUtils.request(new HttpGet(url));
 	}
 
 	public static String post(final String url, final String username, final String password) {
@@ -108,6 +110,6 @@ public final class HttpUtils {
 		}
 		final HttpPost httpreq = new HttpPost(url);
 		httpreq.setEntity(f);
-		return HttpUtils.getUrlCommon(httpreq);
+		return HttpUtils.request(httpreq);
 	}
 }
