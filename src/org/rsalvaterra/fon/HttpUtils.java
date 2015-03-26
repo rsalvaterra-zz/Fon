@@ -39,7 +39,6 @@ public final class HttpUtils {
 	private static final String TAG_WISPR_PASSWORD = "Password";
 	private static final String TAG_WISPR_USERNAME = "UserName";
 
-	private static final BasicHttpContext HTTP_CONTEXT = new BasicHttpContext();
 	private static final DefaultHttpClient HTTP_CLIENT;
 
 	static {
@@ -89,7 +88,7 @@ public final class HttpUtils {
 
 	private static String request(final HttpUriRequest httpreq) {
 		try {
-			return EntityUtils.toString(HttpUtils.HTTP_CLIENT.execute(httpreq, HttpUtils.HTTP_CONTEXT).getEntity()).trim();
+			return EntityUtils.toString(HttpUtils.HTTP_CLIENT.execute(httpreq, new BasicHttpContext()).getEntity()).trim();
 		} catch (final IOException se) {
 			return null;
 		}
