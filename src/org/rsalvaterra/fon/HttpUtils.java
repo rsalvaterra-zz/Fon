@@ -64,7 +64,8 @@ public final class HttpUtils {
 				// Inflate any responses compressed with gzip
 				final Header encoding = response.getEntity().getContentEncoding();
 				if (encoding != null) {
-					for (final HeaderElement element : encoding.getElements()) {
+					final HeaderElement[] elements = encoding.getElements();
+					for (final HeaderElement element : elements) {
 						if (element.getName().equalsIgnoreCase(HttpUtils.ENCODING_GZIP)) {
 							response.setEntity(new HttpEntityWrapper(response.getEntity()) {
 
