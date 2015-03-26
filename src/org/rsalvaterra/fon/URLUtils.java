@@ -3,23 +3,20 @@ package org.rsalvaterra.fon;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.zip.GZIPOutputStream;
 
 public final class URLUtils {
 
 	private static final int CONNECT_TIMEOUT = 5 * 1000;
 	private static final int SOCKET_TIMEOUT = 5 * 1000;
 
-	private static final String ACCEPT_ENCODING = "Accept-Encoding";
-	private static final String ACCEPT_ENCODING_STRING = "gzip";
 	private static final String CONTENT_LENGTH = "Content-Length";
 	private static final String CONTENT_TYPE = "Content-Type";
 	private static final String CONTENT_TYPE_STRING = "application/x-www-form-urlencoded";
 	private static final String LOCATION = "Location";
-	private static final String POST = "POST";
 	private static final String USER_AGENT = "User-Agent";
 	private static final String USER_AGENT_STRING = "FONAccess; wispr; (Linux; U; Android)";
 	private static final String USER_NAME = "UserName=";
@@ -75,15 +72,13 @@ public final class URLUtils {
 	}
 
 	public static String post(final String url, final String username, final String password) {
-		final HttpURLConnection uc;
+		HttpURLConnection uc;
 		final byte[] pc;
 		try {
 			uc = (HttpURLConnection) new URL(url).openConnection();
 			uc.setConnectTimeout(URLUtils.CONNECT_TIMEOUT);
 			uc.setReadTimeout(URLUtils.SOCKET_TIMEOUT);
 			uc.setDoOutput(true);
-			uc.setRequestMethod(URLUtils.POST);
-			uc.setRequestProperty(URLUtils.ACCEPT_ENCODING, URLUtils.ACCEPT_ENCODING_STRING);
 			uc.setRequestProperty(URLUtils.USER_AGENT, URLUtils.USER_AGENT_STRING);
 			pc = (URLUtils.USER_NAME + URLEncoder.encode(username, URLUtils.UTF_8) + URLUtils.PASSWORD + URLEncoder.encode(password, URLUtils.UTF_8)).getBytes();
 			uc.setRequestProperty(URLUtils.CONTENT_LENGTH, Integer.toString(pc.length));
@@ -91,9 +86,9 @@ public final class URLUtils {
 		} catch (final IOException e) {
 			return null;
 		}
-		final GZIPOutputStream os;
+		final OutputStream os;
 		try {
-			os = new GZIPOutputStream(uc.getOutputStream());
+			os = uc.getOutputStream();
 		} catch (final IOException e) {
 			return null;
 		}
@@ -111,6 +106,17 @@ public final class URLUtils {
 			if (error) {
 				return null;
 			}
+		}
+		try {
+			final int rc = uc.getResponseCode();
+			if ((rc == HttpURLConnection.HTTP_MOVED_TEMP) || (rc == HttpURLConnection.HTTP_MOVED_PERM) || (rc == HttpURLConnection.HTTP_SEE_OTHER)) {
+				uc = (HttpURLConnection) new URL(uc.getHeaderField(URLUtils.LOCATION)).openConnection();
+				uc.setRequestProperty(URLUtils.USER_AGENT, URLUtils.USER_AGENT_STRING);
+				uc.setConnectTimeout(URLUtils.CONNECT_TIMEOUT);
+				uc.setReadTimeout(URLUtils.SOCKET_TIMEOUT);
+			}
+		} catch (final IOException e) {
+			return null;
 		}
 		return URLUtils.readConnectionStream(uc);
 	}
