@@ -1,115 +1,134 @@
 package org.rsalvaterra.fon;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.zip.GZIPInputStream;
-
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.entity.HttpEntityWrapper;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.CoreProtocolPNames;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.util.EntityUtils;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 
 public final class HttpUtils {
 
+	private static final int MAX_XPROTO_REDIRECTS = 3;
 	private static final int CONNECT_TIMEOUT = 5 * 1000;
 	private static final int SOCKET_TIMEOUT = 5 * 1000;
 
+	private static final String CONTENT_LENGTH = "Content-Length";
+	private static final String CONTENT_TYPE = "Content-Type";
+	private static final String CONTENT_TYPE_STRING = "application/x-www-form-urlencoded";
+	private static final String LOCATION = "Location";
+	private static final String USER_AGENT = "User-Agent";
 	private static final String USER_AGENT_STRING = "FONAccess; wispr; (Linux; U; Android)";
-	private static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
-	private static final String ENCODING_GZIP = "gzip";
-	private static final String TAG_WISPR_PASSWORD = "Password";
-	private static final String TAG_WISPR_USERNAME = "UserName";
+	private static final String USER_NAME = "UserName=";
+	private static final String UTF_8 = "UTF-8";
+	private static final String PASSWORD = "&Password=";
 
-	private static final DefaultHttpClient HTTP_CLIENT;
-
-	static {
-		final HttpParams p = new BasicHttpParams().setParameter(CoreProtocolPNames.USER_AGENT, HttpUtils.USER_AGENT_STRING);
-		HttpConnectionParams.setConnectionTimeout(p, HttpUtils.CONNECT_TIMEOUT);
-		HttpConnectionParams.setSoTimeout(p, HttpUtils.SOCKET_TIMEOUT);
-		HTTP_CLIENT = new DefaultHttpClient(p);
-		HttpUtils.HTTP_CLIENT.setCookieStore(null);
-		HttpUtils.HTTP_CLIENT.addRequestInterceptor(new HttpRequestInterceptor() {
-
-			@Override
-			public void process(final HttpRequest request, final HttpContext context) {
-				if (!request.containsHeader(HttpUtils.HEADER_ACCEPT_ENCODING)) {
-					request.addHeader(HttpUtils.HEADER_ACCEPT_ENCODING, HttpUtils.ENCODING_GZIP);
-				}
-			}
-		});
-		HttpUtils.HTTP_CLIENT.addResponseInterceptor(new HttpResponseInterceptor() {
-
-			@Override
-			public void process(final HttpResponse response, final HttpContext context) {
-				// Inflate any responses compressed with gzip
-				final Header encoding = response.getEntity().getContentEncoding();
-				if (encoding != null) {
-					final HeaderElement[] elements = encoding.getElements();
-					for (final HeaderElement element : elements) {
-						if (element.getName().equalsIgnoreCase(HttpUtils.ENCODING_GZIP)) {
-							response.setEntity(new HttpEntityWrapper(response.getEntity()) {
-
-								@Override
-								public InputStream getContent() throws IOException {
-									return new GZIPInputStream(wrappedEntity.getContent());
-								}
-
-								@Override
-								public long getContentLength() {
-									return -1;
-								}
-							});
-							break;
-						}
-					}
-				}
-			}
-		});
-	}
-
-	private static String request(final HttpUriRequest httpreq) {
+	private static String readConnectionStream(final HttpURLConnection uc) {
+		final BufferedReader br;
 		try {
-			return EntityUtils.toString(HttpUtils.HTTP_CLIENT.execute(httpreq, new BasicHttpContext()).getEntity()).trim();
-		} catch (final IOException se) {
+			br = new BufferedReader(new InputStreamReader(uc.getInputStream()));
+		} catch (final IOException e) {
 			return null;
 		}
+		String s;
+		try {
+			final StringBuilder sb = new StringBuilder();
+			while ((s = br.readLine()) != null) {
+				sb.append(s);
+			}
+			s = sb.toString();
+		} catch (final IOException e) {
+			s = null;
+		} finally {
+			try {
+				br.close();
+			} catch (final IOException e) {
+				// Nothing can be done.
+			} finally {
+				uc.disconnect();
+			}
+		}
+		return s;
 	}
 
 	public static String get(final String url) {
-		return HttpUtils.request(new HttpGet(url));
+		HttpURLConnection uc;
+		try {
+			uc = (HttpURLConnection) new URL(url).openConnection();
+			uc.setRequestProperty(HttpUtils.USER_AGENT, HttpUtils.USER_AGENT_STRING);
+			uc.setConnectTimeout(HttpUtils.CONNECT_TIMEOUT);
+			uc.setReadTimeout(HttpUtils.SOCKET_TIMEOUT);
+			for (int i = 0; uc.getResponseCode() != HttpURLConnection.HTTP_OK; ++i) {
+				final String target = uc.getHeaderField(HttpUtils.LOCATION);
+				uc.disconnect();
+				if (i == HttpUtils.MAX_XPROTO_REDIRECTS) {
+					return null;
+				}
+				uc = (HttpURLConnection) new URL(target).openConnection();
+				uc.setRequestProperty(HttpUtils.USER_AGENT, HttpUtils.USER_AGENT_STRING);
+				uc.setConnectTimeout(HttpUtils.CONNECT_TIMEOUT);
+				uc.setReadTimeout(HttpUtils.SOCKET_TIMEOUT);
+			}
+		} catch (final IOException e) {
+			return null;
+		}
+		return HttpUtils.readConnectionStream(uc);
 	}
 
 	public static String post(final String url, final String username, final String password) {
-		final ArrayList<BasicNameValuePair> p = new ArrayList<BasicNameValuePair>();
-		p.add(new BasicNameValuePair(HttpUtils.TAG_WISPR_USERNAME, username));
-		p.add(new BasicNameValuePair(HttpUtils.TAG_WISPR_PASSWORD, password));
-		final UrlEncodedFormEntity f;
+		HttpURLConnection uc;
+		final String pc;
 		try {
-			f = new UrlEncodedFormEntity(p, HTTP.UTF_8);
-		} catch (final UnsupportedEncodingException e) {
+			uc = (HttpURLConnection) new URL(url).openConnection();
+			uc.setConnectTimeout(HttpUtils.CONNECT_TIMEOUT);
+			uc.setReadTimeout(HttpUtils.SOCKET_TIMEOUT);
+			uc.setDoOutput(true);
+			uc.setRequestProperty(HttpUtils.USER_AGENT, HttpUtils.USER_AGENT_STRING);
+			pc = (HttpUtils.USER_NAME + URLEncoder.encode(username, HttpUtils.UTF_8) + HttpUtils.PASSWORD + URLEncoder.encode(password, HttpUtils.UTF_8));
+			uc.setRequestProperty(HttpUtils.CONTENT_LENGTH, Integer.toString(pc.getBytes().length));
+			uc.setRequestProperty(HttpUtils.CONTENT_TYPE, HttpUtils.CONTENT_TYPE_STRING);
+		} catch (final IOException e) {
 			return null;
 		}
-		final HttpPost httpreq = new HttpPost(url);
-		httpreq.setEntity(f);
-		return HttpUtils.request(httpreq);
+		final BufferedWriter bw;
+		try {
+			bw = new BufferedWriter(new OutputStreamWriter(uc.getOutputStream()));
+		} catch (final IOException e) {
+			return null;
+		}
+		boolean error = false;
+		try {
+			bw.write(pc);
+			bw.flush();
+		} catch (final IOException e) {
+			error = true;
+		} finally {
+			try {
+				bw.close();
+			} catch (final IOException e) {
+				// Nothing can be done.
+			}
+			if (error) {
+				return null;
+			}
+		}
+		try {
+			for (int i = 0; uc.getResponseCode() != HttpURLConnection.HTTP_OK; ++i) {
+				final String target = uc.getHeaderField(HttpUtils.LOCATION);
+				uc.disconnect();
+				if (i == HttpUtils.MAX_XPROTO_REDIRECTS) {
+					return null;
+				}
+				uc = (HttpURLConnection) new URL(target).openConnection();
+				uc.setRequestProperty(HttpUtils.USER_AGENT, HttpUtils.USER_AGENT_STRING);
+				uc.setConnectTimeout(HttpUtils.CONNECT_TIMEOUT);
+				uc.setReadTimeout(HttpUtils.SOCKET_TIMEOUT);
+			}
+		} catch (final IOException e) {
+			return null;
+		}
+		return HttpUtils.readConnectionStream(uc);
 	}
 }
