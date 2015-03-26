@@ -5,7 +5,6 @@ import org.rsalvaterra.fon.R;
 import org.rsalvaterra.fon.WakefulIntentService;
 
 import android.app.Activity;
-import android.content.Context;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -26,8 +25,7 @@ public final class AdvancedPreferences extends PreferenceActivity {
 		@Override
 		public final boolean onPreferenceChange(final Preference p, final Object v) {
 			if (((Boolean) v).booleanValue()) {
-				final Context c = p.getContext();
-				WakefulIntentService.start(c, Constants.KEY_SCAN);
+				WakefulIntentService.start(p.getContext(), Constants.KEY_SCAN);
 			}
 			return true;
 		}
