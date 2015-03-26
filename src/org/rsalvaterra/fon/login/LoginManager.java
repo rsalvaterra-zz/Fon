@@ -248,10 +248,10 @@ public final class LoginManager {
 		final LoginResult r;
 		if ((user.length() == 0) || (password.length() == 0)) {
 			r = new LoginResult(Constants.CUST_CREDENTIALS_ERROR, null, null);
-		} else if (LoginManager.isSfr(ssid)) {
-			r = LoginManager.sfrLogin(user, password);
-		} else {
+		} else if (LoginManager.isFon(ssid)) {
 			r = LoginManager.fonLogin(user, password);
+		} else {
+			r = LoginManager.sfrLogin(user, password);
 		}
 		return r;
 	}
