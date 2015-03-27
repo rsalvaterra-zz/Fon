@@ -58,6 +58,10 @@ public final class WakefulIntentService extends IntentService {
 		super(WakefulIntentService.class.getName());
 	}
 
+	private static void disconnect(final WifiManager wm, final WifiInfo wi) {
+		wm.removeNetwork(wi.getNetworkId());
+	}
+
 	private static WifiConfiguration[] getConfiguredNetworks(final WifiManager wm) {
 		final List<WifiConfiguration> wcl = wm.getConfiguredNetworks();
 		if (wcl == null) {
@@ -205,11 +209,6 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
-	private void disconnect(final WifiManager wm, final WifiInfo wi) {
-		wm.removeNetwork(wi.getNetworkId());
-		cancelNotification();
-	}
-
 	private String getFailureTone() {
 		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_failure), "");
 	}
@@ -295,6 +294,12 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.CUST_ALREADY_CONNECTED:
 				handleSuccess(ssid, Notification.FLAG_ONLY_ALERT_ONCE, result.getLogOffUrl());
 				break;
+			case Constants.FON_INVALID_CREDENTIALS:
+			case Constants.FON_SESSION_LIMIT_EXCEEDED:
+			case Constants.FON_SPOT_LIMIT_EXCEEDED:
+			case Constants.CUST_WISPR_NOT_PRESENT:
+				BlacklistProvider.addToBlacklist(getContentResolver(), wi.getBSSID());
+				//$FALL-THROUGH$
 			case Constants.FON_INVALID_CREDENTIALS_ALT:
 			case Constants.FON_NOT_ENOUGH_CREDIT:
 			case Constants.FON_USER_IN_BLACK_LIST:
@@ -305,15 +310,11 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.FON_INVALID_TEMPORARY_CREDENTIAL:
 			case Constants.FON_AUTHORIZATION_CONNECTION_ERROR:
 				notifyFonError(result.getReplyMessage(), responseCode);
+				WakefulIntentService.disconnect(wm, wi);
 				break;
-			case Constants.FON_INVALID_CREDENTIALS:
-			case Constants.FON_SESSION_LIMIT_EXCEEDED:
-			case Constants.FON_SPOT_LIMIT_EXCEEDED:
-			case Constants.CUST_WISPR_NOT_PRESENT:
-				BlacklistProvider.addToBlacklist(getContentResolver(), wi.getBSSID());
-				//$FALL-THROUGH$
 			case Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
-				disconnect(wm, wi);
+				WakefulIntentService.disconnect(wm, wi);
+				cancelNotification();
 				break;
 			case Constants.CUST_CREDENTIALS_ERROR:
 				notifyCredentialsError();
