@@ -1,7 +1,5 @@
 package org.rsalvaterra.fon.blacklist;
 
-import org.rsalvaterra.fon.BuildConfig;
-
 import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -47,10 +45,6 @@ public final class BlacklistProvider extends ContentProvider {
 		boolean blacklisted = false;
 		final Cursor cursor = resolver.query(BlacklistProvider.BLACKLIST_URI, new String[] { BlacklistProvider.KEY_BSSID, BlacklistProvider.KEY_TIMESTAMP }, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid }, null);
 		if (cursor != null) {
-			if (BuildConfig.DEBUG && (cursor.getCount() > 1)) {
-				cursor.close();
-				throw new AssertionError();
-			}
 			if (cursor.moveToFirst()) {
 				if ((cursor.getLong(cursor.getColumnIndex(BlacklistProvider.KEY_TIMESTAMP)) + BlacklistProvider.BLACKLIST_PERIOD) > SystemClock.elapsedRealtime()) {
 					blacklisted = true;
