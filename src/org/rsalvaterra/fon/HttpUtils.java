@@ -38,7 +38,7 @@ public final class HttpUtils {
 
 	private static String request(final HttpUriRequest httpreq) {
 		try {
-			return EntityUtils.toString(HttpUtils.HTTP_CLIENT.execute(httpreq, new BasicHttpContext()).getEntity());
+			return EntityUtils.toString(HttpUtils.HTTP_CLIENT.execute(httpreq, new BasicHttpContext()).getEntity()).trim();
 		} catch (final IOException e) {
 			return null;
 		}
