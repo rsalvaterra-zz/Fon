@@ -18,7 +18,7 @@ import org.apache.http.util.EntityUtils;
 
 public final class HttpUtils {
 
-	private static final int TIMEOUT = 5 * 1000;
+	private static final int TIMEOUT = 30 * 1000;
 
 	private static final String TAG_WISPR_PASSWORD = "Password";
 	private static final String TAG_WISPR_USERNAME = "UserName";
