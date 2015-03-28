@@ -148,6 +148,10 @@ public final class WakefulIntentService extends IntentService {
 		return ssid;
 	}
 
+	static boolean isAutoConnectEnabled(final Context c) {
+		return PreferenceManager.getDefaultSharedPreferences(c).getBoolean(c.getString(R.string.key_autoconnect), true);
+	}
+
 	public static ComponentName start(final Context c, final String a) {
 		synchronized (WakefulIntentService.ACTIVE_WAKELOCKS) {
 			final int id = WakefulIntentService.NEXT_WAKELOCK_ID++;
@@ -282,7 +286,9 @@ public final class WakefulIntentService extends IntentService {
 		final String ssid = WakefulIntentService.stripQuotes(wi.getSSID());
 		if (!LoginManager.isSupported(ssid)) {
 			cancelNotification();
-			WakefulIntentService.purgeFonNetworks(wm);
+			if (WakefulIntentService.isAutoConnectEnabled(this)) {
+				WakefulIntentService.purgeFonNetworks(wm);
+			}
 			return;
 		}
 		final LoginResult result = LoginManager.login(ssid, getUsername(), getPassword());

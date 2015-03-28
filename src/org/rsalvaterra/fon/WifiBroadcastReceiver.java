@@ -6,18 +6,13 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
-import android.preference.PreferenceManager;
 
 public final class WifiBroadcastReceiver extends BroadcastReceiver {
-
-	private static boolean isAutoConnectEnabled(final Context c) {
-		return PreferenceManager.getDefaultSharedPreferences(c).getBoolean(c.getString(R.string.key_autoconnect), true);
-	}
 
 	@Override
 	public void onReceive(final Context c, final Intent i) {
 		final String action = i.getAction();
-		if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) && WifiBroadcastReceiver.isAutoConnectEnabled(c)) {
+		if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) && WakefulIntentService.isAutoConnectEnabled(c)) {
 			WakefulIntentService.start(c, Constants.KEY_CONNECT);
 		} else if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
 			final NetworkInfo ni = (NetworkInfo) i.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
