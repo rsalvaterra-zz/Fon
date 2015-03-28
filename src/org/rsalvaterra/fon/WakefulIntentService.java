@@ -58,10 +58,6 @@ public final class WakefulIntentService extends IntentService {
 		super(WakefulIntentService.class.getName());
 	}
 
-	private static void disconnect(final WifiManager wm, final WifiInfo wi) {
-		wm.removeNetwork(wi.getNetworkId());
-	}
-
 	private static WifiConfiguration[] getConfiguredNetworks(final WifiManager wm) {
 		final List<WifiConfiguration> wcl = wm.getConfiguredNetworks();
 		if (wcl == null) {
@@ -213,6 +209,14 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
+	private void disconnect(final WifiManager wm) {
+		if (WakefulIntentService.isAutoConnectEnabled(this)) {
+			wm.removeNetwork(wm.getConnectionInfo().getNetworkId());
+		} else {
+			wm.disconnect();
+		}
+	}
+
 	private String getFailureTone() {
 		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_failure), "");
 	}
@@ -316,10 +320,10 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.FON_INVALID_TEMPORARY_CREDENTIAL:
 			case Constants.FON_AUTHORIZATION_CONNECTION_ERROR:
 				notifyFonError(result.getReplyMessage(), responseCode);
-				WakefulIntentService.disconnect(wm, wi);
+				disconnect(wm);
 				break;
 			case Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
-				WakefulIntentService.disconnect(wm, wi);
+				disconnect(wm);
 				cancelNotification();
 				break;
 			case Constants.CUST_CREDENTIALS_ERROR:
@@ -334,7 +338,7 @@ public final class WakefulIntentService extends IntentService {
 		if ((url != null) && (url.length() != 0)) {
 			HttpUtils.get(url);
 		}
-		wm.removeNetwork(wm.getConnectionInfo().getNetworkId());
+		disconnect(wm);
 		cancelNotification();
 	}
 
