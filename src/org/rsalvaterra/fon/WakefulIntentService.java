@@ -365,7 +365,16 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void notifySuccess(final String ssid, final int flags, final String logoffUrl) {
-		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR | flags, getSuccessTone(), getString(R.string.notif_text_logoff), PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, logoffUrl), PendingIntent.FLAG_UPDATE_CURRENT));
+		final PendingIntent pi;
+		final String tl;
+		if (WakefulIntentService.isAutoConnectEnabled(this)) {
+			pi = PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
+			tl = "";
+		} else {
+			pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, logoffUrl), PendingIntent.FLAG_UPDATE_CURRENT);
+			tl = getString(R.string.notif_text_logoff);
+		}
+		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR | flags, getSuccessTone(), tl, pi);
 	}
 
 	private void scheduleAction(final String action, final int seconds) {
