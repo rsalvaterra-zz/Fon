@@ -18,34 +18,32 @@ import org.apache.http.util.EntityUtils;
 
 public final class HttpUtils {
 
-	private static final int TIMEOUT = 30 * 1000;
-
 	private static final String TAG_WISPR_PASSWORD = "Password";
 	private static final String TAG_WISPR_USERNAME = "UserName";
 	private static final String USER_AGENT = "User-Agent";
 	private static final String USER_AGENT_STRING = "FONAccess; wispr; (Linux; U; Android)";
 	private static final String UTF_8 = "UTF-8";
 
-	private static final DefaultHttpClient HTTP_CLIENT;
+	private static final DefaultHttpClient HTTP_CLIENT = new DefaultHttpClient();
+	private static final HttpParams HTTP_PARAMETERS = new BasicHttpParams().setParameter(HttpUtils.USER_AGENT, HttpUtils.USER_AGENT_STRING);
 
 	static {
-		final HttpParams p = new BasicHttpParams().setParameter(HttpUtils.USER_AGENT, HttpUtils.USER_AGENT_STRING);
-		HttpConnectionParams.setConnectionTimeout(p, HttpUtils.TIMEOUT);
-		HttpConnectionParams.setSoTimeout(p, HttpUtils.TIMEOUT);
-		HTTP_CLIENT = new DefaultHttpClient(p);
 		HttpUtils.HTTP_CLIENT.setCookieStore(null);
 	}
 
-	private static String request(final HttpUriRequest httpreq) {
+	private static String request(final HttpUriRequest hr, final int t) {
+		HttpConnectionParams.setConnectionTimeout(HttpUtils.HTTP_PARAMETERS, t);
+		HttpConnectionParams.setSoTimeout(HttpUtils.HTTP_PARAMETERS, t);
+		HttpUtils.HTTP_CLIENT.setParams(HttpUtils.HTTP_PARAMETERS);
 		try {
-			return EntityUtils.toString(HttpUtils.HTTP_CLIENT.execute(httpreq, new BasicHttpContext()).getEntity()).trim();
+			return EntityUtils.toString(HttpUtils.HTTP_CLIENT.execute(hr, new BasicHttpContext()).getEntity()).trim();
 		} catch (final IOException e) {
 			return null;
 		}
 	}
 
-	public static String get(final String url) {
-		return HttpUtils.request(new HttpGet(url));
+	public static String get(final String url, final int timeout) {
+		return HttpUtils.request(new HttpGet(url), timeout);
 	}
 
 	public static String post(final String url, final String username, final String password) {
@@ -60,6 +58,6 @@ public final class HttpUtils {
 		}
 		final HttpPost r = new HttpPost(url);
 		r.setEntity(f);
-		return HttpUtils.request(r);
+		return HttpUtils.request(r, Constants.HTTP_TIMEOUT);
 	}
 }

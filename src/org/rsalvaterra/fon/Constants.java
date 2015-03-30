@@ -37,6 +37,8 @@ public interface Constants {
 	static final int WISPR_RESPONSE_CODE_AUTH_PENDING = 201;
 	static final int WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR = 255;
 
+	static final int HTTP_TIMEOUT = 30 * 1000;
+
 	static final String KEY_CANCEL_NOTIFICATION = "org.rsalvaterra.fon.CANCEL_NOTIFICATION";
 	static final String KEY_CANCEL_SCHEDULED_ACTIONS = "org.rsalvaterra.fon.CANCEL_SCHEDULED_ACTIONS";
 	static final String KEY_CONNECT = "org.rsalvaterra.fon.CONNECT";

@@ -43,7 +43,7 @@ public final class LoginManager {
 		int rc = Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
 		String rm = null;
 		String lu = null;
-		String c = HttpUtils.get(LoginManager.CONNECTION_TEST_URL);
+		String c = HttpUtils.get(LoginManager.CONNECTION_TEST_URL, Constants.HTTP_TIMEOUT);
 		if (c != null) {
 			if (!c.equals(LoginManager.CONNECTED)) {
 				c = LoginManager.getXml(c);
@@ -105,7 +105,7 @@ public final class LoginManager {
 	}
 
 	private static boolean isConnected() {
-		return LoginManager.CONNECTED.equals(HttpUtils.get(LoginManager.CONNECTION_TEST_URL));
+		return LoginManager.CONNECTED.equals(HttpUtils.get(LoginManager.CONNECTION_TEST_URL, Constants.HTTP_TIMEOUT));
 	}
 
 	private static boolean isDowntownBrooklyn(final String ssid) {
@@ -192,7 +192,7 @@ public final class LoginManager {
 	private static LoginResult sfrLogin(final String user, final String password) {
 		int rc = Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
 		String lu = null;
-		String c = HttpUtils.get(LoginManager.CONNECTION_TEST_URL);
+		String c = HttpUtils.get(LoginManager.CONNECTION_TEST_URL, Constants.HTTP_TIMEOUT);
 		if (c != null) {
 			if (!c.equals(LoginManager.CONNECTED)) {
 				c = LoginManager.getSfrUrl(c);
@@ -202,7 +202,7 @@ public final class LoginManager {
 						FonResponseHandler wrh = new FonResponseHandler();
 						if (LoginManager.parseXml(c, wrh)) {
 							if (wrh.getResponseCode() == Constants.WISPR_RESPONSE_CODE_AUTH_PENDING) {
-								c = HttpUtils.get(wrh.getLoginResultsURL());
+								c = HttpUtils.get(wrh.getLoginResultsURL(), Constants.HTTP_TIMEOUT);
 								if (c != null) {
 									wrh = new FonResponseHandler();
 									if (LoginManager.parseXml(c, wrh)) {
