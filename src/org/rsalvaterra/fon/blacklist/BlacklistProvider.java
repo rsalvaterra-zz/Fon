@@ -19,7 +19,7 @@ public final class BlacklistProvider extends ContentProvider {
 	private static final String AUTHORITY = BlacklistProvider.class.getPackage().getName();
 	private static final String TABLE_BLACKLIST = "blacklist";
 	private static final String KEY_BSSID = "bssid";
-	private static final String KEY_TIMESTAMP = "timestamp";
+	private static final String KEY_EXPIRY_TIME = "exptime";
 	private static final String WHERE_CLAUSE = BlacklistProvider.KEY_BSSID + " = ?";
 
 	private static final UriMatcher MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
@@ -34,7 +34,7 @@ public final class BlacklistProvider extends ContentProvider {
 
 	public static void addToBlacklist(final ContentResolver resolver, final String bssid) {
 		final ContentValues values = new ContentValues();
-		values.put(BlacklistProvider.KEY_TIMESTAMP, Long.valueOf(SystemClock.elapsedRealtime()));
+		values.put(BlacklistProvider.KEY_EXPIRY_TIME, Long.valueOf(SystemClock.elapsedRealtime() + BlacklistProvider.BLACKLIST_PERIOD));
 		if (resolver.update(BlacklistProvider.BLACKLIST_URI, values, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid }) == 0) {
 			values.put(BlacklistProvider.KEY_BSSID, bssid);
 			resolver.insert(BlacklistProvider.BLACKLIST_URI, values);
@@ -43,10 +43,10 @@ public final class BlacklistProvider extends ContentProvider {
 
 	public static boolean isBlacklisted(final ContentResolver resolver, final String bssid) {
 		boolean blacklisted = false;
-		final Cursor cursor = resolver.query(BlacklistProvider.BLACKLIST_URI, new String[] { BlacklistProvider.KEY_BSSID, BlacklistProvider.KEY_TIMESTAMP }, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid }, null);
+		final Cursor cursor = resolver.query(BlacklistProvider.BLACKLIST_URI, new String[] { BlacklistProvider.KEY_BSSID, BlacklistProvider.KEY_EXPIRY_TIME }, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid }, null);
 		if (cursor != null) {
 			if (cursor.moveToFirst()) {
-				if ((cursor.getLong(cursor.getColumnIndex(BlacklistProvider.KEY_TIMESTAMP)) + BlacklistProvider.BLACKLIST_PERIOD) > SystemClock.elapsedRealtime()) {
+				if (cursor.getLong(cursor.getColumnIndex(BlacklistProvider.KEY_EXPIRY_TIME)) > SystemClock.elapsedRealtime()) {
 					blacklisted = true;
 				} else {
 					resolver.delete(BlacklistProvider.BLACKLIST_URI, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid });
@@ -84,7 +84,7 @@ public final class BlacklistProvider extends ContentProvider {
 
 			@Override
 			public void onCreate(final SQLiteDatabase db) {
-				db.execSQL("CREATE TABLE " + BlacklistProvider.TABLE_BLACKLIST + " (_ID INTEGER PRIMARY KEY ASC, " + BlacklistProvider.KEY_BSSID + " TEXT UNIQUE NOT NULL, " + BlacklistProvider.KEY_TIMESTAMP + " LONG NOT NULL)");
+				db.execSQL("CREATE TABLE " + BlacklistProvider.TABLE_BLACKLIST + " (_ID INTEGER PRIMARY KEY ASC, " + BlacklistProvider.KEY_BSSID + " TEXT UNIQUE NOT NULL, " + BlacklistProvider.KEY_EXPIRY_TIME + " LONG NOT NULL)");
 			}
 
 			@Override
