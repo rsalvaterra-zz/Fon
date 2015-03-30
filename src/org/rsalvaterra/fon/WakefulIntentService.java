@@ -305,13 +305,11 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.CUST_ALREADY_CONNECTED:
 				handleSuccess(ssid, Notification.FLAG_ONLY_ALERT_ONCE, result.getLogOffUrl());
 				break;
-			case Constants.FON_INVALID_CREDENTIALS:
 			case Constants.FON_SESSION_LIMIT_EXCEEDED:
 			case Constants.FON_SPOT_LIMIT_EXCEEDED:
 			case Constants.CUST_WISPR_NOT_PRESENT:
 				BlacklistProvider.addToBlacklist(getContentResolver(), wi.getBSSID());
 				//$FALL-THROUGH$
-			case Constants.FON_INVALID_CREDENTIALS_ALT:
 			case Constants.FON_NOT_ENOUGH_CREDIT:
 			case Constants.FON_USER_IN_BLACK_LIST:
 			case Constants.FON_NOT_AUTHORIZED:
@@ -327,6 +325,8 @@ public final class WakefulIntentService extends IntentService {
 				disconnect(wm);
 				cancelNotification();
 				break;
+			case Constants.FON_INVALID_CREDENTIALS_ALT:
+			case Constants.FON_INVALID_CREDENTIALS:
 			case Constants.CUST_CREDENTIALS_ERROR:
 				notifyCredentialsError();
 				break;
