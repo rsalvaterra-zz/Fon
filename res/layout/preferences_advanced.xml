@@ -1,83 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+<PreferenceScreen
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
 
-    <PreferenceCategory
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:title="@string/advanced" >
+	<PreferenceCategory
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:title="@string/advanced">
 
-        <CheckBoxPreference
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:defaultValue="false"
-            android:key="@string/key_reconnect"
-            android:summary="@string/reconnectSummary"
-            android:title="@string/reconnect" />
+		<CheckBoxPreference
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:defaultValue="false"
+			android:key="@string/key_reconnect"
+			android:summary="@string/reconnectSummary"
+			android:title="@string/reconnect" />
 
-        <CheckBoxPreference
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:defaultValue="true"
-            android:dependency="@string/key_reconnect"
-            android:key="@string/key_secure"
-            android:layout="?android:attr/preferenceLayoutChild"
-            android:summary="@string/secureSummary"
-            android:title="@string/secure" />
+		<CheckBoxPreference
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:defaultValue="true"
+			android:dependency="@string/key_reconnect"
+			android:key="@string/key_secure"
+			android:layout="?android:attr/preferenceLayoutChild"
+			android:summary="@string/secureSummary"
+			android:title="@string/secure" />
 
-        <EditTextPreference
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:defaultValue="300"
-            android:dependency="@string/key_reconnect"
-            android:inputType="number"
-            android:key="@string/key_interval"
-            android:layout="?android:attr/preferenceLayoutChild"
-            android:maxLength="4"
-            android:title="@string/interval" />
-    </PreferenceCategory>
+		<EditTextPreference
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:defaultValue="300"
+			android:dependency="@string/key_reconnect"
+			android:inputType="number"
+			android:key="@string/key_interval"
+			android:layout="?android:attr/preferenceLayoutChild"
+			android:maxLength="4"
+			android:title="@string/interval" />
+	</PreferenceCategory>
 
-    <PreferenceCategory
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:title="@string/notifications" >
+	<PreferenceCategory
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:title="@string/notifications">
 
-        <CheckBoxPreference
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:defaultValue="true"
-            android:key="@string/key_notify"
-            android:title="@string/notify" />
+		<CheckBoxPreference
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:defaultValue="true"
+			android:key="@string/key_notify"
+			android:title="@string/notify" />
 
-        <RingtonePreference
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:defaultValue="content://settings/system/notification_sound"
-            android:dependency="@string/key_notify"
-            android:key="@string/key_success"
-            android:layout="?android:attr/preferenceLayoutChild"
-            android:ringtoneType="notification"
-            android:title="@string/success" />
+		<RingtonePreference
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:defaultValue="content://settings/system/notification_sound"
+			android:dependency="@string/key_notify"
+			android:key="@string/key_success"
+			android:layout="?android:attr/preferenceLayoutChild"
+			android:ringtoneType="notification"
+			android:title="@string/success" />
 
-        <RingtonePreference
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:defaultValue="content://settings/system/notification_sound"
-            android:dependency="@string/key_notify"
-            android:key="@string/key_failure"
-            android:layout="?android:attr/preferenceLayoutChild"
-            android:ringtoneType="notification"
-            android:title="@string/failure" />
+		<RingtonePreference
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:defaultValue="content://settings/system/notification_sound"
+			android:dependency="@string/key_notify"
+			android:key="@string/key_failure"
+			android:layout="?android:attr/preferenceLayoutChild"
+			android:ringtoneType="notification"
+			android:title="@string/failure" />
 
-        <CheckBoxPreference
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:defaultValue="false"
-            android:dependency="@string/key_notify"
-            android:key="@string/key_vibration"
-            android:layout="?android:attr/preferenceLayoutChild"
-            android:title="@string/vibration" />
-    </PreferenceCategory>
+		<CheckBoxPreference
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:defaultValue="false"
+			android:dependency="@string/key_notify"
+			android:key="@string/key_vibration"
+			android:layout="?android:attr/preferenceLayoutChild"
+			android:title="@string/vibration" />
+	</PreferenceCategory>
 
 </PreferenceScreen>
