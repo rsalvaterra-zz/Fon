@@ -308,7 +308,8 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.FON_SPOT_LIMIT_EXCEEDED:
 			case Constants.CUST_WISPR_NOT_PRESENT:
 				BlacklistProvider.addToBlacklist(getContentResolver(), wi.getBSSID());
-				//$FALL-THROUGH$
+				disconnect(wm);
+				break;
 			case Constants.FON_NOT_ENOUGH_CREDIT:
 			case Constants.FON_USER_IN_BLACK_LIST:
 			case Constants.FON_NOT_AUTHORIZED:
@@ -318,7 +319,6 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.FON_INVALID_TEMPORARY_CREDENTIAL:
 			case Constants.FON_AUTHORIZATION_CONNECTION_ERROR:
 				notifyFonError(lr.getReplyMessage(), rc);
-				disconnect(wm);
 				break;
 			case Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
 				disconnect(wm);
