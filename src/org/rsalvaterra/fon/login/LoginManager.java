@@ -56,7 +56,7 @@ public final class LoginManager {
 							rc = wrh.getResponseCode();
 							if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
 								lu = wrh.getLogoffURL();
-							} else if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
+							} else {
 								rc = wrh.getFonResponseCode();
 								rm = wrh.getReplyMessage();
 							}
