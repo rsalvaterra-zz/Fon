@@ -39,8 +39,7 @@ public interface Constants {
 
 	static final int HTTP_TIMEOUT = 30 * 1000;
 
-	static final String KEY_CANCEL_NOTIFICATION = "org.rsalvaterra.fon.CANCEL_NOTIFICATION";
-	static final String KEY_CANCEL_SCHEDULED_ACTIONS = "org.rsalvaterra.fon.CANCEL_SCHEDULED_ACTIONS";
+	static final String KEY_CANCEL_ALL = "org.rsalvaterra.fon.CANCEL_ALL";
 	static final String KEY_CONNECT = "org.rsalvaterra.fon.CONNECT";
 	static final String KEY_LOGIN = "org.rsalvaterra.fon.LOGIN";
 	static final String KEY_LOGOFF = "org.rsalvaterra.fon.LOGOFF";

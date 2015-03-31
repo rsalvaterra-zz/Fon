@@ -170,14 +170,11 @@ public final class WakefulIntentService extends IntentService {
 		return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_notify), true);
 	}
 
-	private void cancelNotification() {
-		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(WakefulIntentService.NOTIFICATION_ID);
-	}
-
-	private void cancelScheduledActions() {
+	private void cancelAll() {
 		final AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.KEY_SCAN), PendingIntent.FLAG_UPDATE_CURRENT));
 		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.KEY_LOGIN), PendingIntent.FLAG_UPDATE_CURRENT));
+		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(WakefulIntentService.NOTIFICATION_ID);
 	}
 
 	private void connect(final WifiManager wm) {
@@ -192,13 +189,11 @@ public final class WakefulIntentService extends IntentService {
 			int id = WakefulIntentService.getOtherId(wca, sra, false);
 			if (id == -1) {
 				id = getFonId(wca, sra, wm);
-				if (id == -1) {
-					cancelNotification();
-				} else if (wm.enableNetwork(id, true) && isReconnectEnabled()) {
+				if ((id != -1) && wm.enableNetwork(id, true) && isReconnectEnabled()) {
 					scheduleScan();
 				}
-			} else if (wm.enableNetwork(id, true)) {
-				cancelNotification();
+			} else {
+				wm.enableNetwork(id, true);
 			}
 		} else if (WakefulIntentService.isConnected(ss) && isReconnectEnabled() && LoginManager.isSupported(WakefulIntentService.stripQuotes(wi.getSSID()))) {
 			final int id = WakefulIntentService.getOtherId(WakefulIntentService.getConfiguredNetworks(wm), WakefulIntentService.getScanResults(wm), isSecureEnabled());
@@ -296,7 +291,6 @@ public final class WakefulIntentService extends IntentService {
 		final String ssid = WakefulIntentService.stripQuotes(wi.getSSID());
 		final LoginResult lr = LoginManager.login(ssid, getUsername(), getPassword());
 		if (lr == null) {
-			cancelNotification();
 			if (WakefulIntentService.isAutoConnectEnabled(this)) {
 				WakefulIntentService.purgeFonNetworks(wm);
 			}
@@ -328,7 +322,6 @@ public final class WakefulIntentService extends IntentService {
 				break;
 			case Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
 				disconnect(wm);
-				cancelNotification();
 				break;
 			case Constants.FON_INVALID_CREDENTIALS_ALT:
 			case Constants.FON_INVALID_CREDENTIALS:
@@ -345,7 +338,6 @@ public final class WakefulIntentService extends IntentService {
 			HttpUtils.get(url, WakefulIntentService.LOGOFF_HTTP_TIMEOUT);
 		}
 		disconnect(wm);
-		cancelNotification();
 	}
 
 	private void notify(final String title, final long[] vibratePattern, final int flags, final String ringtone, final String text, final PendingIntent pendingIntent) {
@@ -397,18 +389,16 @@ public final class WakefulIntentService extends IntentService {
 	@Override
 	protected void onHandleIntent(final Intent i) {
 		final String a = i.getAction();
-		if (a.equals(Constants.KEY_LOGOFF)) {
-			logoff(i.getStringExtra(Constants.KEY_LOGOFF_URL), (WifiManager) getSystemService(Context.WIFI_SERVICE));
-		} else if (a.equals(Constants.KEY_SCAN)) {
-			((WifiManager) getSystemService(Context.WIFI_SERVICE)).startScan();
+		if (a.equals(Constants.KEY_CANCEL_ALL)) {
+			cancelAll();
 		} else if (a.equals(Constants.KEY_CONNECT)) {
 			connect((WifiManager) getSystemService(Context.WIFI_SERVICE));
 		} else if (a.equals(Constants.KEY_LOGIN)) {
 			login((WifiManager) getSystemService(Context.WIFI_SERVICE));
-		} else if (a.equals(Constants.KEY_CANCEL_NOTIFICATION)) {
-			cancelNotification();
-		} else if (a.equals(Constants.KEY_CANCEL_SCHEDULED_ACTIONS)) {
-			cancelScheduledActions();
+		} else if (a.equals(Constants.KEY_LOGOFF)) {
+			logoff(i.getStringExtra(Constants.KEY_LOGOFF_URL), (WifiManager) getSystemService(Context.WIFI_SERVICE));
+		} else if (a.equals(Constants.KEY_SCAN)) {
+			((WifiManager) getSystemService(Context.WIFI_SERVICE)).startScan();
 		}
 		WakefulIntentService.releaseWakeLock(i.getIntExtra(WakefulIntentService.KEY_WAKELOCK_ID, 0));
 	}

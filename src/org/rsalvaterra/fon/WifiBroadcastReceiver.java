@@ -20,11 +20,9 @@ public final class WifiBroadcastReceiver extends BroadcastReceiver {
 				if (ni.getState() == NetworkInfo.State.CONNECTED) {
 					WakefulIntentService.start(c, Constants.KEY_LOGIN);
 				} else if (ni.getState() == NetworkInfo.State.DISCONNECTED) {
-					WakefulIntentService.start(c, Constants.KEY_CANCEL_SCHEDULED_ACTIONS);
+					WakefulIntentService.start(c, Constants.KEY_CANCEL_ALL);
 				}
 			}
-		} else if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION) && (i.getIntExtra(WifiManager.EXTRA_WIFI_STATE, WifiManager.WIFI_STATE_UNKNOWN) == WifiManager.WIFI_STATE_DISABLED)) {
-			WakefulIntentService.start(c, Constants.KEY_CANCEL_NOTIFICATION);
 		}
 	}
 }

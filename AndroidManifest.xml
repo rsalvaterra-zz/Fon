@@ -44,7 +44,6 @@
 			<intent-filter>
 				<action android:name="android.net.wifi.SCAN_RESULTS" />
 				<action android:name="android.net.wifi.STATE_CHANGE" />
-				<action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
 			</intent-filter>
 		</receiver>
 
