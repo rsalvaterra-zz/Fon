@@ -24,7 +24,7 @@ public final class LoginManager {
 				final String h = u.getHost();
 				if (h.endsWith(s)) {
 					final String username;
-					if ((h.contains("portal.fon.com") || h.contentEquals("www.btopenzone.com") || h.contains("wifi.sfr.fr")) && !(h.contains("belgacom") || h.contains("telekom"))) {
+					if (LoginManager.isWisprHost(h)) {
 						username = LoginManager.FON_USERNAME_PREFIX + user;
 					} else {
 						username = user;
@@ -176,6 +176,10 @@ public final class LoginManager {
 
 	private static boolean isTtnet(final String ssid) {
 		return ssid.equalsIgnoreCase("TTNET WiFi FON");
+	}
+
+	private static boolean isWisprHost(final String h) {
+		return (h.endsWith("portal.fon.com") || h.endsWith("wifi.sfr.fr") || h.equals("www.btopenzone.com")) && !(h.contains("belgacom") || h.contains("telekom"));
 	}
 
 	private static boolean parseXml(final String xml, final ContentHandler handler) {
