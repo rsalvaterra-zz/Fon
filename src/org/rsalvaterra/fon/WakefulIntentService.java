@@ -230,17 +230,18 @@ public final class WakefulIntentService extends IntentService {
 		for (final WifiConfiguration wc : wca) {
 			if (!WakefulIntentService.isSecure(wc)) {
 				final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
-				if (LoginManager.isSupported(ssid)) {
+				if (isAllowed(wc.BSSID, ssid)) {
 					wcm.put(ssid, Integer.valueOf(wc.networkId));
 				}
 			}
 		}
 		for (final ScanResult sr : sra) {
-			if (LoginManager.isSupported(sr.SSID) && !BlacklistProvider.isBlacklisted(getContentResolver(), sr.BSSID)) {
+			if (isAllowed(sr.BSSID, sr.SSID)) {
 				final Integer id = wcm.get(sr.SSID);
 				if (id == null) {
 					final WifiConfiguration wc = new WifiConfiguration();
 					wc.SSID = '"' + sr.SSID + '"';
+					wc.BSSID = sr.BSSID;
 					wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
 					return wm.addNetwork(wc);
 				}
@@ -269,6 +270,10 @@ public final class WakefulIntentService extends IntentService {
 	private void handleSuccess(final String ssid, final int flags, final String logoffUrl) {
 		notifySuccess(ssid, flags, logoffUrl);
 		scheduleConnectivityCheck();
+	}
+
+	private boolean isAllowed(final String bssid, final String ssid) {
+		return LoginManager.isSupported(ssid) && !BlacklistProvider.isBlacklisted(getContentResolver(), bssid);
 	}
 
 	private boolean isReconnectEnabled() {
