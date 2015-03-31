@@ -289,21 +289,21 @@ public final class WakefulIntentService extends IntentService {
 			return;
 		}
 		final String ssid = WakefulIntentService.stripQuotes(wi.getSSID());
-		if (!LoginManager.isSupported(ssid)) {
+		final LoginResult lr = LoginManager.login(ssid, getUsername(), getPassword());
+		if (lr == null) {
 			cancelNotification();
 			if (WakefulIntentService.isAutoConnectEnabled(this)) {
 				WakefulIntentService.purgeFonNetworks(wm);
 			}
 			return;
 		}
-		final LoginResult result = LoginManager.login(ssid, getUsername(), getPassword());
-		final int responseCode = result.getResponseCode();
-		switch (responseCode) {
+		final int rc = lr.getResponseCode();
+		switch (rc) {
 			case Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
-				handleSuccess(ssid, 0, result.getLogOffUrl());
+				handleSuccess(ssid, 0, lr.getLogOffUrl());
 				break;
 			case Constants.CUST_ALREADY_CONNECTED:
-				handleSuccess(ssid, Notification.FLAG_ONLY_ALERT_ONCE, result.getLogOffUrl());
+				handleSuccess(ssid, Notification.FLAG_ONLY_ALERT_ONCE, lr.getLogOffUrl());
 				break;
 			case Constants.FON_SESSION_LIMIT_EXCEEDED:
 			case Constants.FON_SPOT_LIMIT_EXCEEDED:
@@ -318,7 +318,7 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.FON_UNKNOWN_ERROR:
 			case Constants.FON_INVALID_TEMPORARY_CREDENTIAL:
 			case Constants.FON_AUTHORIZATION_CONNECTION_ERROR:
-				notifyFonError(result.getReplyMessage(), responseCode);
+				notifyFonError(lr.getReplyMessage(), rc);
 				disconnect(wm);
 				break;
 			case Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:

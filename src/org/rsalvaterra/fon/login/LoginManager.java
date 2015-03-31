@@ -234,8 +234,10 @@ public final class LoginManager {
 			r = new LoginResult(Constants.CUST_CREDENTIALS_ERROR, null, null);
 		} else if (LoginManager.isFon(ssid)) {
 			r = LoginManager.fonLogin(user, password);
-		} else {
+		} else if (LoginManager.isSfr(ssid)) {
 			r = LoginManager.sfrLogin(user, password);
+		} else {
+			r = null;
 		}
 		return r;
 	}
