@@ -68,20 +68,19 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private static int getOtherId(final WifiConfiguration[] wca, final ScanResult[] sra, final boolean secureOnly) {
-		if ((wca == null) || (wca.length == 0)) {
-			return -1;
-		}
-		final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
-		for (final WifiConfiguration wc : wca) {
-			final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
-			if ((!secureOnly || (secureOnly && WakefulIntentService.isSecure(wc))) && !LoginManager.isSupported(ssid)) {
-				wcm.put(ssid, Integer.valueOf(wc.networkId));
+		if ((wca != null) && (wca.length != 0)) {
+			final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
+			for (final WifiConfiguration wc : wca) {
+				final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
+				if ((!secureOnly || (secureOnly && WakefulIntentService.isSecure(wc))) && !LoginManager.isSupported(ssid)) {
+					wcm.put(ssid, Integer.valueOf(wc.networkId));
+				}
 			}
-		}
-		for (final ScanResult sr : sra) {
-			final Integer id = wcm.get(sr.SSID);
-			if (id != null) {
-				return id.intValue();
+			for (final ScanResult sr : sra) {
+				final Integer id = wcm.get(sr.SSID);
+				if (id != null) {
+					return id.intValue();
+				}
 			}
 		}
 		return -1;
@@ -218,15 +217,14 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private int getFonId(final WifiConfiguration[] wca, final ScanResult[] sra, final WifiManager wm) {
-		if (wca == null) {
-			return -1;
-		}
 		final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
-		for (final WifiConfiguration wc : wca) {
-			if (!WakefulIntentService.isSecure(wc)) {
-				final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
-				if (LoginManager.isSupported(ssid)) {
-					wcm.put(ssid, Integer.valueOf(wc.networkId));
+		if ((wca != null) && (wca.length != 0)) {
+			for (final WifiConfiguration wc : wca) {
+				if (!WakefulIntentService.isSecure(wc)) {
+					final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
+					if (LoginManager.isSupported(ssid)) {
+						wcm.put(ssid, Integer.valueOf(wc.networkId));
+					}
 				}
 			}
 		}
