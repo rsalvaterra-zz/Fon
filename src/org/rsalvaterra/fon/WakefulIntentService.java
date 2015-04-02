@@ -107,13 +107,14 @@ public final class WakefulIntentService extends IntentService {
 
 	private static void purgeFonNetworks(final WifiConfiguration[] wca, final WifiManager wm) {
 		if ((wca != null) && (wca.length != 0)) {
+			boolean changed = false;
 			for (final WifiConfiguration wc : wca) {
-				if (!WakefulIntentService.isSecure(wc)) {
-					final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
-					if (LoginManager.isSupported(ssid)) {
-						wm.removeNetwork(wc.networkId);
-					}
+				if (!WakefulIntentService.isSecure(wc) && LoginManager.isSupported(WakefulIntentService.stripQuotes(wc.SSID)) && wm.removeNetwork(wc.networkId) && !changed) {
+					changed = true;
 				}
+			}
+			if (changed) {
+				wm.saveConfiguration();
 			}
 		}
 	}
