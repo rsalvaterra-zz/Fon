@@ -363,14 +363,17 @@ public final class WakefulIntentService extends IntentService {
 		final String a = i.getAction();
 		if (a.equals(Constants.KEY_CANCEL_ALL)) {
 			cancelAll();
-		} else if (a.equals(Constants.KEY_CONNECT)) {
-			connect((WifiManager) getSystemService(Context.WIFI_SERVICE));
-		} else if (a.equals(Constants.KEY_LOGIN)) {
-			login((WifiManager) getSystemService(Context.WIFI_SERVICE));
-		} else if (a.equals(Constants.KEY_LOGOFF)) {
-			WakefulIntentService.logoff(i.getStringExtra(Constants.KEY_LOGOFF_URL), (WifiManager) getSystemService(Context.WIFI_SERVICE));
-		} else if (a.equals(Constants.KEY_SCAN)) {
-			((WifiManager) getSystemService(Context.WIFI_SERVICE)).startScan();
+		} else {
+			final WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+			if (a.equals(Constants.KEY_CONNECT)) {
+				connect(wm);
+			} else if (a.equals(Constants.KEY_LOGIN)) {
+				login(wm);
+			} else if (a.equals(Constants.KEY_LOGOFF)) {
+				WakefulIntentService.logoff(i.getStringExtra(Constants.KEY_LOGOFF_URL), wm);
+			} else if (a.equals(Constants.KEY_SCAN)) {
+				wm.startScan();
+			}
 		}
 		WakefulIntentService.releaseWakeLock(i.getIntExtra(WakefulIntentService.KEY_WAKELOCK_ID, 0));
 	}
