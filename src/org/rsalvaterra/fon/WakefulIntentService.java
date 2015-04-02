@@ -207,14 +207,6 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
-	private void disconnect(final WifiManager wm) {
-		if (WakefulIntentService.isAutoConnectEnabled(this)) {
-			wm.removeNetwork(wm.getConnectionInfo().getNetworkId());
-		} else {
-			wm.disconnect();
-		}
-	}
-
 	private String getFailureTone() {
 		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_failure), "");
 	}
@@ -248,8 +240,18 @@ public final class WakefulIntentService extends IntentService {
 		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_username), "").trim();
 	}
 
-	private void handleSuccess(final String ssid, final int flags, final String logoffUrl) {
-		notifySuccess(ssid, flags, logoffUrl);
+	private void handleRecoverableError(final WifiManager wm, final LoginResult lr) {
+		if (WakefulIntentService.isAutoConnectEnabled(this)) {
+			final WifiInfo wi = wm.getConnectionInfo();
+			BlacklistProvider.addToBlacklist(getContentResolver(), wi.getBSSID());
+			wm.removeNetwork(wi.getNetworkId());
+		} else {
+			notifyFonError(lr);
+		}
+	}
+
+	private void handleSuccess(final String ssid, final int flags, final LoginResult lr) {
+		notifySuccess(ssid, flags, lr);
 		scheduleConnectivityCheck();
 	}
 
@@ -275,20 +277,18 @@ public final class WakefulIntentService extends IntentService {
 		if (lr == null) {
 			return;
 		}
-		final int rc = lr.getResponseCode();
-		switch (rc) {
+		switch (lr.getResponseCode()) {
 			case Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
-				handleSuccess(ssid, 0, lr.getLogOffUrl());
+				handleSuccess(ssid, 0, lr);
 				break;
 			case Constants.CUST_ALREADY_CONNECTED:
-				handleSuccess(ssid, Notification.FLAG_ONLY_ALERT_ONCE, lr.getLogOffUrl());
+				handleSuccess(ssid, Notification.FLAG_ONLY_ALERT_ONCE, lr);
 				break;
 			case Constants.FON_SESSION_LIMIT_EXCEEDED:
 			case Constants.FON_SPOT_LIMIT_EXCEEDED:
 			case Constants.FON_UNKNOWN_ERROR:
 			case Constants.CUST_WISPR_NOT_PRESENT:
-				BlacklistProvider.addToBlacklist(getContentResolver(), wi.getBSSID());
-				disconnect(wm);
+				handleRecoverableError(wm, lr);
 				break;
 			case Constants.FON_NOT_ENOUGH_CREDIT:
 			case Constants.FON_USER_IN_BLACK_LIST:
@@ -297,10 +297,10 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.FON_INTERNAL_ERROR:
 			case Constants.FON_INVALID_TEMPORARY_CREDENTIAL:
 			case Constants.FON_AUTHORIZATION_CONNECTION_ERROR:
-				notifyFonError(lr.getReplyMessage(), rc);
+				notifyFonError(lr);
 				break;
 			case Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
-				disconnect(wm);
+				wm.removeNetwork(wi.getNetworkId());
 				break;
 			case Constants.FON_INVALID_CREDENTIALS_ALT:
 			case Constants.FON_INVALID_CREDENTIALS:
@@ -329,18 +329,18 @@ public final class WakefulIntentService extends IntentService {
 		notify(getString(R.string.notif_title_10001), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), getString(R.string.notif_text_config), PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
-	private void notifyFonError(final String replyMessage, final int responseCode) {
-		notify(getString(R.string.notif_title_9xx, Integer.valueOf(responseCode)), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), '"' + replyMessage + '"', PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
+	private void notifyFonError(final LoginResult lr) {
+		notify(getString(R.string.notif_title_9xx, Integer.valueOf(lr.getResponseCode())), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), '"' + lr.getReplyMessage() + '"', PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
-	private void notifySuccess(final String ssid, final int flags, final String logoffUrl) {
+	private void notifySuccess(final String ssid, final int flags, final LoginResult lr) {
 		final PendingIntent pi;
 		final String tl;
 		if (WakefulIntentService.isAutoConnectEnabled(this)) {
 			pi = PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
 			tl = "";
 		} else {
-			pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, logoffUrl), PendingIntent.FLAG_UPDATE_CURRENT);
+			pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
 			tl = getString(R.string.notif_text_logoff);
 		}
 		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR | flags, getSuccessTone(), tl, pi);
