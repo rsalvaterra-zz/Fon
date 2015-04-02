@@ -105,6 +105,13 @@ public final class WakefulIntentService extends IntentService {
 		return wc.allowedKeyManagement.get(KeyMgmt.WPA_PSK) || wc.allowedKeyManagement.get(KeyMgmt.WPA_EAP) || wc.allowedKeyManagement.get(KeyMgmt.IEEE8021X) || (wc.wepKeys[0] != null);
 	}
 
+	private static void logoff(final String url, final WifiManager wm) {
+		if ((url != null) && (url.length() != 0)) {
+			HttpUtils.get(url, WakefulIntentService.LOGOFF_HTTP_TIMEOUT);
+		}
+		wm.disconnect();
+	}
+
 	private static void purgeFonNetworks(final WifiConfiguration[] wca, final WifiManager wm) {
 		if ((wca != null) && (wca.length != 0)) {
 			boolean changed = false;
@@ -305,13 +312,6 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
-	private void logoff(final String url, final WifiManager wm) {
-		if ((url != null) && (url.length() != 0)) {
-			HttpUtils.get(url, WakefulIntentService.LOGOFF_HTTP_TIMEOUT);
-		}
-		disconnect(wm);
-	}
-
 	private void notify(final String title, final long[] vibratePattern, final int flags, final String ringtone, final String text, final PendingIntent pendingIntent) {
 		final Notification notification = new Notification(R.drawable.ic_stat_fon, title, System.currentTimeMillis());
 		if (areNotificationsEnabled()) {
@@ -368,7 +368,7 @@ public final class WakefulIntentService extends IntentService {
 		} else if (a.equals(Constants.KEY_LOGIN)) {
 			login((WifiManager) getSystemService(Context.WIFI_SERVICE));
 		} else if (a.equals(Constants.KEY_LOGOFF)) {
-			logoff(i.getStringExtra(Constants.KEY_LOGOFF_URL), (WifiManager) getSystemService(Context.WIFI_SERVICE));
+			WakefulIntentService.logoff(i.getStringExtra(Constants.KEY_LOGOFF_URL), (WifiManager) getSystemService(Context.WIFI_SERVICE));
 		} else if (a.equals(Constants.KEY_SCAN)) {
 			((WifiManager) getSystemService(Context.WIFI_SERVICE)).startScan();
 		}
