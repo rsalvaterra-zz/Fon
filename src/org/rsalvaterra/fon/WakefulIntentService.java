@@ -49,7 +49,7 @@ public final class WakefulIntentService extends IntentService {
 
 		@Override
 		public int compare(final ScanResult sr1, final ScanResult sr2) {
-			return (sr1.level > sr2.level ? -1 : (sr1.level == sr2.level ? 0 : 1));
+			return sr2.level - sr1.level;
 		}
 	};
 
