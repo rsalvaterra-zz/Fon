@@ -37,20 +37,14 @@
 			android:authorities="org.rsalvaterra.fon.blacklist"
 			android:exported="false" />
 
-		<receiver
-			android:name=".WifiBroadcastReceiver"
-			android:enabled="true"
-			android:exported="true">
+		<receiver android:name=".WifiBroadcastReceiver">
 			<intent-filter>
 				<action android:name="android.net.wifi.SCAN_RESULTS" />
 				<action android:name="android.net.wifi.STATE_CHANGE" />
 			</intent-filter>
 		</receiver>
 
-		<receiver
-			android:name=".AlarmBroadcastReceiver"
-			android:enabled="true"
-			android:exported="false" />
+		<receiver android:name=".AlarmBroadcastReceiver" />
 
 		<service android:name=".WakefulIntentService" />
 	</application>
