@@ -112,20 +112,6 @@ public final class WakefulIntentService extends IntentService {
 		wm.disconnect();
 	}
 
-	private static void purgeFonNetworks(final WifiConfiguration[] wca, final WifiManager wm) {
-		if ((wca != null) && (wca.length != 0)) {
-			boolean changed = false;
-			for (final WifiConfiguration wc : wca) {
-				if (!WakefulIntentService.isSecure(wc) && LoginManager.isSupported(WakefulIntentService.stripQuotes(wc.SSID)) && wm.removeNetwork(wc.networkId) && !changed) {
-					changed = true;
-				}
-			}
-			if (changed) {
-				wm.saveConfiguration();
-			}
-		}
-	}
-
 	private static void releaseWakeLock(final int i) {
 		if (i != 0) {
 			synchronized (WakefulIntentService.ACTIVE_WAKELOCKS) {
@@ -189,8 +175,7 @@ public final class WakefulIntentService extends IntentService {
 			final ScanResult[] sra = WakefulIntentService.getScanResults(wm);
 			int id = WakefulIntentService.getOtherId(wca, sra, false);
 			if (id == -1) {
-				WakefulIntentService.purgeFonNetworks(wca, wm);
-				id = getFonId(sra, wm);
+				id = getFonId(wca, sra, wm);
 				if ((id != -1) && wm.enableNetwork(id, true) && isReconnectEnabled()) {
 					scheduleScan();
 				}
@@ -211,7 +196,14 @@ public final class WakefulIntentService extends IntentService {
 		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_failure), "");
 	}
 
-	private int getFonId(final ScanResult[] sra, final WifiManager wm) {
+	private int getFonId(final WifiConfiguration[] wca, final ScanResult[] sra, final WifiManager wm) {
+		if ((wca != null) && (wca.length != 0)) {
+			for (final WifiConfiguration wc : wca) {
+				if (!WakefulIntentService.isSecure(wc) && LoginManager.isSupported(WakefulIntentService.stripQuotes(wc.SSID))) {
+					wm.removeNetwork(wc.networkId);
+				}
+			}
+		}
 		for (final ScanResult sr : sra) {
 			if (LoginManager.isSupported(sr.SSID) && !BlacklistProvider.isBlacklisted(getContentResolver(), sr.BSSID)) {
 				final WifiConfiguration wc = new WifiConfiguration();
