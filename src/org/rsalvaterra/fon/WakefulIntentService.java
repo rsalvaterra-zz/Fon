@@ -276,6 +276,8 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.CUST_ALREADY_CONNECTED:
 				handleSuccess(ssid, Notification.FLAG_ONLY_ALERT_ONCE, lr);
 				break;
+			case Constants.WISPR_RESPONSE_CODE_RADIUS_ERROR:
+			case Constants.WISPR_RESPONSE_CODE_NETWORK_ADMIN_ERROR:
 			case Constants.FON_SESSION_LIMIT_EXCEEDED:
 			case Constants.FON_SPOT_LIMIT_EXCEEDED:
 			case Constants.FON_UNKNOWN_ERROR:
