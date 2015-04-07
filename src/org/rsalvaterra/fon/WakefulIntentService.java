@@ -32,6 +32,7 @@ import android.util.SparseArray;
 
 public final class WakefulIntentService extends IntentService {
 
+	private static final int MINIMUM_SIGNAL_LEVEL = -80;
 	private static final int NOTIFICATION_ID = 1;
 	private static final int REQUEST_CODE = 1;
 	private static final int CONNECTIVITY_CHECK_INTERVAL = 60;
@@ -45,7 +46,7 @@ public final class WakefulIntentService extends IntentService {
 
 	private static final SparseArray<PowerManager.WakeLock> ACTIVE_WAKELOCKS = new SparseArray<PowerManager.WakeLock>();
 
-	private static final Comparator<ScanResult> BY_DESCENDING_LEVEL = new Comparator<ScanResult>() {
+	private static final Comparator<ScanResult> BY_DESCENDING_SIGNAL_LEVEL = new Comparator<ScanResult>() {
 
 		@Override
 		public int compare(final ScanResult sr1, final ScanResult sr2) {
@@ -77,6 +78,9 @@ public final class WakefulIntentService extends IntentService {
 				}
 			}
 			for (final ScanResult sr : sra) {
+				if (sr.level < WakefulIntentService.MINIMUM_SIGNAL_LEVEL) {
+					break;
+				}
 				final Integer id = wcm.get(sr.SSID);
 				if (id != null) {
 					return id.intValue();
@@ -89,7 +93,7 @@ public final class WakefulIntentService extends IntentService {
 	private static ScanResult[] getScanResults(final WifiManager wm) {
 		final List<ScanResult> srl = wm.getScanResults();
 		final ScanResult[] sra = srl.toArray(new ScanResult[srl.size()]);
-		Arrays.sort(sra, WakefulIntentService.BY_DESCENDING_LEVEL);
+		Arrays.sort(sra, WakefulIntentService.BY_DESCENDING_SIGNAL_LEVEL);
 		return sra;
 	}
 
@@ -205,6 +209,9 @@ public final class WakefulIntentService extends IntentService {
 			}
 		}
 		for (final ScanResult sr : sra) {
+			if (sr.level < WakefulIntentService.MINIMUM_SIGNAL_LEVEL) {
+				break;
+			}
 			if (LoginManager.isSupported(sr.SSID) && !BlacklistProvider.isBlacklisted(getContentResolver(), sr.BSSID)) {
 				final WifiConfiguration wc = new WifiConfiguration();
 				wc.SSID = '"' + sr.SSID + '"';
