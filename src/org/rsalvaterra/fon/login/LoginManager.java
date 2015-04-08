@@ -76,26 +76,28 @@ public final class LoginManager {
 
 	private static String getSfrUrl(final String source) {
 		final int start = source.indexOf("SFRLoginURL_JIL");
-		final int end = source.indexOf("-->", start);
-		if ((start == -1) || (end == -1)) {
-			return null;
+		if (start != -1) {
+			final int end = source.indexOf("-->", start);
+			if (end != -1) {
+				final String url = source.substring(start, end);
+				return new String(url.substring(url.indexOf("https")).replace("&amp;", "&").replace("notyet", "smartclient"));
+			}
 		}
-		final String url = source.substring(start, end);
-		return new String(url.substring(url.indexOf("https")).replace("&amp;", "&").replace("notyet", "smartclient"));
-
+		return null;
 	}
 
 	private static String getXml(final String source) {
 		final int start = source.indexOf("<" + LoginManager.TAG_WISPR);
-		final int end = source.indexOf("</" + LoginManager.TAG_WISPR + ">", start);
-		if ((start == -1) || (end == -1)) {
-			return null;
+		if (start != -1) {
+			final int end = source.indexOf("</" + LoginManager.TAG_WISPR + ">", start);
+			if (end != -1) {
+				final String res = new String(source.substring(start, end + LoginManager.TAG_WISPR.length() + 3));
+				if (!res.contains("&amp;")) {
+					return res.replace("&", "&amp;");
+				}
+			}
 		}
-		final String res = new String(source.substring(start, end + LoginManager.TAG_WISPR.length() + 3));
-		if (!res.contains("&amp;")) {
-			return res.replace("&", "&amp;");
-		}
-		return res;
+		return null;
 	}
 
 	private static boolean isBt(final String ssid) {
