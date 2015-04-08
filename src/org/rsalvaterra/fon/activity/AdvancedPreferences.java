@@ -81,7 +81,7 @@ public final class AdvancedPreferences extends PreferenceActivity {
 		addPreferencesFromResource(R.layout.preferences_advanced);
 		final PreferenceScreen preferenceScreen = getPreferenceScreen();
 		AdvancedPreferences.bindCheckBoxListener(preferenceScreen.findPreference(getString(R.string.key_reconnect)));
-		AdvancedPreferences.bindEditTextListener(preferenceScreen.findPreference(getString(R.string.key_interval)));
+		AdvancedPreferences.bindEditTextListener(preferenceScreen.findPreference(getString(R.string.key_period)));
 		AdvancedPreferences.bindRingtoneListener(preferenceScreen.findPreference(getString(R.string.key_success)));
 		AdvancedPreferences.bindRingtoneListener(preferenceScreen.findPreference(getString(R.string.key_failure)));
 	}

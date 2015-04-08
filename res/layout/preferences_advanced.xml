@@ -33,10 +33,10 @@
 			android:defaultValue="300"
 			android:dependency="@string/key_reconnect"
 			android:inputType="number"
-			android:key="@string/key_interval"
+			android:key="@string/key_period"
 			android:layout="?android:attr/preferenceLayoutChild"
 			android:maxLength="4"
-			android:title="@string/interval" />
+			android:title="@string/period" />
 	</PreferenceCategory>
 
 	<PreferenceCategory

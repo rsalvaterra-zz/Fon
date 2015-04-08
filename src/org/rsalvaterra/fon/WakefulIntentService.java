@@ -228,7 +228,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private int getPeriod() {
-		return Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_interval), "300"));
+		return Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_period), "300"));
 	}
 
 	private String getSuccessTone() {
@@ -327,11 +327,11 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void notifyCredentialsError() {
-		notify(getString(R.string.notif_title_10001), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), getString(R.string.notif_text_config), PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
+		notify(getString(R.string.notif_title_cred_err), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), getString(R.string.notif_text_config), PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void notifyFonError(final LoginResult lr) {
-		notify(getString(R.string.notif_title_9xx, Integer.valueOf(lr.getResponseCode())), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), '"' + lr.getReplyMessage() + '"', PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
+		notify(getString(R.string.notif_title_fon_err, Integer.valueOf(lr.getResponseCode())), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), '"' + lr.getReplyMessage() + '"', PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void notifySuccess(final String ssid, final int flags, final LoginResult lr) {
