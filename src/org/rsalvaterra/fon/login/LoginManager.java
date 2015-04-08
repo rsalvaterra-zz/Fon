@@ -80,7 +80,7 @@ public final class LoginManager {
 			final int end = source.indexOf("-->", start);
 			if (end != -1) {
 				final String url = source.substring(start, end);
-				return new String(url.substring(url.indexOf("https")).replace("&amp;", "&").replace("notyet", "smartclient"));
+				return url.substring(url.indexOf("https")).replace("&amp;", "&").replace("notyet", "smartclient");
 			}
 		}
 		return null;
@@ -91,7 +91,7 @@ public final class LoginManager {
 		if (start != -1) {
 			final int end = source.indexOf("</" + LoginManager.TAG_WISPR + ">", start);
 			if (end != -1) {
-				final String res = new String(source.substring(start, end + LoginManager.TAG_WISPR.length() + 3));
+				final String res = source.substring(start, end + LoginManager.TAG_WISPR.length() + 3);
 				if (!res.contains("&amp;")) {
 					res.replace("&", "&amp;");
 				}
