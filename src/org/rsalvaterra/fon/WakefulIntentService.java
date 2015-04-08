@@ -249,8 +249,8 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
-	private void handleSuccess(final String ssid, final int flags, final LoginResult lr) {
-		notifySuccess(ssid, flags, lr);
+	private void handleSuccess(final String ssid, final LoginResult lr) {
+		notifySuccess(ssid, lr);
 		scheduleConnectivityCheck();
 	}
 
@@ -278,10 +278,7 @@ public final class WakefulIntentService extends IntentService {
 		}
 		switch (lr.getResponseCode()) {
 			case Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
-				handleSuccess(ssid, 0, lr);
-				break;
-			case Constants.CUST_ALREADY_CONNECTED:
-				handleSuccess(ssid, Notification.FLAG_ONLY_ALERT_ONCE, lr);
+				handleSuccess(ssid, lr);
 				break;
 			case Constants.WISPR_RESPONSE_CODE_RADIUS_ERROR:
 			case Constants.WISPR_RESPONSE_CODE_NETWORK_ADMIN_ERROR:
@@ -334,7 +331,7 @@ public final class WakefulIntentService extends IntentService {
 		notify(getString(R.string.notif_title_fon_err, Integer.valueOf(lr.getResponseCode())), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), '"' + lr.getReplyMessage() + '"', PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
-	private void notifySuccess(final String ssid, final int flags, final LoginResult lr) {
+	private void notifySuccess(final String ssid, final LoginResult lr) {
 		final PendingIntent pi;
 		final String tl;
 		if (WakefulIntentService.isAutoConnectEnabled(this)) {
@@ -344,7 +341,7 @@ public final class WakefulIntentService extends IntentService {
 			pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
 			tl = getString(R.string.notif_text_logoff);
 		}
-		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR | flags, getSuccessTone(), tl, pi);
+		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR, getSuccessTone(), tl, pi);
 	}
 
 	private void scheduleAction(final String action, final int seconds) {
