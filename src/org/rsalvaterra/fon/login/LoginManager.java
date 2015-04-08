@@ -93,8 +93,9 @@ public final class LoginManager {
 			if (end != -1) {
 				final String res = new String(source.substring(start, end + LoginManager.TAG_WISPR.length() + 3));
 				if (!res.contains("&amp;")) {
-					return res.replace("&", "&amp;");
+					res.replace("&", "&amp;");
 				}
+				return res;
 			}
 		}
 		return null;
