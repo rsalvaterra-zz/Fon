@@ -105,10 +105,6 @@ public final class LoginManager {
 		return ssid.equals("BTWiFi") || ssid.equals("BTWiFi-with-FON") || ssid.equals("BTOpenzone") || ssid.equals("BTOpenzone-H") || ssid.equals("BTOpenzone-B") || ssid.equals("BTOpenzone-M") || ssid.equals("BTFON");
 	}
 
-	private static boolean isConnected() {
-		return LoginManager.CONNECTED.equals(HttpUtils.get(LoginManager.CONNECTION_TEST_URL, Constants.HTTP_TIMEOUT));
-	}
-
 	private static boolean isDowntownBrooklyn(final String ssid) {
 		return ssid.equalsIgnoreCase("DowntownBrooklynWifi_Fon");
 	}
@@ -229,6 +225,10 @@ public final class LoginManager {
 			rc = Constants.CUST_ALREADY_CONNECTED;
 		}
 		return new LoginResult(rc, null, lu);
+	}
+
+	public static boolean isConnected() {
+		return LoginManager.CONNECTED.equals(HttpUtils.get(LoginManager.CONNECTION_TEST_URL, Constants.HTTP_TIMEOUT));
 	}
 
 	public static boolean isSupported(final String ssid) {

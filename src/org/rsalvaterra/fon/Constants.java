@@ -41,6 +41,7 @@ public interface Constants {
 
 	static final String KEY_CANCEL_ALL = "org.rsalvaterra.fon.CANCEL_ALL";
 	static final String KEY_CONNECT = "org.rsalvaterra.fon.CONNECT";
+	static final String KEY_CONN_CHECK = "org.rsalvaterra.fon.CONN_CHECK";
 	static final String KEY_LOGIN = "org.rsalvaterra.fon.LOGIN";
 	static final String KEY_LOGOFF = "org.rsalvaterra.fon.LOGOFF";
 	static final String KEY_LOGOFF_URL = "org.rsalvaterra.fon.LOGOFF_URL";

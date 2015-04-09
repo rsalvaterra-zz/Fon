@@ -165,8 +165,16 @@ public final class WakefulIntentService extends IntentService {
 	private void cancelAll() {
 		final AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.KEY_SCAN), PendingIntent.FLAG_UPDATE_CURRENT));
-		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.KEY_LOGIN), PendingIntent.FLAG_UPDATE_CURRENT));
+		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.KEY_CONN_CHECK), PendingIntent.FLAG_UPDATE_CURRENT));
 		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(WakefulIntentService.NOTIFICATION_ID);
+	}
+
+	private void checkConnectivity(final WifiManager wm) {
+		if (!LoginManager.isConnected()) {
+			login(wm);
+		} else {
+			scheduleConnectivityCheck();
+		}
 	}
 
 	private void connect(final WifiManager wm) {
@@ -279,6 +287,7 @@ public final class WakefulIntentService extends IntentService {
 		}
 		switch (lr.getResponseCode()) {
 			case Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
+			case Constants.CUST_ALREADY_CONNECTED:
 				handleSuccess(ssid, lr);
 				break;
 			case Constants.WISPR_RESPONSE_CODE_RADIUS_ERROR:
@@ -306,7 +315,6 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.CUST_CREDENTIALS_ERROR:
 				notifyCredentialsError();
 				break;
-			case Constants.CUST_ALREADY_CONNECTED:
 			default:
 				break;
 		}
@@ -355,7 +363,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void scheduleConnectivityCheck() {
-		scheduleAction(Constants.KEY_LOGIN, WakefulIntentService.CONNECTIVITY_CHECK_INTERVAL);
+		scheduleAction(Constants.KEY_CONN_CHECK, WakefulIntentService.CONNECTIVITY_CHECK_INTERVAL);
 	}
 
 	private void scheduleScan() {
@@ -371,6 +379,8 @@ public final class WakefulIntentService extends IntentService {
 			final WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 			if (a.equals(Constants.KEY_CONNECT)) {
 				connect(wm);
+			} else if (a.equals(Constants.KEY_CONN_CHECK)) {
+				checkConnectivity(wm);
 			} else if (a.equals(Constants.KEY_LOGIN)) {
 				login(wm);
 			} else if (a.equals(Constants.KEY_LOGOFF)) {
