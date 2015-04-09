@@ -258,8 +258,34 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
-	private void handleSuccess(final String ssid, final LoginResult lr) {
-		notifySuccess(ssid, lr);
+	private void handleResume(final String ssid, final LoginResult lr) {
+		final PendingIntent pi;
+		final String tl;
+		if (WakefulIntentService.isAutoConnectEnabled(this)) {
+			pi = PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
+			tl = getString(R.string.notif_text_resumed);
+		} else {
+			pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
+			tl = getString(R.string.notif_text_logoff);
+		}
+		handleSuccess(ssid, pi, tl);
+	}
+
+	private void handleStart(final String ssid, final LoginResult lr) {
+		final PendingIntent pi;
+		final String tl;
+		if (WakefulIntentService.isAutoConnectEnabled(this)) {
+			pi = PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
+			tl = getString(R.string.notif_text_started);
+		} else {
+			pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
+			tl = getString(R.string.notif_text_logoff);
+		}
+		handleSuccess(ssid, pi, tl);
+	}
+
+	private void handleSuccess(final String ssid, final PendingIntent pi, final String tl) {
+		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR, getSuccessTone(), tl, pi);
 		scheduleConnectivityCheck();
 	}
 
@@ -287,8 +313,10 @@ public final class WakefulIntentService extends IntentService {
 		}
 		switch (lr.getResponseCode()) {
 			case Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
+				handleStart(ssid, lr);
+				break;
 			case Constants.CUST_ALREADY_CONNECTED:
-				handleSuccess(ssid, lr);
+				handleResume(ssid, lr);
 				break;
 			case Constants.WISPR_RESPONSE_CODE_RADIUS_ERROR:
 			case Constants.WISPR_RESPONSE_CODE_NETWORK_ADMIN_ERROR:
@@ -343,19 +371,6 @@ public final class WakefulIntentService extends IntentService {
 
 	private void notifyFonError(final LoginResult lr) {
 		notifyError(getString(R.string.notif_title_fon_err, Integer.valueOf(lr.getResponseCode())), '"' + lr.getReplyMessage() + '"');
-	}
-
-	private void notifySuccess(final String ssid, final LoginResult lr) {
-		final PendingIntent pi;
-		final String tl;
-		if (WakefulIntentService.isAutoConnectEnabled(this)) {
-			pi = PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
-			tl = "";
-		} else {
-			pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
-			tl = getString(R.string.notif_text_logoff);
-		}
-		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR, getSuccessTone(), tl, pi);
 	}
 
 	private void scheduleAction(final String action, final int seconds) {

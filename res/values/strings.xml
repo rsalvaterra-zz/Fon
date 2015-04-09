@@ -63,5 +63,7 @@
 	<string name="notif_title_cred_err">Invalid credentials</string>
 	<string name="notif_text_logoff">Touch to logoff.</string>
 	<string name="notif_text_config">Touch to configure.</string>
+	<string name="notif_text_started">Session started.</string>
+	<string name="notif_text_resumed">Session resumed.</string>
 	<string name="intervalSummary">%s seconds</string>
 </resources>
