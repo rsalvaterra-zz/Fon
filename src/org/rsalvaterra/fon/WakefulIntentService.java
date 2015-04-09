@@ -26,6 +26,7 @@ import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.SparseArray;
@@ -44,7 +45,7 @@ public final class WakefulIntentService extends IntentService {
 
 	private static final String KEY_WAKELOCK_ID = WakefulIntentService.class.getPackage().getName();
 
-	private static final SparseArray<PowerManager.WakeLock> ACTIVE_WAKELOCKS = new SparseArray<PowerManager.WakeLock>();
+	private static final SparseArray<WakeLock> ACTIVE_WAKELOCKS = new SparseArray<WakeLock>();
 
 	private static final Comparator<ScanResult> BY_DESCENDING_SIGNAL_LEVEL = new Comparator<ScanResult>() {
 
@@ -119,7 +120,7 @@ public final class WakefulIntentService extends IntentService {
 	private static void releaseWakeLock(final int i) {
 		if (i != 0) {
 			synchronized (WakefulIntentService.ACTIVE_WAKELOCKS) {
-				final PowerManager.WakeLock wl = WakefulIntentService.ACTIVE_WAKELOCKS.get(i);
+				final WakeLock wl = WakefulIntentService.ACTIVE_WAKELOCKS.get(i);
 				if (wl != null) {
 					wl.release();
 					WakefulIntentService.ACTIVE_WAKELOCKS.remove(i);
@@ -239,7 +240,7 @@ public final class WakefulIntentService extends IntentService {
 		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_username), "").trim();
 	}
 
-	private void handleRecoverableError(final WifiManager wm, final LoginResult lr) {
+	private void handleError(final WifiManager wm, final LoginResult lr) {
 		if (WakefulIntentService.isAutoConnectEnabled(this)) {
 			final WifiInfo wi = wm.getConnectionInfo();
 			BlacklistProvider.addToBlacklist(getContentResolver(), wi.getBSSID());
@@ -286,7 +287,7 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.FON_SPOT_LIMIT_EXCEEDED:
 			case Constants.FON_UNKNOWN_ERROR:
 			case Constants.CUST_WISPR_NOT_PRESENT:
-				handleRecoverableError(wm, lr);
+				handleError(wm, lr);
 				break;
 			case Constants.FON_NOT_ENOUGH_CREDIT:
 			case Constants.FON_USER_IN_BLACK_LIST:
@@ -305,6 +306,7 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.CUST_CREDENTIALS_ERROR:
 				notifyCredentialsError();
 				break;
+			case Constants.CUST_ALREADY_CONNECTED:
 			default:
 				break;
 		}
@@ -324,11 +326,15 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void notifyCredentialsError() {
-		notify(getString(R.string.notif_title_cred_err), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), getString(R.string.notif_text_config), PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
+		notifyError(getString(R.string.notif_title_cred_err), getString(R.string.notif_text_config));
+	}
+
+	private void notifyError(final String title, final String text) {
+		notify(title, WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), text, PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void notifyFonError(final LoginResult lr) {
-		notify(getString(R.string.notif_title_fon_err, Integer.valueOf(lr.getResponseCode())), WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), '"' + lr.getReplyMessage() + '"', PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
+		notifyError(getString(R.string.notif_title_fon_err, Integer.valueOf(lr.getResponseCode())), '"' + lr.getReplyMessage() + '"');
 	}
 
 	private void notifySuccess(final String ssid, final LoginResult lr) {
