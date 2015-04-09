@@ -44,32 +44,34 @@ public final class LoginManager {
 		String rm = null;
 		String lu = null;
 		String c = HttpUtils.get(LoginManager.CONNECTION_TEST_URL, Constants.HTTP_TIMEOUT);
-		if ((c != null) && !c.equals(LoginManager.CONNECTED)) {
-			c = LoginManager.getXml(c);
-			if (c != null) {
-				final FonInfoHandler wih = new FonInfoHandler();
-				if (LoginManager.parseXml(c, wih) && (wih.getMessageType() == Constants.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (wih.getResponseCode() == Constants.WISPR_RESPONSE_CODE_NO_ERROR)) {
-					c = LoginManager.doLogin(wih.getLoginURL(), user, password);
-					if (c != null) {
-						final FonResponseHandler wrh = new FonResponseHandler();
-						if (LoginManager.parseXml(c, wrh)) {
-							rc = wrh.getResponseCode();
-							if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
-								lu = wrh.getLogoffURL();
-							} else if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
-								rc = wrh.getFonResponseCode();
-								rm = wrh.getReplyMessage();
+		if (c != null) {
+			if (!c.equals(LoginManager.CONNECTED)) {
+				c = LoginManager.getXml(c);
+				if (c != null) {
+					final FonInfoHandler wih = new FonInfoHandler();
+					if (LoginManager.parseXml(c, wih) && (wih.getMessageType() == Constants.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (wih.getResponseCode() == Constants.WISPR_RESPONSE_CODE_NO_ERROR)) {
+						c = LoginManager.doLogin(wih.getLoginURL(), user, password);
+						if (c != null) {
+							final FonResponseHandler wrh = new FonResponseHandler();
+							if (LoginManager.parseXml(c, wrh)) {
+								rc = wrh.getResponseCode();
+								if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
+									lu = wrh.getLogoffURL();
+								} else if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
+									rc = wrh.getFonResponseCode();
+									rm = wrh.getReplyMessage();
+								}
 							}
+						} else if (LoginManager.isConnected()) {
+							rc = Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
 						}
-					} else if (LoginManager.isConnected()) {
-						rc = Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
 					}
+				} else {
+					rc = Constants.CUST_WISPR_NOT_PRESENT;
 				}
 			} else {
-				rc = Constants.CUST_WISPR_NOT_PRESENT;
+				rc = Constants.CUST_ALREADY_CONNECTED;
 			}
-		} else {
-			rc = Constants.CUST_ALREADY_CONNECTED;
 		}
 		return new LoginResult(rc, rm, lu);
 	}
@@ -194,35 +196,37 @@ public final class LoginManager {
 		int rc = Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
 		String lu = null;
 		String c = HttpUtils.get(LoginManager.CONNECTION_TEST_URL, Constants.HTTP_TIMEOUT);
-		if ((c != null) && !c.equals(LoginManager.CONNECTED)) {
-			c = LoginManager.getSfrUrl(c);
-			if (c != null) {
-				c = LoginManager.doLogin(c, user, password);
+		if (c != null) {
+			if (!c.equals(LoginManager.CONNECTED)) {
+				c = LoginManager.getSfrUrl(c);
 				if (c != null) {
-					FonResponseHandler wrh = new FonResponseHandler();
-					if (LoginManager.parseXml(c, wrh)) {
-						if (wrh.getResponseCode() == Constants.WISPR_RESPONSE_CODE_AUTH_PENDING) {
-							c = HttpUtils.get(wrh.getLoginResultsURL(), Constants.HTTP_TIMEOUT);
-							if (c != null) {
-								wrh = new FonResponseHandler();
-								if (LoginManager.parseXml(c, wrh)) {
-									rc = wrh.getResponseCode();
-									lu = wrh.getLogoffURL();
+					c = LoginManager.doLogin(c, user, password);
+					if (c != null) {
+						FonResponseHandler wrh = new FonResponseHandler();
+						if (LoginManager.parseXml(c, wrh)) {
+							if (wrh.getResponseCode() == Constants.WISPR_RESPONSE_CODE_AUTH_PENDING) {
+								c = HttpUtils.get(wrh.getLoginResultsURL(), Constants.HTTP_TIMEOUT);
+								if (c != null) {
+									wrh = new FonResponseHandler();
+									if (LoginManager.parseXml(c, wrh)) {
+										rc = wrh.getResponseCode();
+										lu = wrh.getLogoffURL();
+									}
 								}
+							} else {
+								rc = wrh.getResponseCode();
+								lu = wrh.getLogoffURL();
 							}
-						} else {
-							rc = wrh.getResponseCode();
-							lu = wrh.getLogoffURL();
 						}
+					} else if (LoginManager.isConnected()) {
+						rc = Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
 					}
-				} else if (LoginManager.isConnected()) {
-					rc = Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
+				} else {
+					rc = Constants.CUST_WISPR_NOT_PRESENT;
 				}
 			} else {
-				rc = Constants.CUST_WISPR_NOT_PRESENT;
+				rc = Constants.CUST_ALREADY_CONNECTED;
 			}
-		} else {
-			rc = Constants.CUST_ALREADY_CONNECTED;
 		}
 		return new LoginResult(rc, null, lu);
 	}
