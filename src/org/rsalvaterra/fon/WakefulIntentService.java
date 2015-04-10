@@ -282,7 +282,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void notify(final String title, final long[] vibratePattern, final int flags, final String ringtone, final String text, final PendingIntent pendingIntent) {
-		final Notification notification = new Notification(R.drawable.ic_stat_fon, title, System.currentTimeMillis());
+		final Notification notification = new Notification(R.drawable.ic_stat_fon, title, 0);
 		if (areNotificationsEnabled()) {
 			if (isVibrationEnabled()) {
 				notification.vibrate = vibratePattern;
