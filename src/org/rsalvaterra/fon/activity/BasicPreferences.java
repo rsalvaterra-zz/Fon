@@ -23,22 +23,22 @@ public final class BasicPreferences extends PreferenceActivity {
 	}
 
 	@Override
-	public void onCreate(final Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+	public void onCreate(final Bundle b) {
+		super.onCreate(b);
 		addPreferencesFromResource(R.layout.preferences_main);
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(final Menu menu) {
-		menu.add(Menu.NONE, BasicPreferences.CLOSE_ID, Menu.NONE, R.string.close).setIcon(android.R.drawable.ic_menu_save);
-		menu.add(Menu.NONE, BasicPreferences.ADVANCED_ID, Menu.NONE, R.string.advanced).setIcon(android.R.drawable.ic_menu_preferences);
-		menu.add(Menu.NONE, BasicPreferences.ABOUT_ID, Menu.NONE, R.string.about).setIcon(android.R.drawable.ic_menu_info_details);
-		return super.onCreateOptionsMenu(menu);
+	public boolean onCreateOptionsMenu(final Menu m) {
+		m.add(Menu.NONE, BasicPreferences.CLOSE_ID, Menu.NONE, R.string.close).setIcon(android.R.drawable.ic_menu_save);
+		m.add(Menu.NONE, BasicPreferences.ADVANCED_ID, Menu.NONE, R.string.advanced).setIcon(android.R.drawable.ic_menu_preferences);
+		m.add(Menu.NONE, BasicPreferences.ABOUT_ID, Menu.NONE, R.string.about).setIcon(android.R.drawable.ic_menu_info_details);
+		return super.onCreateOptionsMenu(m);
 	}
 
 	@Override
-	public boolean onOptionsItemSelected(final MenuItem item) {
-		switch (item.getItemId()) {
+	public boolean onOptionsItemSelected(final MenuItem mi) {
+		switch (mi.getItemId()) {
 			case CLOSE_ID:
 				finish();
 				break;
@@ -49,7 +49,7 @@ public final class BasicPreferences extends PreferenceActivity {
 				showAbout();
 				break;
 			default:
-				return super.onOptionsItemSelected(item);
+				return super.onOptionsItemSelected(mi);
 		}
 		return true;
 	}

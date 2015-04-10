@@ -123,9 +123,10 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void cancelAll() {
-		final AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.KEY_SCAN), PendingIntent.FLAG_UPDATE_CURRENT));
-		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.KEY_LOGIN), PendingIntent.FLAG_UPDATE_CURRENT));
+		final AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+		final Intent i = new Intent(this, AlarmBroadcastReceiver.class);
+		am.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, i.setAction(Constants.KEY_SCAN), PendingIntent.FLAG_UPDATE_CURRENT));
+		am.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, i.setAction(Constants.KEY_LOGIN), PendingIntent.FLAG_UPDATE_CURRENT));
 		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(WakefulIntentService.NOTIFICATION_ID);
 	}
 
@@ -211,16 +212,17 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void handleStart(final String ssid, final LoginResult lr) {
+		final Intent i = new Intent();
 		final PendingIntent pi;
-		final String tl;
+		final String t;
 		if (WakefulIntentService.isAutoConnectEnabled(this)) {
-			pi = PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
-			tl = getString(R.string.notif_text_started);
+			pi = PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
+			t = getString(R.string.notif_text_started);
 		} else {
-			pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
-			tl = getString(R.string.notif_text_logoff);
+			pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, i.setClass(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
+			t = getString(R.string.notif_text_logoff);
 		}
-		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), tl, pi);
+		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), t, pi);
 		scheduleConnectivityCheck();
 	}
 

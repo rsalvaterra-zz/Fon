@@ -3,7 +3,6 @@ package org.rsalvaterra.fon.activity;
 import org.rsalvaterra.fon.Constants;
 import org.rsalvaterra.fon.R;
 import org.rsalvaterra.fon.WakefulBroadcastReceiver;
-import org.rsalvaterra.fon.WakefulIntentService;
 
 import android.app.Activity;
 import android.media.Ringtone;
@@ -27,7 +26,7 @@ public final class AdvancedPreferences extends PreferenceActivity {
 		@Override
 		public final boolean onPreferenceChange(final Preference p, final Object v) {
 			if (((Boolean) v).booleanValue()) {
-				WakefulBroadcastReceiver.startService(p.getContext(), WakefulIntentService.class, Constants.KEY_SCAN);
+				WakefulBroadcastReceiver.startService(p.getContext(), Constants.KEY_SCAN);
 			}
 			return true;
 		}
@@ -78,8 +77,8 @@ public final class AdvancedPreferences extends PreferenceActivity {
 	}
 
 	@Override
-	public void onCreate(final Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+	public void onCreate(final Bundle b) {
+		super.onCreate(b);
 		addPreferencesFromResource(R.layout.preferences_advanced);
 		final PreferenceScreen preferenceScreen = getPreferenceScreen();
 		AdvancedPreferences.bindCheckBoxListener(preferenceScreen.findPreference(getString(R.string.key_reconnect)));
@@ -89,20 +88,20 @@ public final class AdvancedPreferences extends PreferenceActivity {
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(final Menu menu) {
-		menu.add(Menu.NONE, AdvancedPreferences.BASIC_ID, Menu.NONE, R.string.basic).setIcon(android.R.drawable.ic_menu_revert);
-		return super.onCreateOptionsMenu(menu);
+	public boolean onCreateOptionsMenu(final Menu m) {
+		m.add(Menu.NONE, AdvancedPreferences.BASIC_ID, Menu.NONE, R.string.basic).setIcon(android.R.drawable.ic_menu_revert);
+		return super.onCreateOptionsMenu(m);
 	}
 
 	@Override
-	public boolean onOptionsItemSelected(final MenuItem item) {
-		switch (item.getItemId()) {
+	public boolean onOptionsItemSelected(final MenuItem mi) {
+		switch (mi.getItemId()) {
 			case BASIC_ID:
 				setResult(Activity.RESULT_OK);
 				finish();
 				break;
 			default:
-				return super.onOptionsItemSelected(item);
+				return super.onOptionsItemSelected(mi);
 		}
 		return true;
 	}
