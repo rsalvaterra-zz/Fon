@@ -28,6 +28,5 @@
 	<string name="notif_text_logoff">Toque para terminar.</string>
 	<string name="notif_text_config">Toque para configurar.</string>
 	<string name="notif_text_started">Sessão iniciada.</string>
-	<string name="notif_text_resumed">Sessão retomada.</string>
 	<string name="intervalSummary">%s segundos</string>
 </resources>

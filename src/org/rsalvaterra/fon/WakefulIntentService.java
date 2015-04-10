@@ -125,16 +125,8 @@ public final class WakefulIntentService extends IntentService {
 	private void cancelAll() {
 		final AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.KEY_SCAN), PendingIntent.FLAG_UPDATE_CURRENT));
-		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.KEY_CONN_CHECK), PendingIntent.FLAG_UPDATE_CURRENT));
+		alarmManager.cancel(PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.KEY_LOGIN), PendingIntent.FLAG_UPDATE_CURRENT));
 		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(WakefulIntentService.NOTIFICATION_ID);
-	}
-
-	private void checkConnectivity(final WifiManager wm) {
-		if (!LoginManager.isConnected()) {
-			login(wm);
-		} else {
-			scheduleConnectivityCheck();
-		}
 	}
 
 	private void connect(final WifiManager wm) {
@@ -218,19 +210,6 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
-	private void handleResume(final String ssid, final LoginResult lr) {
-		final PendingIntent pi;
-		final String tl;
-		if (WakefulIntentService.isAutoConnectEnabled(this)) {
-			pi = PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
-			tl = getString(R.string.notif_text_resumed);
-		} else {
-			pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
-			tl = getString(R.string.notif_text_logoff);
-		}
-		handleSuccess(ssid, pi, tl);
-	}
-
 	private void handleStart(final String ssid, final LoginResult lr) {
 		final PendingIntent pi;
 		final String tl;
@@ -241,11 +220,7 @@ public final class WakefulIntentService extends IntentService {
 			pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, new Intent(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
 			tl = getString(R.string.notif_text_logoff);
 		}
-		handleSuccess(ssid, pi, tl);
-	}
-
-	private void handleSuccess(final String ssid, final PendingIntent pi, final String tl) {
-		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR, getSuccessTone(), tl, pi);
+		notify(getString(R.string.notif_title_conn, ssid), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), tl, pi);
 		scheduleConnectivityCheck();
 	}
 
@@ -273,10 +248,8 @@ public final class WakefulIntentService extends IntentService {
 		}
 		switch (lr.getResponseCode()) {
 			case Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
-				handleStart(ssid, lr);
-				break;
 			case Constants.CUST_ALREADY_CONNECTED:
-				handleResume(ssid, lr);
+				handleStart(ssid, lr);
 				break;
 			case Constants.WISPR_RESPONSE_CODE_RADIUS_ERROR:
 			case Constants.WISPR_RESPONSE_CODE_NETWORK_ADMIN_ERROR:
@@ -338,7 +311,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void scheduleConnectivityCheck() {
-		scheduleAction(Constants.KEY_CONN_CHECK, WakefulIntentService.CONNECTIVITY_CHECK_INTERVAL);
+		scheduleAction(Constants.KEY_LOGIN, WakefulIntentService.CONNECTIVITY_CHECK_INTERVAL);
 	}
 
 	private void scheduleScan() {
@@ -354,8 +327,6 @@ public final class WakefulIntentService extends IntentService {
 			final WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 			if (a.equals(Constants.KEY_CONNECT)) {
 				connect(wm);
-			} else if (a.equals(Constants.KEY_CONN_CHECK)) {
-				checkConnectivity(wm);
 			} else if (a.equals(Constants.KEY_LOGIN)) {
 				login(wm);
 			} else if (a.equals(Constants.KEY_LOGOFF)) {
