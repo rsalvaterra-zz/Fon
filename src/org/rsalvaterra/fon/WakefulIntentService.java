@@ -15,7 +15,6 @@ import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -25,11 +24,8 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
-import android.util.SparseArray;
 
 public final class WakefulIntentService extends IntentService {
 
@@ -37,15 +33,10 @@ public final class WakefulIntentService extends IntentService {
 	private static final int NOTIFICATION_ID = 1;
 	private static final int REQUEST_CODE = 1;
 	private static final int CONNECTIVITY_CHECK_INTERVAL = 60;
-	private static final int WAKELOCK_TIMEOUT = 60 * 1000;
 	private static final int LOGOFF_HTTP_TIMEOUT = 2 * 1000;
 
 	private static final long[] VIBRATE_PATTERN_SUCCESS = { 100, 250 };
 	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
-
-	private static final String KEY_WAKELOCK_ID = WakefulIntentService.class.getPackage().getName();
-
-	private static final SparseArray<WakeLock> ACTIVE_WAKELOCKS = new SparseArray<WakeLock>();
 
 	private static final Comparator<ScanResult> BY_DESCENDING_SIGNAL_LEVEL = new Comparator<ScanResult>() {
 
@@ -54,8 +45,6 @@ public final class WakefulIntentService extends IntentService {
 			return sr2.level - sr1.level;
 		}
 	};
-
-	private static int NEXT_WAKELOCK_ID = 1;
 
 	public WakefulIntentService() {
 		super(WakefulIntentService.class.getName());
@@ -117,18 +106,6 @@ public final class WakefulIntentService extends IntentService {
 		wm.disconnect();
 	}
 
-	private static void releaseWakeLock(final int i) {
-		if (i != 0) {
-			synchronized (WakefulIntentService.ACTIVE_WAKELOCKS) {
-				final WakeLock wl = WakefulIntentService.ACTIVE_WAKELOCKS.get(i);
-				if (wl != null) {
-					wl.release();
-					WakefulIntentService.ACTIVE_WAKELOCKS.remove(i);
-				}
-			}
-		}
-	}
-
 	private static String stripQuotes(final String ssid) {
 		final int length = ssid.length();
 		if ((length > 2) && (ssid.charAt(0) == '"') && (ssid.charAt(length - 1) == '"')) {
@@ -139,23 +116,6 @@ public final class WakefulIntentService extends IntentService {
 
 	static boolean isAutoConnectEnabled(final Context c) {
 		return PreferenceManager.getDefaultSharedPreferences(c).getBoolean(c.getString(R.string.key_autoconnect), true);
-	}
-
-	public static ComponentName start(final Context c, final String a) {
-		synchronized (WakefulIntentService.ACTIVE_WAKELOCKS) {
-			final int id = WakefulIntentService.NEXT_WAKELOCK_ID++;
-			if (WakefulIntentService.NEXT_WAKELOCK_ID <= 0) {
-				WakefulIntentService.NEXT_WAKELOCK_ID = 1;
-			}
-			final ComponentName cn = c.startService(new Intent(c, WakefulIntentService.class).setAction(a).putExtra(WakefulIntentService.KEY_WAKELOCK_ID, id));
-			if (cn != null) {
-				final PowerManager.WakeLock wl = ((PowerManager) c.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WakefulIntentService.KEY_WAKELOCK_ID);
-				wl.setReferenceCounted(false);
-				wl.acquire(WakefulIntentService.WAKELOCK_TIMEOUT);
-				WakefulIntentService.ACTIVE_WAKELOCKS.put(id, wl);
-			}
-			return cn;
-		}
 	}
 
 	private boolean areNotificationsEnabled() {
@@ -404,7 +364,7 @@ public final class WakefulIntentService extends IntentService {
 				wm.startScan();
 			}
 		}
-		WakefulIntentService.releaseWakeLock(i.getIntExtra(WakefulIntentService.KEY_WAKELOCK_ID, 0));
+		WakefulBroadcastReceiver.releaseWakeLock(i);
 	}
 
 }

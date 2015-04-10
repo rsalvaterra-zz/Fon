@@ -2,6 +2,7 @@ package org.rsalvaterra.fon.activity;
 
 import org.rsalvaterra.fon.Constants;
 import org.rsalvaterra.fon.R;
+import org.rsalvaterra.fon.WakefulBroadcastReceiver;
 import org.rsalvaterra.fon.WakefulIntentService;
 
 import android.app.Activity;
@@ -10,6 +11,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
@@ -20,18 +22,18 @@ public final class AdvancedPreferences extends PreferenceActivity {
 
 	private static final int BASIC_ID = Menu.FIRST;
 
-	private static final Preference.OnPreferenceChangeListener CHECKBOX_LISTENER = new Preference.OnPreferenceChangeListener() {
+	private static final OnPreferenceChangeListener CHECKBOX_LISTENER = new OnPreferenceChangeListener() {
 
 		@Override
 		public final boolean onPreferenceChange(final Preference p, final Object v) {
 			if (((Boolean) v).booleanValue()) {
-				WakefulIntentService.start(p.getContext(), Constants.KEY_SCAN);
+				WakefulBroadcastReceiver.startService(p.getContext(), WakefulIntentService.class, Constants.KEY_SCAN);
 			}
 			return true;
 		}
 	};
 
-	private static final Preference.OnPreferenceChangeListener EDIT_TEXT_LISTENER = new Preference.OnPreferenceChangeListener() {
+	private static final OnPreferenceChangeListener EDIT_TEXT_LISTENER = new OnPreferenceChangeListener() {
 
 		@Override
 		public final boolean onPreferenceChange(final Preference p, final Object v) {
@@ -40,7 +42,7 @@ public final class AdvancedPreferences extends PreferenceActivity {
 		}
 	};
 
-	private static final Preference.OnPreferenceChangeListener RINGTONE_LISTENER = new Preference.OnPreferenceChangeListener() {
+	private static final OnPreferenceChangeListener RINGTONE_LISTENER = new OnPreferenceChangeListener() {
 
 		@Override
 		public final boolean onPreferenceChange(final Preference p, final Object v) {

@@ -1,14 +1,13 @@
 package org.rsalvaterra.fon;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-public final class AlarmBroadcastReceiver extends BroadcastReceiver {
+public final class AlarmBroadcastReceiver extends WakefulBroadcastReceiver {
 
 	@Override
 	public void onReceive(final Context c, final Intent i) {
-		WakefulIntentService.start(c, i.getAction());
+		WakefulBroadcastReceiver.startService(c, WakefulIntentService.class, i.getAction());
 	}
 
 }
