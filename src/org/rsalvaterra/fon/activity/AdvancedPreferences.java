@@ -3,8 +3,11 @@ package org.rsalvaterra.fon.activity;
 import org.rsalvaterra.fon.Constants;
 import org.rsalvaterra.fon.R;
 import org.rsalvaterra.fon.WakefulBroadcastReceiver;
+import org.rsalvaterra.fon.WakefulIntentService;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -26,7 +29,8 @@ public final class AdvancedPreferences extends PreferenceActivity {
 		@Override
 		public final boolean onPreferenceChange(final Preference p, final Object v) {
 			if (((Boolean) v).booleanValue()) {
-				WakefulBroadcastReceiver.startService(p.getContext(), Constants.KEY_SCAN);
+				final Context c = p.getContext();
+				WakefulBroadcastReceiver.startService(c, new Intent(c, WakefulIntentService.class).setAction(Constants.KEY_SCAN));
 			}
 			return true;
 		}

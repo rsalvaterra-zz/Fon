@@ -31,13 +31,13 @@ public abstract class WakefulBroadcastReceiver extends BroadcastReceiver {
 		}
 	}
 
-	public static ComponentName startService(final Context context, final String action) {
+	public static ComponentName startService(final Context context, final Intent intent) {
 		synchronized (WakefulBroadcastReceiver.ACTIVE_WAKELOCKS) {
 			final int id = WakefulBroadcastReceiver.NEXT_WAKELOCK_ID++;
 			if (WakefulBroadcastReceiver.NEXT_WAKELOCK_ID <= 0) {
 				WakefulBroadcastReceiver.NEXT_WAKELOCK_ID = 1;
 			}
-			final ComponentName cn = context.startService(new Intent(context, WakefulIntentService.class).setAction(action).putExtra(WakefulBroadcastReceiver.KEY_WAKELOCK_ID, id));
+			final ComponentName cn = context.startService(intent.putExtra(WakefulBroadcastReceiver.KEY_WAKELOCK_ID, id));
 			if (cn != null) {
 				final WakeLock wl = ((PowerManager) context.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WakefulBroadcastReceiver.KEY_WAKELOCK_ID);
 				wl.setReferenceCounted(false);
