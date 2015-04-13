@@ -256,7 +256,9 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.CUST_WISPR_NOT_PRESENT:
 				handleError(wm, lr);
 				break;
+			case Constants.FON_INVALID_CREDENTIALS_ALT:
 			case Constants.FON_NOT_ENOUGH_CREDIT:
+			case Constants.FON_INVALID_CREDENTIALS:
 			case Constants.FON_USER_IN_BLACK_LIST:
 			case Constants.FON_NOT_AUTHORIZED:
 			case Constants.FON_CUSTOMIZED_ERROR:
@@ -265,8 +267,9 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.FON_AUTHORIZATION_CONNECTION_ERROR:
 				notifyFonError(lr);
 				break;
-			case Constants.FON_INVALID_CREDENTIALS_ALT:
-			case Constants.FON_INVALID_CREDENTIALS:
+			case Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
+				wm.removeNetwork(wm.getConnectionInfo().getNetworkId());
+				break;
 			case Constants.CUST_CREDENTIALS_ERROR:
 				notifyCredentialsError();
 				break;

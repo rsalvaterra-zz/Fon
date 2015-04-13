@@ -192,7 +192,7 @@ public final class LoginManager {
 							FonResponseHandler wrh = new FonResponseHandler();
 							if (LoginManager.parseXml(c, wrh)) {
 								rc = wrh.getResponseCode();
-								if (wrh.getResponseCode() == Constants.WISPR_RESPONSE_CODE_AUTH_PENDING) {
+								if (rc == Constants.WISPR_RESPONSE_CODE_AUTH_PENDING) {
 									c = HttpUtils.get(wrh.getLoginResultsURL(), Constants.HTTP_TIMEOUT);
 									if (c != null) {
 										wrh = new FonResponseHandler();
@@ -206,6 +206,8 @@ public final class LoginManager {
 								} else if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
 									rc = wrh.getFonResponseCode();
 									rm = wrh.getReplyMessage();
+								} else {
+									rc = Constants.FON_UNKNOWN_ERROR;
 								}
 							}
 						} else if (LoginManager.isConnected(LoginManager.getTestUrlContent())) {
