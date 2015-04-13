@@ -241,26 +241,8 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void login(final WifiManager wm, final boolean isFirst) {
-		final String u = getUsername();
-		final String p = getPassword();
-		if ((u.length() == 0) || (p.length() == 0)) {
-			notifyCredentialsError();
-			return;
-		}
-		final String tuc = LoginManager.getTestUrlContent();
-		if (tuc == null) {
-			wm.removeNetwork(wm.getConnectionInfo().getNetworkId());
-			return;
-		}
-		final LoginResult lr;
 		final String ssid = WakefulIntentService.stripQuotes(wm.getConnectionInfo().getSSID());
-		if (LoginManager.isFon(ssid)) {
-			lr = LoginManager.fonLogin(tuc, u, p);
-		} else if (LoginManager.isSfr(ssid)) {
-			lr = LoginManager.sfrLogin(tuc, u, p);
-		} else {
-			return;
-		}
+		final LoginResult lr = LoginManager.login(ssid, getUsername(), getPassword());
 		switch (lr.getResponseCode()) {
 			case Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
 			case Constants.CUST_ALREADY_CONNECTED:
