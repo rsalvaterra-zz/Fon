@@ -7,13 +7,12 @@ final class FonResponseHandler extends DefaultHandler {
 
 	private static final String TAG_REPLY_MESSAGE = "ReplyMessage";
 	private static final String TAG_LOGOFF_URL = "LogoffURL";
-	private static final String TAG_LOGIN_RESULTS_URL = "LoginResultsURL";
 	private static final String TAG_FON_RESPONSE_CODE = "FONResponseCode";
 
+	private final StringBuilder messageType = new StringBuilder();
 	private final StringBuilder responseCode = new StringBuilder();
-	private final StringBuilder logoffUrL = new StringBuilder();
+	private final StringBuilder logoffUrl = new StringBuilder();
 	private final StringBuilder replyMessage = new StringBuilder();
-	private final StringBuilder loginResultsUrl = new StringBuilder();
 	private final StringBuilder fonResponseCode = new StringBuilder();
 
 	private String currentTag;
@@ -22,12 +21,12 @@ final class FonResponseHandler extends DefaultHandler {
 		return Integer.parseInt(fonResponseCode.toString().trim());
 	}
 
-	String getLoginResultsURL() {
-		return loginResultsUrl.toString().trim().replace("&amp;", "&");
+	String getLogoffURL() {
+		return logoffUrl.toString().trim();
 	}
 
-	String getLogoffURL() {
-		return logoffUrL.toString().trim();
+	int getMessageType() {
+		return Integer.parseInt(messageType.toString().trim());
 	}
 
 	String getReplyMessage() {
@@ -40,14 +39,14 @@ final class FonResponseHandler extends DefaultHandler {
 
 	@Override
 	public void characters(final char ch[], final int start, final int length) {
-		if (currentTag.equals(FonInfoHandler.TAG_RESPONSE_CODE)) {
+		if (currentTag.equals(FonInfoHandler.TAG_MESSAGE_TYPE)) {
+			messageType.append(ch, start, start + length);
+		} else if (currentTag.equals(FonInfoHandler.TAG_RESPONSE_CODE)) {
 			responseCode.append(ch, start, start + length);
 		} else if (currentTag.equals(FonResponseHandler.TAG_LOGOFF_URL)) {
-			logoffUrL.append(ch, start, start + length);
+			logoffUrl.append(ch, start, start + length);
 		} else if (currentTag.equals(FonResponseHandler.TAG_REPLY_MESSAGE)) {
 			replyMessage.append(ch, start, start + length);
-		} else if (currentTag.equals(FonResponseHandler.TAG_LOGIN_RESULTS_URL)) {
-			loginResultsUrl.append(ch, start, start + length);
 		} else if (currentTag.equals(FonResponseHandler.TAG_FON_RESPONSE_CODE)) {
 			fonResponseCode.append(ch, start, start + length);
 		}

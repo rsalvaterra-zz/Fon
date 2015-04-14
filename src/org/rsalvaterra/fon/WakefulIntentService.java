@@ -217,13 +217,13 @@ public final class WakefulIntentService extends IntentService {
 		final String text;
 		if (WakefulIntentService.isAutoConnectEnabled(this)) {
 			pi = PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
-			text = getString(R.string.notif_title_conn, ssid);
+			text = getString(R.string.notif_text_conn, ssid);
 		} else {
 			pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, i.setClass(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
 			text = getString(R.string.notif_text_logoff);
 		}
 		if (isfirst) {
-			notify(getString(R.string.notif_text_started), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), text, pi);
+			notify(getString(R.string.notif_title_started), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), text, pi);
 		}
 		scheduleConnectivityCheck();
 	}
@@ -241,12 +241,11 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void login(final WifiManager wm, final boolean isFirst) {
-		final String ssid = WakefulIntentService.stripQuotes(wm.getConnectionInfo().getSSID());
-		final LoginResult lr = LoginManager.login(ssid, getUsername(), getPassword());
+		final LoginResult lr = LoginManager.login(getUsername(), getPassword());
 		switch (lr.getResponseCode()) {
 			case Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
 			case Constants.CUST_ALREADY_CONNECTED:
-				handleSuccess(ssid, lr, isFirst);
+				handleSuccess(WakefulIntentService.stripQuotes(wm.getConnectionInfo().getSSID()), lr, isFirst);
 				break;
 			case Constants.WISPR_RESPONSE_CODE_RADIUS_ERROR:
 			case Constants.WISPR_RESPONSE_CODE_NETWORK_ADMIN_ERROR:
@@ -256,9 +255,7 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.CUST_WISPR_NOT_PRESENT:
 				handleError(wm, lr);
 				break;
-			case Constants.FON_INVALID_CREDENTIALS_ALT:
 			case Constants.FON_NOT_ENOUGH_CREDIT:
-			case Constants.FON_INVALID_CREDENTIALS:
 			case Constants.FON_USER_IN_BLACK_LIST:
 			case Constants.FON_NOT_AUTHORIZED:
 			case Constants.FON_CUSTOMIZED_ERROR:
@@ -270,6 +267,8 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
 				wm.removeNetwork(wm.getConnectionInfo().getNetworkId());
 				break;
+			case Constants.FON_INVALID_CREDENTIALS_ALT:
+			case Constants.FON_INVALID_CREDENTIALS:
 			case Constants.CUST_CREDENTIALS_ERROR:
 				notifyCredentialsError();
 				break;
@@ -292,15 +291,15 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void notifyCredentialsError() {
-		notifyError(getString(R.string.notif_title_cred_err), getString(R.string.notif_text_config));
+		notifyError(getString(R.string.notif_title_cred_err));
 	}
 
-	private void notifyError(final String title, final String text) {
-		notify(title, WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), text, PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
+	private void notifyError(final String title) {
+		notify(title, WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), getString(R.string.notif_text_config), PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void notifyFonError(final LoginResult lr) {
-		notifyError(getString(R.string.notif_title_fon_err, Integer.valueOf(lr.getResponseCode())), '"' + lr.getReplyMessage() + '"');
+		notifyError(getString(R.string.notif_title_fon_err, Integer.valueOf(lr.getResponseCode()), lr.getReplyMessage()));
 	}
 
 	private void scheduleAction(final Intent intent, final int seconds) {

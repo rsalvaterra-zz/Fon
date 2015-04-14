@@ -39,18 +39,6 @@ public final class LoginManager {
 		return null;
 	}
 
-	private static String getSfrUrl(final String source) {
-		final int start = source.indexOf("SFRLoginURL_JIL");
-		if (start != -1) {
-			final int end = source.indexOf("-->", start);
-			if (end != -1) {
-				final String url = source.substring(start, end);
-				return url.substring(url.indexOf("https")).replace("&amp;", "&").replace("notyet", "smartclient");
-			}
-		}
-		return null;
-	}
-
 	private static String getTestUrlContent() {
 		return HttpUtils.get(LoginManager.CONNECTION_TEST_URL, Constants.HTTP_TIMEOUT);
 	}
@@ -84,10 +72,6 @@ public final class LoginManager {
 
 	private static boolean isDt(final String ssid) {
 		return ssid.equals("Telekom_FON");
-	}
-
-	private static boolean isFon(final String ssid) {
-		return LoginManager.isGenericFon(ssid) || LoginManager.isBt(ssid) || LoginManager.isProximus(ssid) || LoginManager.isKpn(ssid) || LoginManager.isDt(ssid) || LoginManager.isSt(ssid) || LoginManager.isJt(ssid) || LoginManager.isHt(ssid) || LoginManager.isOte(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isTtnet(ssid) || LoginManager.isOtherFon(ssid) || LoginManager.isOi(ssid) || LoginManager.isDowntownBrooklyn(ssid) || LoginManager.isMweb(ssid) || LoginManager.isSoftBank(ssid) || LoginManager.isTelstra(ssid);
 	}
 
 	private static boolean isGenericFon(final String ssid) {
@@ -164,10 +148,10 @@ public final class LoginManager {
 	}
 
 	public static boolean isSupported(final String ssid) {
-		return LoginManager.isFon(ssid) || LoginManager.isSfr(ssid);
+		return LoginManager.isGenericFon(ssid) || LoginManager.isBt(ssid) || LoginManager.isSfr(ssid) || LoginManager.isProximus(ssid) || LoginManager.isKpn(ssid) || LoginManager.isDt(ssid) || LoginManager.isSt(ssid) || LoginManager.isJt(ssid) || LoginManager.isHt(ssid) || LoginManager.isOte(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isTtnet(ssid) || LoginManager.isOtherFon(ssid) || LoginManager.isOi(ssid) || LoginManager.isDowntownBrooklyn(ssid) || LoginManager.isMweb(ssid) || LoginManager.isSoftBank(ssid) || LoginManager.isTelstra(ssid);
 	}
 
-	public static LoginResult login(final String ssid, final String user, final String password) {
+	public static LoginResult login(final String user, final String password) {
 		int rc = Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
 		String rm = null;
 		String lu = null;
@@ -175,43 +159,28 @@ public final class LoginManager {
 			String c = LoginManager.getTestUrlContent();
 			if (c != null) {
 				if (!LoginManager.isConnected(c)) {
-					if (LoginManager.isFon(ssid)) {
-						c = LoginManager.getXml(c);
-						if (c != null) {
-							final FonInfoHandler wih = new FonInfoHandler();
-							if (LoginManager.parseXml(c, wih) && (wih.getMessageType() == Constants.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (wih.getResponseCode() == Constants.WISPR_RESPONSE_CODE_NO_ERROR)) {
-								c = wih.getLoginURL();
-							}
-						}
-					} else if (LoginManager.isSfr(ssid)) {
-						c = LoginManager.getSfrUrl(c);
-					}
+					c = LoginManager.getXml(c);
 					if (c != null) {
-						c = LoginManager.doLogin(c, user, password);
-						if (c != null) {
-							FonResponseHandler wrh = new FonResponseHandler();
-							if (LoginManager.parseXml(c, wrh)) {
-								rc = wrh.getResponseCode();
-								if (rc == Constants.WISPR_RESPONSE_CODE_AUTH_PENDING) {
-									c = HttpUtils.get(wrh.getLoginResultsURL(), Constants.HTTP_TIMEOUT);
-									if (c != null) {
-										wrh = new FonResponseHandler();
-										if (LoginManager.parseXml(c, wrh)) {
-											rc = wrh.getResponseCode();
+						final FonInfoHandler wih = new FonInfoHandler();
+						if (LoginManager.parseXml(c, wih) && (wih.getMessageType() == Constants.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (wih.getResponseCode() == Constants.WISPR_RESPONSE_CODE_NO_ERROR)) {
+							c = LoginManager.doLogin(wih.getLoginURL(), user, password);
+							if (c != null) {
+								final FonResponseHandler wrh = new FonResponseHandler();
+								if (LoginManager.parseXml(c, wrh)) {
+									final int mt = wrh.getMessageType();
+									if ((mt == Constants.WISPR_MESSAGE_TYPE_AUTH_NOTIFICATION) || (mt == Constants.WISPR_MESSAGE_TYPE_RESPONSE_AUTH_POLL)) {
+										rc = wrh.getResponseCode();
+										if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
 											lu = wrh.getLogoffURL();
+										} else if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
+											rc = wrh.getFonResponseCode();
+											rm = wrh.getReplyMessage();
 										}
 									}
-								} else if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
-									lu = wrh.getLogoffURL();
-								} else if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
-									rc = wrh.getFonResponseCode();
-									rm = wrh.getReplyMessage();
-								} else {
-									rc = Constants.FON_UNKNOWN_ERROR;
 								}
+							} else if (LoginManager.isConnected(LoginManager.getTestUrlContent())) {
+								rc = Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
 							}
-						} else if (LoginManager.isConnected(LoginManager.getTestUrlContent())) {
-							rc = Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
 						}
 					} else {
 						rc = Constants.CUST_WISPR_NOT_PRESENT;

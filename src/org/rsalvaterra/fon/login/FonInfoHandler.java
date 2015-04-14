@@ -5,19 +5,19 @@ import org.xml.sax.helpers.DefaultHandler;
 
 final class FonInfoHandler extends DefaultHandler {
 
-	private static final String TAG_MESSAGE_TYPE = "MessageType";
 	private static final String TAG_LOGIN_URL = "LoginURL";
 
+	static final String TAG_MESSAGE_TYPE = "MessageType";
 	static final String TAG_RESPONSE_CODE = "ResponseCode";
 
-	private final StringBuilder loginURL = new StringBuilder();
+	private final StringBuilder loginUrl = new StringBuilder();
 	private final StringBuilder messageType = new StringBuilder();
 	private final StringBuilder responseCode = new StringBuilder();
 
 	private String currentTag;
 
 	String getLoginURL() {
-		return loginURL.toString().trim();
+		return loginUrl.toString().trim();
 	}
 
 	int getMessageType() {
@@ -31,7 +31,7 @@ final class FonInfoHandler extends DefaultHandler {
 	@Override
 	public void characters(final char[] ch, final int start, final int length) {
 		if (currentTag.equals(FonInfoHandler.TAG_LOGIN_URL)) {
-			loginURL.append(ch, start, start + length);
+			loginUrl.append(ch, start, start + length);
 		} else if (currentTag.equals(FonInfoHandler.TAG_MESSAGE_TYPE)) {
 			messageType.append(ch, start, start + length);
 		} else if (currentTag.equals(FonInfoHandler.TAG_RESPONSE_CODE)) {
