@@ -74,7 +74,7 @@ public final class LoginManager {
 	}
 
 	private static boolean isConnected(final String content) {
-		return LoginManager.CONNECTED.equals(content);
+		return content.equals(LoginManager.CONNECTED);
 	}
 
 	private static boolean isDowntownBrooklyn(final String ssid) {
