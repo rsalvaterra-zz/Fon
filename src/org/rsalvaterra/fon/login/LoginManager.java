@@ -2,17 +2,20 @@ package org.rsalvaterra.fon.login;
 
 import org.rsalvaterra.fon.Constants;
 import org.rsalvaterra.fon.HttpUtils;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
 
 import android.net.Uri;
-import android.util.Xml;
 
 public final class LoginManager {
 
 	private static final String CONNECTED = "CONNECTED";
 	private static final String CONNECTION_TEST_URL = "http://cm.fon.mobi/android.txt";
 	private static final String FON_USERNAME_PREFIX = "FON_WISPR/";
+	private static final String TAG_FON_RESPONSE_CODE = "FONResponseCode";
+	private static final String TAG_LOGIN_URL = "LoginURL";
+	private static final String TAG_LOGOFF_URL = "LogoffURL";
+	private static final String TAG_MESSAGE_TYPE = "MessageType";
+	private static final String TAG_REPLY_MESSAGE = "ReplyMessage";
+	private static final String TAG_RESPONSE_CODE = "ResponseCode";
 	private static final String TAG_WISPR = "WISPAccessGatewayParam";
 
 	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".neuf.fr", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
@@ -31,7 +34,7 @@ public final class LoginManager {
 					}
 					final String r = HttpUtils.post(url, username, password);
 					if (r != null) {
-						return LoginManager.getXml(r);
+						return LoginManager.getWisprMessage(r);
 					}
 				}
 			}
@@ -39,21 +42,29 @@ public final class LoginManager {
 		return null;
 	}
 
+	private static String getElementText(final String source, final String elementName) {
+		final int start = source.indexOf("<" + elementName);
+		if (start != -1) {
+			final int end = source.indexOf("</" + elementName + ">", start);
+			if (end != -1) {
+				return source.substring(start + elementName.length() + 2, end);
+			}
+		}
+		return "";
+	}
+
+	private static int getElementTextAsInt(final String source, final String elementName) {
+		return Integer.parseInt(LoginManager.getElementText(source, elementName));
+	}
+
 	private static String getTestUrlContent() {
 		return HttpUtils.get(LoginManager.CONNECTION_TEST_URL, Constants.HTTP_TIMEOUT);
 	}
 
-	private static String getXml(final String source) {
-		final int start = source.indexOf("<" + LoginManager.TAG_WISPR);
-		if (start != -1) {
-			final int end = source.indexOf("</" + LoginManager.TAG_WISPR + ">", start);
-			if (end != -1) {
-				final String res = source.substring(start, end + LoginManager.TAG_WISPR.length() + 3);
-				if (!res.contains("&amp;")) {
-					res.replace("&", "&amp;");
-				}
-				return res;
-			}
+	private static String getWisprMessage(final String source) {
+		final String res = LoginManager.getElementText(source, LoginManager.TAG_WISPR);
+		if (res.length() != 0) {
+			return res.replace("&amp;", "&");
 		}
 		return null;
 	}
@@ -138,15 +149,6 @@ public final class LoginManager {
 		return (h.endsWith("portal.fon.com") || h.endsWith("wifi.sfr.fr") || h.equals("www.btopenzone.com")) && !(h.contains("belgacom") || h.contains("telekom"));
 	}
 
-	private static boolean parseXml(final String xml, final ContentHandler handler) {
-		try {
-			Xml.parse(xml, handler);
-		} catch (final SAXException e) {
-			return false;
-		}
-		return true;
-	}
-
 	public static boolean isSupported(final String ssid) {
 		return LoginManager.isGenericFon(ssid) || LoginManager.isBt(ssid) || LoginManager.isSfr(ssid) || LoginManager.isProximus(ssid) || LoginManager.isKpn(ssid) || LoginManager.isDt(ssid) || LoginManager.isSt(ssid) || LoginManager.isJt(ssid) || LoginManager.isHt(ssid) || LoginManager.isOte(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isTtnet(ssid) || LoginManager.isOtherFon(ssid) || LoginManager.isOi(ssid) || LoginManager.isDowntownBrooklyn(ssid) || LoginManager.isMweb(ssid) || LoginManager.isSoftBank(ssid) || LoginManager.isTelstra(ssid);
 	}
@@ -159,23 +161,19 @@ public final class LoginManager {
 			String c = LoginManager.getTestUrlContent();
 			if (c != null) {
 				if (!LoginManager.isConnected(c)) {
-					c = LoginManager.getXml(c);
+					c = LoginManager.getWisprMessage(c);
 					if (c != null) {
-						final FonInfoHandler wih = new FonInfoHandler();
-						if (LoginManager.parseXml(c, wih) && (wih.getMessageType() == Constants.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (wih.getResponseCode() == Constants.WISPR_RESPONSE_CODE_NO_ERROR)) {
-							c = LoginManager.doLogin(wih.getLoginURL(), user, password);
+						if ((LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE) == Constants.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE) == Constants.WISPR_RESPONSE_CODE_NO_ERROR)) {
+							c = LoginManager.doLogin(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL), user, password);
 							if (c != null) {
-								final FonResponseHandler wrh = new FonResponseHandler();
-								if (LoginManager.parseXml(c, wrh)) {
-									final int mt = wrh.getMessageType();
-									if ((mt == Constants.WISPR_MESSAGE_TYPE_AUTH_NOTIFICATION) || (mt == Constants.WISPR_MESSAGE_TYPE_RESPONSE_AUTH_POLL)) {
-										rc = wrh.getResponseCode();
-										if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
-											lu = wrh.getLogoffURL();
-										} else if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
-											rc = wrh.getFonResponseCode();
-											rm = wrh.getReplyMessage();
-										}
+								final int mt = LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE);
+								if ((mt == Constants.WISPR_MESSAGE_TYPE_AUTH_NOTIFICATION) || (mt == Constants.WISPR_MESSAGE_TYPE_RESPONSE_AUTH_POLL)) {
+									rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE);
+									if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
+										lu = LoginManager.getElementText(c, LoginManager.TAG_LOGOFF_URL);
+									} else if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
+										rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_FON_RESPONSE_CODE);
+										rm = LoginManager.getElementText(c, LoginManager.TAG_REPLY_MESSAGE);
 									}
 								}
 							} else if (LoginManager.isConnected(LoginManager.getTestUrlContent())) {
