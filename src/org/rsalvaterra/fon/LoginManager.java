@@ -69,10 +69,6 @@ public final class LoginManager {
 		return ssid.equals("BTWiFi") || ssid.equals("BTWiFi-with-FON") || ssid.equals("BTOpenzone") || ssid.equals("BTOpenzone-H") || ssid.equals("BTOpenzone-B") || ssid.equals("BTOpenzone-M") || ssid.equals("BTFON");
 	}
 
-	private static boolean isConnected(final String content) {
-		return content.equals(LoginManager.CONNECTED);
-	}
-
 	private static boolean isDowntownBrooklyn(final String ssid) {
 		return ssid.equalsIgnoreCase("DowntownBrooklynWifi_Fon");
 	}
@@ -160,24 +156,20 @@ public final class LoginManager {
 		if ((user.length() != 0) && (password.length() != 0)) {
 			String c = LoginManager.getTestUrlContent();
 			if (c != null) {
-				if (!LoginManager.isConnected(c)) {
+				if (!c.equals(LoginManager.CONNECTED)) {
 					c = LoginManager.getWisprMessage(c);
-					if (c != null) {
-						if ((LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE) == Constants.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE) == Constants.WISPR_RESPONSE_CODE_NO_ERROR)) {
-							c = LoginManager.doLogin(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL), user, password);
-							if (c != null) {
-								final int mt = LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE);
-								if ((mt == Constants.WISPR_MESSAGE_TYPE_AUTH_NOTIFICATION) || (mt == Constants.WISPR_MESSAGE_TYPE_RESPONSE_AUTH_POLL)) {
-									rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE);
-									if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
-										lu = LoginManager.getElementText(c, LoginManager.TAG_LOGOFF_URL);
-									} else if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
-										rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_FON_RESPONSE_CODE);
-										rm = LoginManager.getElementText(c, LoginManager.TAG_REPLY_MESSAGE);
-									}
+					if ((c != null) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE) == Constants.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE) == Constants.WISPR_RESPONSE_CODE_NO_ERROR)) {
+						c = LoginManager.doLogin(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL), user, password);
+						if (c != null) {
+							final int mt = LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE);
+							if ((mt == Constants.WISPR_MESSAGE_TYPE_AUTH_NOTIFICATION) || (mt == Constants.WISPR_MESSAGE_TYPE_RESPONSE_AUTH_POLL)) {
+								rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE);
+								if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
+									lu = LoginManager.getElementText(c, LoginManager.TAG_LOGOFF_URL);
+								} else if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
+									rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_FON_RESPONSE_CODE);
+									rm = LoginManager.getElementText(c, LoginManager.TAG_REPLY_MESSAGE);
 								}
-							} else if (LoginManager.isConnected(LoginManager.getTestUrlContent())) {
-								rc = Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED;
 							}
 						}
 					} else {
