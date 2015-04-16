@@ -12,7 +12,7 @@ public abstract class WakefulBroadcastReceiver extends BroadcastReceiver {
 
 	private static final int WAKELOCK_TIMEOUT = 60 * 1000;
 
-	private static final String KEY_WAKELOCK_ID = WakefulBroadcastReceiver.class.getPackage().getName();
+	private static final String KEY_WAKELOCK_ID = Constants.APP_ID + ".wakelock";
 
 	private static final SparseArray<WakeLock> ACTIVE_WAKELOCKS = new SparseArray<WakeLock>();
 
@@ -31,7 +31,7 @@ public abstract class WakefulBroadcastReceiver extends BroadcastReceiver {
 		}
 	}
 
-	public static ComponentName startService(final Context context, final Intent intent) {
+	static ComponentName startService(final Context context, final Intent intent) {
 		synchronized (WakefulBroadcastReceiver.ACTIVE_WAKELOCKS) {
 			final int id = WakefulBroadcastReceiver.NEXT_WAKELOCK_ID++;
 			if (WakefulBroadcastReceiver.NEXT_WAKELOCK_ID <= 0) {

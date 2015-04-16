@@ -1,6 +1,4 @@
-package org.rsalvaterra.fon.activity;
-
-import org.rsalvaterra.fon.R;
+package org.rsalvaterra.fon;
 
 import android.app.AlertDialog;
 import android.content.Intent;

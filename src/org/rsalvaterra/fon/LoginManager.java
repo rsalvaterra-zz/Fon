@@ -1,15 +1,11 @@
-package org.rsalvaterra.fon.login;
-
-import org.rsalvaterra.fon.Constants;
-import org.rsalvaterra.fon.HttpUtils;
-
-import android.net.Uri;
+package org.rsalvaterra.fon;
 
 public final class LoginManager {
 
 	private static final String CONNECTED = "CONNECTED";
 	private static final String CONNECTION_TEST_URL = "http://cm.fon.mobi/android.txt";
 	private static final String FON_USERNAME_PREFIX = "FON_WISPR/";
+	private static final String SAFE_PROTOCOL = "https://";
 	private static final String TAG_FON_RESPONSE_CODE = "FONResponseCode";
 	private static final String TAG_LOGIN_URL = "LoginURL";
 	private static final String TAG_LOGOFF_URL = "LogoffURL";
@@ -18,13 +14,13 @@ public final class LoginManager {
 	private static final String TAG_RESPONSE_CODE = "ResponseCode";
 	private static final String TAG_WISPR = "WISPAccessGatewayParam";
 
-	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".neuf.fr", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
+	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
 
-	private static String doLogin(final String url, final String user, final String password) {
-		final Uri u = Uri.parse(url);
-		if (u.getScheme().equals("https")) {
+	private static String doLogin(final String url, final String user, final String pass) {
+		final String u = LoginManager.replaceAmpEntities(url);
+		if (u.startsWith(LoginManager.SAFE_PROTOCOL)) {
 			for (final String s : LoginManager.VALID_SUFFIX) {
-				final String h = u.getHost();
+				final String h = u.substring(LoginManager.SAFE_PROTOCOL.length(), u.indexOf("/", LoginManager.SAFE_PROTOCOL.length()));
 				if (h.endsWith(s)) {
 					final String username;
 					if (LoginManager.isWisprHost(h)) {
@@ -32,7 +28,7 @@ public final class LoginManager {
 					} else {
 						username = user;
 					}
-					final String r = HttpUtils.post(url, username, password);
+					final String r = HttpUtils.post(u, username, pass);
 					if (r != null) {
 						return LoginManager.getWisprMessage(r);
 					}
@@ -43,7 +39,7 @@ public final class LoginManager {
 	}
 
 	private static String getElementText(final String source, final String elementName) {
-		final int start = source.indexOf(">", source.indexOf("<" + elementName));
+		final int start = source.indexOf(">", source.indexOf('<' + elementName));
 		if (start != -1) {
 			final int end = source.indexOf("</" + elementName + ">", start);
 			if (end != -1) {
@@ -153,11 +149,11 @@ public final class LoginManager {
 		return s.replace("&amp;", "&");
 	}
 
-	public static boolean isSupported(final String ssid) {
+	static boolean isSupported(final String ssid) {
 		return LoginManager.isGenericFon(ssid) || LoginManager.isBt(ssid) || LoginManager.isSfr(ssid) || LoginManager.isProximus(ssid) || LoginManager.isKpn(ssid) || LoginManager.isDt(ssid) || LoginManager.isSt(ssid) || LoginManager.isJt(ssid) || LoginManager.isHt(ssid) || LoginManager.isOte(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isTtnet(ssid) || LoginManager.isOtherFon(ssid) || LoginManager.isOi(ssid) || LoginManager.isDowntownBrooklyn(ssid) || LoginManager.isMweb(ssid) || LoginManager.isSoftBank(ssid) || LoginManager.isTelstra(ssid);
 	}
 
-	public static LoginResult login(final String user, final String password) {
+	static LoginResult login(final String user, final String password) {
 		int rc = Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
 		String rm = null;
 		String lu = null;
@@ -168,13 +164,13 @@ public final class LoginManager {
 					c = LoginManager.getWisprMessage(c);
 					if (c != null) {
 						if ((LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE) == Constants.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE) == Constants.WISPR_RESPONSE_CODE_NO_ERROR)) {
-							c = LoginManager.doLogin(LoginManager.replaceAmpEntities(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL)), user, password);
+							c = LoginManager.doLogin(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL), user, password);
 							if (c != null) {
 								final int mt = LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE);
 								if ((mt == Constants.WISPR_MESSAGE_TYPE_AUTH_NOTIFICATION) || (mt == Constants.WISPR_MESSAGE_TYPE_RESPONSE_AUTH_POLL)) {
 									rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE);
 									if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
-										lu = LoginManager.replaceAmpEntities(LoginManager.getElementText(c, LoginManager.TAG_LOGOFF_URL));
+										lu = LoginManager.getElementText(c, LoginManager.TAG_LOGOFF_URL);
 									} else if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
 										rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_FON_RESPONSE_CODE);
 										rm = LoginManager.getElementText(c, LoginManager.TAG_REPLY_MESSAGE);

@@ -91,11 +91,11 @@ public final class HttpUtils {
 		}
 	}
 
-	public static String get(final String url, final int timeout) {
+	static String get(final String url, final int timeout) {
 		return HttpUtils.request(new HttpGet(url), timeout);
 	}
 
-	public static String post(final String url, final String username, final String password) {
+	static String post(final String url, final String username, final String password) {
 		final ArrayList<BasicNameValuePair> p = new ArrayList<BasicNameValuePair>();
 		p.add(new BasicNameValuePair(HttpUtils.TAG_WISPR_USERNAME, username));
 		p.add(new BasicNameValuePair(HttpUtils.TAG_WISPR_PASSWORD, password));

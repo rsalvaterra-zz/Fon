@@ -1,4 +1,4 @@
-package org.rsalvaterra.fon.login;
+package org.rsalvaterra.fon;
 
 public final class LoginResult {
 
@@ -13,15 +13,15 @@ public final class LoginResult {
 		this.logOffUrl = logOffUrl;
 	}
 
-	public String getLogOffUrl() {
+	String getLogOffUrl() {
 		return logOffUrl;
 	}
 
-	public String getReplyMessage() {
+	String getReplyMessage() {
 		return replyMessage;
 	}
 
-	public int getResponseCode() {
+	int getResponseCode() {
 		return responseCode;
 	}
 

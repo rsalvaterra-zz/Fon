@@ -1,9 +1,4 @@
-package org.rsalvaterra.fon.activity;
-
-import org.rsalvaterra.fon.Constants;
-import org.rsalvaterra.fon.R;
-import org.rsalvaterra.fon.WakefulBroadcastReceiver;
-import org.rsalvaterra.fon.WakefulIntentService;
+package org.rsalvaterra.fon;
 
 import android.app.Activity;
 import android.content.Context;

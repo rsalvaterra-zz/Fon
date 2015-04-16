@@ -1,4 +1,4 @@
-package org.rsalvaterra.fon.blacklist;
+package org.rsalvaterra.fon;
 
 import android.content.ContentProvider;
 import android.content.ContentResolver;
@@ -16,15 +16,15 @@ public final class BlacklistProvider extends ContentProvider {
 	private static final int DATABASE_VERSION = 1;
 	private static final int BLACKLIST_PERIOD = 300000; // Five minutes
 
-	private static final String AUTHORITY = BlacklistProvider.class.getPackage().getName();
 	private static final String TABLE_BLACKLIST = "blacklist";
+	private static final String AUTHORITY = Constants.APP_ID + '.' + BlacklistProvider.TABLE_BLACKLIST;
 	private static final String KEY_BSSID = "bssid";
 	private static final String KEY_EXPIRY_TIME = "exptime";
 	private static final String WHERE_CLAUSE = BlacklistProvider.KEY_BSSID + " = ?";
 
 	private static final UriMatcher MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
-	private static final Uri BLACKLIST_URI = Uri.parse(new StringBuilder().append("content://").append(BlacklistProvider.AUTHORITY).append('/').append(BlacklistProvider.TABLE_BLACKLIST).toString());
+	private static final Uri BLACKLIST_URI = Uri.parse("content://" + BlacklistProvider.AUTHORITY + '/' + BlacklistProvider.TABLE_BLACKLIST);
 
 	static {
 		BlacklistProvider.MATCHER.addURI(BlacklistProvider.AUTHORITY, BlacklistProvider.TABLE_BLACKLIST, BlacklistProvider.MATCHES);
@@ -32,7 +32,7 @@ public final class BlacklistProvider extends ContentProvider {
 
 	private SQLiteOpenHelper helper;
 
-	public static void addToBlacklist(final ContentResolver resolver, final String bssid) {
+	static void addToBlacklist(final ContentResolver resolver, final String bssid) {
 		final ContentValues values = new ContentValues();
 		values.put(BlacklistProvider.KEY_EXPIRY_TIME, Long.valueOf(SystemClock.elapsedRealtime() + BlacklistProvider.BLACKLIST_PERIOD));
 		if (resolver.update(BlacklistProvider.BLACKLIST_URI, values, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid }) == 0) {
@@ -41,7 +41,7 @@ public final class BlacklistProvider extends ContentProvider {
 		}
 	}
 
-	public static boolean isBlacklisted(final ContentResolver resolver, final String bssid) {
+	static boolean isBlacklisted(final ContentResolver resolver, final String bssid) {
 		boolean blacklisted = false;
 		final Cursor cursor = resolver.query(BlacklistProvider.BLACKLIST_URI, new String[] { BlacklistProvider.KEY_BSSID, BlacklistProvider.KEY_EXPIRY_TIME }, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid }, null);
 		if (cursor != null) {

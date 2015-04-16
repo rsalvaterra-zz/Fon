@@ -1,7 +1,5 @@
 package org.rsalvaterra.fon;
 
-import org.rsalvaterra.fon.login.LoginManager;
-
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;

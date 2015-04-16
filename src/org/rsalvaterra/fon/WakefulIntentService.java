@@ -5,11 +5,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-import org.rsalvaterra.fon.activity.BasicPreferences;
-import org.rsalvaterra.fon.blacklist.BlacklistProvider;
-import org.rsalvaterra.fon.login.LoginManager;
-import org.rsalvaterra.fon.login.LoginResult;
-
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.Notification;

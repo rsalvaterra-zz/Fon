@@ -1,6 +1,6 @@
 package org.rsalvaterra.fon;
 
-public interface Constants {
+interface Constants {
 
 	static final int CUST_WISPR_NOT_PRESENT = 1024;
 	static final int CUST_ALREADY_CONNECTED = 1025;
@@ -39,12 +39,14 @@ public interface Constants {
 
 	static final int HTTP_TIMEOUT = 30 * 1000;
 
-	static final String KEY_CANCEL_ALL = "org.rsalvaterra.fon.CANCEL_ALL";
-	static final String KEY_CONNECT = "org.rsalvaterra.fon.CONNECT";
-	static final String KEY_FIRST = "org.rsalvaterra.fon.FIRST";
-	static final String KEY_LOGIN = "org.rsalvaterra.fon.LOGIN";
-	static final String KEY_LOGOFF = "org.rsalvaterra.fon.LOGOFF";
-	static final String KEY_LOGOFF_URL = "org.rsalvaterra.fon.LOGOFF_URL";
-	static final String KEY_SCAN = "org.rsalvaterra.fon.SCAN";
+	static final String APP_ID = "org.rsalvaterra.fon";
+
+	static final String KEY_CANCEL_ALL = Constants.APP_ID + ".CANCEL_ALL";
+	static final String KEY_CONNECT = Constants.APP_ID + ".CONNECT";
+	static final String KEY_FIRST = Constants.APP_ID + ".FIRST";
+	static final String KEY_LOGIN = Constants.APP_ID + ".LOGIN";
+	static final String KEY_LOGOFF = Constants.APP_ID + ".LOGOFF";
+	static final String KEY_LOGOFF_URL = Constants.APP_ID + ".LOGOFF_URL";
+	static final String KEY_SCAN = Constants.APP_ID + ".SCAN";
 
 }
