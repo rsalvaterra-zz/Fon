@@ -33,9 +33,9 @@ public final class LoginManager {
 	}
 
 	private static String getElementText(final String source, final String elementName) {
-		final int start = source.indexOf(">", source.indexOf('<' + elementName));
+		final int start = source.indexOf(">", source.indexOf(elementName));
 		if (start != -1) {
-			final int end = source.indexOf("</" + elementName + ">", start);
+			final int end = source.indexOf("</" + elementName, start);
 			if (end != -1) {
 				return source.substring(start + 1, end);
 			}
