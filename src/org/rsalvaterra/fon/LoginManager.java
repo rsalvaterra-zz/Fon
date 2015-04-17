@@ -22,13 +22,7 @@ public final class LoginManager {
 			for (final String s : LoginManager.VALID_SUFFIX) {
 				final String h = u.substring(LoginManager.SAFE_PROTOCOL.length(), u.indexOf("/", LoginManager.SAFE_PROTOCOL.length()));
 				if (h.endsWith(s)) {
-					final String username;
-					if (LoginManager.isWisprHost(h)) {
-						username = LoginManager.FON_USERNAME_PREFIX + user;
-					} else {
-						username = user;
-					}
-					final String r = HttpUtils.post(u, username, pass);
+					final String r = HttpUtils.post(u, LoginManager.getPrefixedUserName(h, user), pass);
 					if (r != null) {
 						return LoginManager.getWisprMessage(r);
 					}
@@ -51,6 +45,13 @@ public final class LoginManager {
 
 	private static int getElementTextAsInt(final String source, final String elementName) {
 		return Integer.parseInt(LoginManager.getElementText(source, elementName));
+	}
+
+	private static String getPrefixedUserName(final String h, final String username) {
+		if ((h.endsWith("portal.fon.com") || h.endsWith("wifi.sfr.fr") || h.equals("www.btopenzone.com")) && !(h.contains("belgacom") || h.contains("telekom"))) {
+			return LoginManager.FON_USERNAME_PREFIX + username;
+		}
+		return username;
 	}
 
 	private static String getTestUrlContent() {
@@ -135,10 +136,6 @@ public final class LoginManager {
 
 	private static boolean isTtnet(final String ssid) {
 		return ssid.equalsIgnoreCase("TTNET WiFi FON");
-	}
-
-	private static boolean isWisprHost(final String h) {
-		return (h.endsWith("portal.fon.com") || h.endsWith("wifi.sfr.fr") || h.equals("www.btopenzone.com")) && !(h.contains("belgacom") || h.contains("telekom"));
 	}
 
 	private static String replaceAmpEntities(final String s) {
