@@ -58,8 +58,8 @@
 		name="key_vibration"
 		translatable="false">vibrate</string>
 	<string name="vibration">Vibration</string>
-	<string name="notif_text_conn">Connected to "%s".</string>
-	<string name="notif_title_fon_err">Error %1$d: "%2$s"</string>
+	<string name="notif_text_conn">Connected to \"%s\".</string>
+	<string name="notif_title_fon_err">Error %1$d: \"%2$s\"</string>
 	<string name="notif_title_cred_err">Invalid credentials</string>
 	<string name="notif_text_logoff">Touch to logoff.</string>
 	<string name="notif_text_config">Touch to configure.</string>
