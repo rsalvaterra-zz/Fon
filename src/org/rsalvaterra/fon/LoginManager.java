@@ -147,7 +147,7 @@ public final class LoginManager {
 	}
 
 	static LoginResult login(final String user, final String password) {
-		int rc = Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR;
+		int rc = Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR;
 		String rm = null;
 		String lu = null;
 		if ((user.length() != 0) && (password.length() != 0)) {
@@ -155,29 +155,29 @@ public final class LoginManager {
 			if (c != null) {
 				if (!c.equals(LoginManager.CONNECTED)) {
 					c = LoginManager.getWisprMessage(c);
-					if ((c != null) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE) == Constants.WISPR_MESSAGE_TYPE_INITIAL_REDIRECT) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE) == Constants.WISPR_RESPONSE_CODE_NO_ERROR)) {
+					if ((c != null) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE) == Constants.WMT_INITIAL_REDIRECT) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE) == Constants.WRC_NO_ERROR)) {
 						c = LoginManager.doLogin(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL), user, password);
 						if (c != null) {
 							final int mt = LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE);
-							if ((mt == Constants.WISPR_MESSAGE_TYPE_AUTH_NOTIFICATION) || (mt == Constants.WISPR_MESSAGE_TYPE_RESPONSE_AUTH_POLL)) {
+							if ((mt == Constants.WMT_AUTH_NOTIFICATION) || (mt == Constants.WMT_RESPONSE_AUTH_POLL)) {
 								rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE);
-								if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED) {
+								if (rc == Constants.WRC_LOGIN_SUCCEEDED) {
 									lu = LoginManager.getElementText(c, LoginManager.TAG_LOGOFF_URL);
-								} else if (rc == Constants.WISPR_RESPONSE_CODE_LOGIN_FAILED) {
+								} else if (rc == Constants.WRC_LOGIN_FAILED) {
 									rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_FON_RESPONSE_CODE);
 									rm = LoginManager.getElementText(c, LoginManager.TAG_REPLY_MESSAGE);
 								}
 							}
 						}
 					} else {
-						rc = Constants.CUST_WISPR_NOT_PRESENT;
+						rc = Constants.CRC_WISPR_NOT_PRESENT;
 					}
 				} else {
-					rc = Constants.CUST_ALREADY_CONNECTED;
+					rc = Constants.CRC_ALREADY_CONNECTED;
 				}
 			}
 		} else {
-			rc = Constants.CUST_CREDENTIALS_ERROR;
+			rc = Constants.CRC_CREDENTIALS_ERROR;
 		}
 		return new LoginResult(rc, rm, lu);
 	}

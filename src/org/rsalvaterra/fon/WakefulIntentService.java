@@ -238,33 +238,33 @@ public final class WakefulIntentService extends IntentService {
 	private void login(final WifiManager wm, final boolean isFirst) {
 		final LoginResult lr = LoginManager.login(getUsername(), getPassword());
 		switch (lr.getResponseCode()) {
-			case Constants.WISPR_RESPONSE_CODE_LOGIN_SUCCEEDED:
-			case Constants.CUST_ALREADY_CONNECTED:
+			case Constants.WRC_LOGIN_SUCCEEDED:
+			case Constants.CRC_ALREADY_CONNECTED:
 				handleSuccess(WakefulIntentService.stripQuotes(wm.getConnectionInfo().getSSID()), lr, isFirst);
 				break;
-			case Constants.WISPR_RESPONSE_CODE_RADIUS_ERROR:
-			case Constants.WISPR_RESPONSE_CODE_NETWORK_ADMIN_ERROR:
-			case Constants.FON_SPOT_LIMIT_EXCEEDED:
-			case Constants.FON_UNKNOWN_ERROR:
-			case Constants.CUST_WISPR_NOT_PRESENT:
+			case Constants.WRC_RADIUS_ERROR:
+			case Constants.WRC_NETWORK_ADMIN_ERROR:
+			case Constants.FRC_SPOT_LIMIT_EXCEEDED:
+			case Constants.FRC_UNKNOWN_ERROR:
+			case Constants.CRC_WISPR_NOT_PRESENT:
 				handleError(wm, lr);
 				break;
-			case Constants.FON_NOT_ENOUGH_CREDIT:
-			case Constants.FON_USER_IN_BLACK_LIST:
-			case Constants.FON_SESSION_LIMIT_EXCEEDED:
-			case Constants.FON_NOT_AUTHORIZED:
-			case Constants.FON_CUSTOMIZED_ERROR:
-			case Constants.FON_INTERNAL_ERROR:
-			case Constants.FON_INVALID_TEMPORARY_CREDENTIAL:
-			case Constants.FON_AUTHORIZATION_CONNECTION_ERROR:
+			case Constants.FRC_NOT_ENOUGH_CREDIT:
+			case Constants.FRC_USER_IN_BLACK_LIST:
+			case Constants.FRC_SESSION_LIMIT_EXCEEDED:
+			case Constants.FRC_NOT_AUTHORIZED:
+			case Constants.FRC_CUSTOMIZED_ERROR:
+			case Constants.FRC_INTERNAL_ERROR:
+			case Constants.FRC_INVALID_TEMPORARY_CREDENTIAL:
+			case Constants.FRC_AUTHORIZATION_CONNECTION_ERROR:
 				notifyFonError(lr);
 				break;
-			case Constants.WISPR_RESPONSE_CODE_ACCESS_GATEWAY_INTERNAL_ERROR:
+			case Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR:
 				wm.removeNetwork(wm.getConnectionInfo().getNetworkId());
 				break;
-			case Constants.FON_INVALID_CREDENTIALS_ALT:
-			case Constants.FON_INVALID_CREDENTIALS:
-			case Constants.CUST_CREDENTIALS_ERROR:
+			case Constants.FRC_INVALID_CREDENTIALS_ALT:
+			case Constants.FRC_INVALID_CREDENTIALS:
+			case Constants.CRC_CREDENTIALS_ERROR:
 				notifyCredentialsError();
 				break;
 			default:
