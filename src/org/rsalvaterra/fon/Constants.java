@@ -2,9 +2,9 @@ package org.rsalvaterra.fon;
 
 interface Constants {
 
-	static final int CUST_WISPR_NOT_PRESENT = 1024;
-	static final int CUST_ALREADY_CONNECTED = 1025;
-	static final int CUST_CREDENTIALS_ERROR = 10001;
+	static final int CUST_ALREADY_CONNECTED = 1000;
+	static final int CUST_CREDENTIALS_ERROR = 1001;
+	static final int CUST_WISPR_NOT_PRESENT = 1002;
 
 	static final int FON_INVALID_CREDENTIALS_ALT = 900;
 	static final int FON_NOT_ENOUGH_CREDIT = 901;

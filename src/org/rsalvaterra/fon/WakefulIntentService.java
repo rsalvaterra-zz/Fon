@@ -207,17 +207,17 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void handleSuccess(final String ssid, final LoginResult lr, final boolean isfirst) {
-		final Intent i = new Intent();
-		final PendingIntent pi;
-		final String text;
-		if (WakefulIntentService.isAutoConnectEnabled(this)) {
-			pi = PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
-			text = getString(R.string.notif_text_conn, ssid);
-		} else {
-			pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, i.setClass(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
-			text = getString(R.string.notif_text_logoff);
-		}
 		if (isfirst) {
+			final Intent i = new Intent();
+			final PendingIntent pi;
+			final String text;
+			if (WakefulIntentService.isAutoConnectEnabled(this)) {
+				pi = PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
+				text = getString(R.string.notif_text_conn, ssid);
+			} else {
+				pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, i.setClass(this, WakefulIntentService.class).setAction(Constants.KEY_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
+				text = getString(R.string.notif_text_logoff);
+			}
 			notify(getString(R.string.notif_title_started), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), text, pi);
 		}
 		scheduleConnectivityCheck();
