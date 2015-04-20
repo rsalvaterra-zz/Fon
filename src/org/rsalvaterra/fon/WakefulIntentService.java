@@ -244,7 +244,6 @@ public final class WakefulIntentService extends IntentService {
 				break;
 			case Constants.WISPR_RESPONSE_CODE_RADIUS_ERROR:
 			case Constants.WISPR_RESPONSE_CODE_NETWORK_ADMIN_ERROR:
-			case Constants.FON_SESSION_LIMIT_EXCEEDED:
 			case Constants.FON_SPOT_LIMIT_EXCEEDED:
 			case Constants.FON_UNKNOWN_ERROR:
 			case Constants.CUST_WISPR_NOT_PRESENT:
@@ -252,6 +251,7 @@ public final class WakefulIntentService extends IntentService {
 				break;
 			case Constants.FON_NOT_ENOUGH_CREDIT:
 			case Constants.FON_USER_IN_BLACK_LIST:
+			case Constants.FON_SESSION_LIMIT_EXCEEDED:
 			case Constants.FON_NOT_AUTHORIZED:
 			case Constants.FON_CUSTOMIZED_ERROR:
 			case Constants.FON_INTERNAL_ERROR:
