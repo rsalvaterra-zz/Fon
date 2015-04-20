@@ -61,7 +61,7 @@ public final class LoginManager {
 	private static String getWisprMessage(final String source) {
 		final String res = LoginManager.getElementText(source, LoginManager.TAG_WISPR);
 		if (res.length() != 0) {
-			return res.trim().replaceAll(">\\s+<", "><");
+			return res;
 		}
 		return null;
 	}
