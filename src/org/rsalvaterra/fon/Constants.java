@@ -18,6 +18,7 @@ interface Constants {
 	static final int FRC_UNKNOWN_ERROR = 910;
 	static final int FRC_INVALID_TEMPORARY_CREDENTIAL = 911;
 	static final int FRC_AUTHORIZATION_CONNECTION_ERROR = 912;
+	static final int FRC_UNKNOWN_925 = 925;
 
 	static final int WMT_INITIAL_REDIRECT = 100;
 	static final int WMT_PROXY_NOTIFICATION = 110;
