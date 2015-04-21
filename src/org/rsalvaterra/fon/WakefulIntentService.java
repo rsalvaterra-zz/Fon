@@ -294,16 +294,6 @@ public final class WakefulIntentService extends IntentService {
 			case Constants.CRC_WISPR_NOT_PRESENT:
 				handleError(wm, wi, lr);
 				break;
-			case Constants.FRC_NOT_ENOUGH_CREDIT:
-			case Constants.FRC_USER_IN_BLACK_LIST:
-			case Constants.FRC_SESSION_LIMIT_EXCEEDED:
-			case Constants.FRC_NOT_AUTHORIZED:
-			case Constants.FRC_CUSTOMIZED_ERROR:
-			case Constants.FRC_INTERNAL_ERROR:
-			case Constants.FRC_INVALID_TEMPORARY_CREDENTIAL:
-			case Constants.FRC_AUTHORIZATION_CONNECTION_ERROR:
-				notifyFonError(lr);
-				break;
 			case Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR:
 				wm.removeNetwork(wi.getNetworkId());
 				break;
@@ -313,6 +303,7 @@ public final class WakefulIntentService extends IntentService {
 				notifyCredentialsError();
 				break;
 			default:
+				notifyFonError(lr);
 				break;
 		}
 	}
