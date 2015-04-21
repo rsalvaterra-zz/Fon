@@ -1,6 +1,6 @@
 package org.rsalvaterra.fon;
 
-public final class LoginResult {
+final class LoginResult {
 
 	private final int responseCode;
 

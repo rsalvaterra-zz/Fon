@@ -26,7 +26,7 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
-public final class HttpUtils {
+final class HttpUtils {
 
 	private static final String ENCODING_GZIP = "gzip";
 	private static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
@@ -79,6 +79,8 @@ public final class HttpUtils {
 			}
 		});
 	}
+
+	private HttpUtils() {}
 
 	private static String request(final HttpUriRequest hr, final int t) {
 		HttpConnectionParams.setConnectionTimeout(HttpUtils.HTTP_PARAMETERS, t);

@@ -1,6 +1,6 @@
 package org.rsalvaterra.fon;
 
-public final class LoginManager {
+final class LoginManager {
 
 	private static final String CONNECTED = "CONNECTED";
 	private static final String CONNECTION_TEST_URL = "http://cm.fon.mobi/android.txt";
@@ -15,6 +15,8 @@ public final class LoginManager {
 	private static final String TAG_WISPR = "WISPAccessGatewayParam";
 
 	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
+
+	private LoginManager() {}
 
 	private static String doLogin(final String url, final String user, final String pass) {
 		final String u = LoginManager.replaceAmpEntities(url);
