@@ -41,12 +41,12 @@ interface Constants {
 
 	static final String APP_ID = "org.rsalvaterra.fon";
 
-	static final String KEY_CANCEL_ALL = Constants.APP_ID + ".CANCEL_ALL";
-	static final String KEY_CONNECT = Constants.APP_ID + ".CONNECT";
+	static final String ACT_CANCEL_ALL = Constants.APP_ID + ".CANCEL_ALL";
+	static final String ACT_CONNECT = Constants.APP_ID + ".CONNECT";
+	static final String ACT_LOGIN = Constants.APP_ID + ".LOGIN";
+	static final String ACT_LOGOFF = Constants.APP_ID + ".LOGOFF";
+	static final String ACT_SCAN = Constants.APP_ID + ".SCAN";
 	static final String KEY_FIRST = Constants.APP_ID + ".FIRST";
-	static final String KEY_LOGIN = Constants.APP_ID + ".LOGIN";
-	static final String KEY_LOGOFF = Constants.APP_ID + ".LOGOFF";
 	static final String KEY_LOGOFF_URL = Constants.APP_ID + ".LOGOFF_URL";
-	static final String KEY_SCAN = Constants.APP_ID + ".SCAN";
 
 }

@@ -25,7 +25,7 @@ public final class AdvancedPreferences extends PreferenceActivity {
 		public final boolean onPreferenceChange(final Preference p, final Object v) {
 			if (((Boolean) v).booleanValue()) {
 				final Context c = p.getContext();
-				WakefulBroadcastReceiver.startService(c, new Intent(c, WakefulIntentService.class).setAction(Constants.KEY_SCAN));
+				WakefulBroadcastReceiver.startService(c, new Intent(c, WakefulIntentService.class).setAction(Constants.ACT_SCAN));
 			}
 			return true;
 		}
