@@ -47,7 +47,7 @@ interface Constants {
 	static final String ACT_LOGIN = Constants.APP_ID + ".LOGIN";
 	static final String ACT_LOGOFF = Constants.APP_ID + ".LOGOFF";
 	static final String ACT_SCAN = Constants.APP_ID + ".SCAN";
-	static final String KEY_FIRST = Constants.APP_ID + ".FIRST";
+	static final String KEY_LOGIN = Constants.ACT_LOGIN;
 	static final String KEY_LOGOFF_URL = Constants.APP_ID + ".LOGOFF_URL";
 
 }

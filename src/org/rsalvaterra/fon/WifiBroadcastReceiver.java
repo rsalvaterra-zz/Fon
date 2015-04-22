@@ -18,7 +18,7 @@ public final class WifiBroadcastReceiver extends BroadcastReceiver {
 			final NetworkInfo ni = (NetworkInfo) i.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
 			if ((ni.getType() == ConnectivityManager.TYPE_WIFI)) {
 				if (ni.getState() == NetworkInfo.State.CONNECTED) {
-					WakefulIntentService.startService(c, new Intent(c, WakefulIntentService.class).setAction(Constants.ACT_LOGIN).putExtra(Constants.KEY_FIRST, true));
+					WakefulIntentService.startService(c, new Intent(c, WakefulIntentService.class).setAction(Constants.ACT_LOGIN).putExtra(Constants.KEY_LOGIN, true));
 				} else if (ni.getState() == NetworkInfo.State.DISCONNECTED) {
 					WakefulIntentService.startService(c, new Intent(c, WakefulIntentService.class).setAction(Constants.ACT_CANCEL_ALL));
 				}

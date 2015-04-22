@@ -246,8 +246,8 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
-	private void handleSuccess(final String ssid, final LoginResult lr, final boolean isfirst) {
-		if (isfirst) {
+	private void handleSuccess(final String ssid, final LoginResult lr, final boolean isLogin) {
+		if (isLogin) {
 			final Intent i = new Intent();
 			final PendingIntent pi;
 			final String text;
@@ -275,7 +275,7 @@ public final class WakefulIntentService extends IntentService {
 		return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_vibration), false);
 	}
 
-	private void login(final WifiManager wm, final boolean isFirst) {
+	private void login(final WifiManager wm, final boolean isLogin) {
 		final WifiInfo wi = wm.getConnectionInfo();
 		final String ssid = WakefulIntentService.stripQuotes(wi.getSSID());
 		if (!LoginManager.isSupported(ssid)) {
@@ -285,7 +285,7 @@ public final class WakefulIntentService extends IntentService {
 		switch (lr.getResponseCode()) {
 			case Constants.WRC_LOGIN_SUCCEEDED:
 			case Constants.CRC_ALREADY_CONNECTED:
-				handleSuccess(ssid, lr, isFirst);
+				handleSuccess(ssid, lr, isLogin);
 				break;
 			case Constants.WRC_RADIUS_ERROR:
 			case Constants.WRC_NETWORK_ADMIN_ERROR:
@@ -338,7 +338,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void scheduleConnectivityCheck() {
-		scheduleAction(new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.ACT_LOGIN).putExtra(Constants.KEY_FIRST, false), WakefulIntentService.CONNECTIVITY_CHECK_INTERVAL);
+		scheduleAction(new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.ACT_LOGIN).putExtra(Constants.KEY_LOGIN, false), WakefulIntentService.CONNECTIVITY_CHECK_INTERVAL);
 	}
 
 	private void scheduleScan() {
@@ -355,7 +355,7 @@ public final class WakefulIntentService extends IntentService {
 			if (a.equals(Constants.ACT_CONNECT)) {
 				connect(wm);
 			} else if (a.equals(Constants.ACT_LOGIN)) {
-				login(wm, i.getBooleanExtra(Constants.KEY_FIRST, false));
+				login(wm, i.getBooleanExtra(Constants.KEY_LOGIN, false));
 			} else if (a.equals(Constants.ACT_LOGOFF)) {
 				WakefulIntentService.logoff(i.getStringExtra(Constants.KEY_LOGOFF_URL), wm);
 			} else if (a.equals(Constants.ACT_SCAN)) {
