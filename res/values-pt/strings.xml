@@ -17,6 +17,9 @@
 	<string name="secure">Apenas seguras</string>
 	<string name="secureSummary">Apenas considerar redes seguras para reconexão.</string>
 	<string name="period">Período entre sondagens</string>
+	<string name="reject">Rejeitar PA fracos</string>
+	<string name="rejectSummary">Evitar ligações a PA com sinal fraco.</string>
+	<string name="rssi">Potência mínima</string>
 	<string name="notifications">Notificações</string>
 	<string name="notify">Notificar</string>
 	<string name="success">Toque (sucesso)</string>
@@ -28,5 +31,5 @@
 	<string name="notif_text_logoff">Toque para terminar.</string>
 	<string name="notif_text_config">Toque para configurar.</string>
 	<string name="notif_title_started">Sessão iniciada</string>
-	<string name="intervalSummary">%s segundos</string>
+	<string name="periodSummary">%s segundos</string>
 </resources>

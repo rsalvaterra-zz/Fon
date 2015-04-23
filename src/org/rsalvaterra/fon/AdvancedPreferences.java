@@ -19,71 +19,65 @@ public final class AdvancedPreferences extends PreferenceActivity {
 
 	private static final int BASIC_ID = Menu.FIRST;
 
-	private static final OnPreferenceChangeListener CHECKBOX_LISTENER = new OnPreferenceChangeListener() {
+	private static final OnPreferenceChangeListener LISTENER = new OnPreferenceChangeListener() {
 
 		@Override
 		public final boolean onPreferenceChange(final Preference p, final Object v) {
-			if (((Boolean) v).booleanValue()) {
-				final Context c = p.getContext();
-				WakefulIntentService.startService(c, new Intent(c, WakefulIntentService.class).setAction(Constants.ACT_SCAN));
-			}
-			return true;
-		}
-	};
-
-	private static final OnPreferenceChangeListener EDIT_TEXT_LISTENER = new OnPreferenceChangeListener() {
-
-		@Override
-		public final boolean onPreferenceChange(final Preference p, final Object v) {
-			p.setSummary(p.getContext().getString(R.string.intervalSummary, v));
-			return true;
-		}
-	};
-
-	private static final OnPreferenceChangeListener RINGTONE_LISTENER = new OnPreferenceChangeListener() {
-
-		@Override
-		public final boolean onPreferenceChange(final Preference p, final Object v) {
-			final String t = v.toString();
-			final String s;
-			if (t.length() == 0) {
-				s = "";
-			} else {
-				final Ringtone r = RingtoneManager.getRingtone(p.getContext(), Uri.parse(t));
-				if (r == null) {
-					s = null;
-				} else {
-					s = r.getTitle(p.getContext());
+			final Context c = p.getContext();
+			final String k = p.getKey();
+			if (k.equals(c.getString(R.string.key_reconnect))) {
+				if (((Boolean) v).booleanValue()) {
+					WakefulIntentService.startService(c, new Intent(c, WakefulIntentService.class).setAction(Constants.ACT_SCAN));
 				}
+			} else if (k.equals(c.getString(R.string.key_period))) {
+				p.setSummary(c.getString(R.string.periodSummary, v));
+			} else if (k.equals(c.getString(R.string.key_rssi))) {
+				p.setSummary(c.getString(R.string.rssiSummary, v));
+			} else if (k.equals(c.getString(R.string.key_success)) || k.equals(c.getString(R.string.key_failure))) {
+				final String t = v.toString();
+				final String s;
+				if (t.length() == 0) {
+					s = "";
+				} else {
+					final Ringtone r = RingtoneManager.getRingtone(c, Uri.parse(t));
+					if (r == null) {
+						s = null;
+					} else {
+						s = r.getTitle(c);
+					}
+				}
+				p.setSummary(s);
 			}
-			p.setSummary(s);
 			return true;
 		}
 	};
 
-	private static void bindCheckBoxListener(final Preference p) {
-		p.setOnPreferenceChangeListener(AdvancedPreferences.CHECKBOX_LISTENER);
+	private static String getPreferenceValue(final Preference p, final String dv) {
+		return PreferenceManager.getDefaultSharedPreferences(p.getContext()).getString(p.getKey(), dv);
 	}
 
-	private static void bindEditTextListener(final Preference p) {
-		p.setOnPreferenceChangeListener(AdvancedPreferences.EDIT_TEXT_LISTENER);
-		AdvancedPreferences.EDIT_TEXT_LISTENER.onPreferenceChange(p, PreferenceManager.getDefaultSharedPreferences(p.getContext()).getString(p.getKey(), "300"));
-	}
-
-	private static void bindRingtoneListener(final Preference p) {
-		p.setOnPreferenceChangeListener(AdvancedPreferences.RINGTONE_LISTENER);
-		AdvancedPreferences.RINGTONE_LISTENER.onPreferenceChange(p, PreferenceManager.getDefaultSharedPreferences(p.getContext()).getString(p.getKey(), ""));
+	private void bindPreferenceListener() {
+		final PreferenceScreen ps = getPreferenceScreen();
+		ps.findPreference(getString(R.string.key_reconnect)).setOnPreferenceChangeListener(AdvancedPreferences.LISTENER);
+		Preference p = ps.findPreference(getString(R.string.key_period));
+		p.setOnPreferenceChangeListener(AdvancedPreferences.LISTENER);
+		AdvancedPreferences.LISTENER.onPreferenceChange(p, AdvancedPreferences.getPreferenceValue(p, "300"));
+		p = ps.findPreference(getString(R.string.key_rssi));
+		p.setOnPreferenceChangeListener(AdvancedPreferences.LISTENER);
+		AdvancedPreferences.LISTENER.onPreferenceChange(p, AdvancedPreferences.getPreferenceValue(p, "-80"));
+		p = ps.findPreference(getString(R.string.key_success));
+		p.setOnPreferenceChangeListener(AdvancedPreferences.LISTENER);
+		AdvancedPreferences.LISTENER.onPreferenceChange(p, AdvancedPreferences.getPreferenceValue(p, ""));
+		p = ps.findPreference(getString(R.string.key_failure));
+		p.setOnPreferenceChangeListener(AdvancedPreferences.LISTENER);
+		AdvancedPreferences.LISTENER.onPreferenceChange(p, AdvancedPreferences.getPreferenceValue(p, ""));
 	}
 
 	@Override
 	public void onCreate(final Bundle b) {
 		super.onCreate(b);
 		addPreferencesFromResource(R.layout.preferences_advanced);
-		final PreferenceScreen preferenceScreen = getPreferenceScreen();
-		AdvancedPreferences.bindCheckBoxListener(preferenceScreen.findPreference(getString(R.string.key_reconnect)));
-		AdvancedPreferences.bindEditTextListener(preferenceScreen.findPreference(getString(R.string.key_period)));
-		AdvancedPreferences.bindRingtoneListener(preferenceScreen.findPreference(getString(R.string.key_success)));
-		AdvancedPreferences.bindRingtoneListener(preferenceScreen.findPreference(getString(R.string.key_failure)));
+		bindPreferenceListener();
 	}
 
 	@Override

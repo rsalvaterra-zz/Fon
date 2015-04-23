@@ -28,7 +28,6 @@ import android.util.SparseArray;
 
 public final class WakefulIntentService extends IntentService {
 
-	private static final int MINIMUM_SIGNAL_LEVEL = -80;
 	private static final int NOTIFICATION_ID = 1;
 	private static final int REQUEST_CODE = 1;
 	private static final int CONNECTIVITY_CHECK_INTERVAL = 60;
@@ -62,28 +61,6 @@ public final class WakefulIntentService extends IntentService {
 			return null;
 		}
 		return wcl.toArray(new WifiConfiguration[wcl.size()]);
-	}
-
-	private static int getOtherId(final WifiConfiguration[] wca, final ScanResult[] sra, final boolean secureOnly) {
-		if ((wca != null) && (wca.length != 0)) {
-			final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
-			for (final WifiConfiguration wc : wca) {
-				final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
-				if ((!secureOnly || (secureOnly && WakefulIntentService.isSecure(wc))) && !LoginManager.isSupported(ssid)) {
-					wcm.put(ssid, Integer.valueOf(wc.networkId));
-				}
-			}
-			for (final ScanResult sr : sra) {
-				if (sr.level < WakefulIntentService.MINIMUM_SIGNAL_LEVEL) {
-					break;
-				}
-				final Integer id = wcm.get(sr.SSID);
-				if (id != null) {
-					return id.intValue();
-				}
-			}
-		}
-		return -1;
 	}
 
 	private static ScanResult[] getScanResults(final WifiManager wm) {
@@ -175,7 +152,7 @@ public final class WakefulIntentService extends IntentService {
 		if (WakefulIntentService.isDisconnected(ss)) {
 			final WifiConfiguration[] wca = WakefulIntentService.getConfiguredNetworks(wm);
 			final ScanResult[] sra = WakefulIntentService.getScanResults(wm);
-			int id = WakefulIntentService.getOtherId(wca, sra, false);
+			int id = getOtherId(wca, sra, false);
 			if (id == -1) {
 				id = getFonId(wca, sra, wm);
 				if ((id != -1) && wm.enableNetwork(id, true) && isReconnectEnabled()) {
@@ -185,7 +162,7 @@ public final class WakefulIntentService extends IntentService {
 				wm.enableNetwork(id, true);
 			}
 		} else if (WakefulIntentService.isConnected(ss) && isReconnectEnabled() && LoginManager.isSupported(WakefulIntentService.stripQuotes(wi.getSSID()))) {
-			final int id = WakefulIntentService.getOtherId(WakefulIntentService.getConfiguredNetworks(wm), WakefulIntentService.getScanResults(wm), isSecureEnabled());
+			final int id = getOtherId(WakefulIntentService.getConfiguredNetworks(wm), WakefulIntentService.getScanResults(wm), isSecureEnabled());
 			if (id != -1) {
 				wm.enableNetwork(id, true);
 			} else {
@@ -206,8 +183,9 @@ public final class WakefulIntentService extends IntentService {
 				}
 			}
 		}
+		final int mr = getMinimumRssi();
 		for (final ScanResult sr : sra) {
-			if (sr.level < WakefulIntentService.MINIMUM_SIGNAL_LEVEL) {
+			if (sr.level < mr) {
 				break;
 			}
 			if (LoginManager.isSupported(sr.SSID) && !BlacklistProvider.isBlacklisted(getContentResolver(), sr.BSSID)) {
@@ -216,6 +194,36 @@ public final class WakefulIntentService extends IntentService {
 				wc.BSSID = sr.BSSID;
 				wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
 				return wm.addNetwork(wc);
+			}
+		}
+		return -1;
+	}
+
+	private int getMinimumRssi() {
+		if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_reject), false)) {
+			return Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_rssi), "-80"));
+		}
+		return Integer.MIN_VALUE;
+	}
+
+	private int getOtherId(final WifiConfiguration[] wca, final ScanResult[] sra, final boolean secureOnly) {
+		if ((wca != null) && (wca.length != 0)) {
+			final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
+			for (final WifiConfiguration wc : wca) {
+				final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
+				if ((!secureOnly || (secureOnly && WakefulIntentService.isSecure(wc))) && !LoginManager.isSupported(ssid)) {
+					wcm.put(ssid, Integer.valueOf(wc.networkId));
+				}
+			}
+			final int mr = getMinimumRssi();
+			for (final ScanResult sr : sra) {
+				if (sr.level < mr) {
+					break;
+				}
+				final Integer id = wcm.get(sr.SSID);
+				if (id != null) {
+					return id.intValue();
+				}
 			}
 		}
 		return -1;

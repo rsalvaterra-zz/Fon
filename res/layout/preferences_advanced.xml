@@ -37,6 +37,25 @@
 			android:layout="?android:attr/preferenceLayoutChild"
 			android:maxLength="4"
 			android:title="@string/period" />
+
+		<CheckBoxPreference
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:defaultValue="false"
+			android:key="@string/key_reject"
+			android:summary="@string/rejectSummary"
+			android:title="@string/reject" />
+
+		<EditTextPreference
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:defaultValue="-80"
+			android:dependency="@string/key_reject"
+			android:inputType="numberSigned"
+			android:key="@string/key_rssi"
+			android:layout="?android:attr/preferenceLayoutChild"
+			android:maxLength="3"
+			android:title="@string/rssi" />
 	</PreferenceCategory>
 
 	<PreferenceCategory
