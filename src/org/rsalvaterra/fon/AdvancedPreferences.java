@@ -2,7 +2,6 @@ package org.rsalvaterra.fon;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -11,7 +10,6 @@ import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.preference.PreferenceScreen;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -25,24 +23,15 @@ public final class AdvancedPreferences extends PreferenceActivity {
 		public final boolean onPreferenceChange(final Preference p, final Object v) {
 			final Context c = p.getContext();
 			final String k = p.getKey();
-			if (k.equals(c.getString(R.string.key_reconnect))) {
-				if (((Boolean) v).booleanValue()) {
-					WakefulIntentService.startService(c, new Intent(c, WakefulIntentService.class).setAction(Constants.ACT_SCAN));
-				}
-			} else if (k.equals(c.getString(R.string.key_period))) {
+			if (k.equals(c.getString(R.string.key_period))) {
 				p.setSummary(c.getString(R.string.periodSummary, v));
 			} else if (k.equals(c.getString(R.string.key_rssi))) {
 				p.setSummary(c.getString(R.string.rssiSummary, v));
 			} else if (k.equals(c.getString(R.string.key_success)) || k.equals(c.getString(R.string.key_failure))) {
-				final String t = v.toString();
-				final String s;
-				if (t.length() == 0) {
-					s = "";
-				} else {
-					final Ringtone r = RingtoneManager.getRingtone(c, Uri.parse(t));
-					if (r == null) {
-						s = null;
-					} else {
+				String s = v.toString();
+				if (s.length() != 0) {
+					final Ringtone r = RingtoneManager.getRingtone(c, Uri.parse(s));
+					if (r != null) {
 						s = r.getTitle(c);
 					}
 				}
@@ -52,32 +41,24 @@ public final class AdvancedPreferences extends PreferenceActivity {
 		}
 	};
 
-	private static String getPreferenceValue(final Preference p, final String dv) {
-		return PreferenceManager.getDefaultSharedPreferences(p.getContext()).getString(p.getKey(), dv);
+	private void bindListenerToPreferences() {
+		setListener(R.string.key_period, "300");
+		setListener(R.string.key_rssi, "-80");
+		setListener(R.string.key_success, "");
+		setListener(R.string.key_failure, "");
 	}
 
-	private void bindPreferenceListener() {
-		final PreferenceScreen ps = getPreferenceScreen();
-		ps.findPreference(getString(R.string.key_reconnect)).setOnPreferenceChangeListener(AdvancedPreferences.LISTENER);
-		Preference p = ps.findPreference(getString(R.string.key_period));
+	private void setListener(final int k, final String v) {
+		final Preference p = getPreferenceScreen().findPreference(getString(k));
 		p.setOnPreferenceChangeListener(AdvancedPreferences.LISTENER);
-		AdvancedPreferences.LISTENER.onPreferenceChange(p, AdvancedPreferences.getPreferenceValue(p, "300"));
-		p = ps.findPreference(getString(R.string.key_rssi));
-		p.setOnPreferenceChangeListener(AdvancedPreferences.LISTENER);
-		AdvancedPreferences.LISTENER.onPreferenceChange(p, AdvancedPreferences.getPreferenceValue(p, "-80"));
-		p = ps.findPreference(getString(R.string.key_success));
-		p.setOnPreferenceChangeListener(AdvancedPreferences.LISTENER);
-		AdvancedPreferences.LISTENER.onPreferenceChange(p, AdvancedPreferences.getPreferenceValue(p, ""));
-		p = ps.findPreference(getString(R.string.key_failure));
-		p.setOnPreferenceChangeListener(AdvancedPreferences.LISTENER);
-		AdvancedPreferences.LISTENER.onPreferenceChange(p, AdvancedPreferences.getPreferenceValue(p, ""));
+		AdvancedPreferences.LISTENER.onPreferenceChange(p, PreferenceManager.getDefaultSharedPreferences(p.getContext()).getString(p.getKey(), v));
 	}
 
 	@Override
 	public void onCreate(final Bundle b) {
 		super.onCreate(b);
 		addPreferencesFromResource(R.layout.preferences_advanced);
-		bindPreferenceListener();
+		bindListenerToPreferences();
 	}
 
 	@Override
