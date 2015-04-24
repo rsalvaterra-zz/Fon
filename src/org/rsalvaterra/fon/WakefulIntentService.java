@@ -13,6 +13,7 @@ import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.SupplicantState;
@@ -63,6 +64,14 @@ public final class WakefulIntentService extends IntentService {
 		return wcl.toArray(new WifiConfiguration[wcl.size()]);
 	}
 
+	private static boolean getPreference(final Context c, final int id, final boolean v) {
+		return WakefulIntentService.getPreferences(c).getBoolean(c.getString(id), v);
+	}
+
+	private static SharedPreferences getPreferences(final Context c) {
+		return PreferenceManager.getDefaultSharedPreferences(c);
+	}
+
 	private static ScanResult[] getScanResults(final WifiManager wm) {
 		final List<ScanResult> srl = wm.getScanResults();
 		final ScanResult[] sra = srl.toArray(new ScanResult[srl.size()]);
@@ -110,8 +119,12 @@ public final class WakefulIntentService extends IntentService {
 		return ssid;
 	}
 
+	static String getPreference(final Context c, final int id, final String v) {
+		return WakefulIntentService.getPreferences(c).getString(c.getString(id), v);
+	}
+
 	static boolean isAutoConnectEnabled(final Context c) {
-		return PreferenceManager.getDefaultSharedPreferences(c).getBoolean(c.getString(R.string.key_autoconnect), true);
+		return WakefulIntentService.getPreference(c, R.string.key_autoconnect, true);
 	}
 
 	static ComponentName startService(final Context context, final Intent intent) {
@@ -132,7 +145,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private boolean areNotificationsEnabled() {
-		return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_notify), true);
+		return WakefulIntentService.getPreference(this, R.string.key_notify, true);
 	}
 
 	private void cancelAll() {
@@ -172,7 +185,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private String getFailureTone() {
-		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_failure), "");
+		return WakefulIntentService.getPreference(this, R.string.key_failure, "");
 	}
 
 	private int getFonId(final WifiConfiguration[] wca, final ScanResult[] sra, final WifiManager wm) {
@@ -200,8 +213,8 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private int getMinimumRssi() {
-		if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_reject), false)) {
-			return Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_rssi), "-80"));
+		if (WakefulIntentService.getPreference(this, R.string.key_reject, false)) {
+			return Integer.parseInt(WakefulIntentService.getPreference(this, R.string.key_rssi, Constants.DEFAULT_MINIMUM_RSSI));
 		}
 		return Integer.MIN_VALUE;
 	}
@@ -230,19 +243,19 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private String getPassword() {
-		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_password), "").trim();
+		return WakefulIntentService.getPreference(this, R.string.key_password, "");
 	}
 
 	private int getPeriod() {
-		return Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_period), "300"));
+		return Integer.parseInt(WakefulIntentService.getPreference(this, R.string.key_period, Constants.DEFAULT_PERIOD));
 	}
 
 	private String getSuccessTone() {
-		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_success), "");
+		return WakefulIntentService.getPreference(this, R.string.key_success, "");
 	}
 
 	private String getUsername() {
-		return PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_username), "").trim();
+		return WakefulIntentService.getPreference(this, R.string.key_username, "");
 	}
 
 	private void handleError(final WifiManager wm, final WifiInfo wi, final LoginResult lr) {
@@ -272,15 +285,15 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private boolean isReconnectEnabled() {
-		return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_reconnect), false);
+		return WakefulIntentService.getPreference(this, R.string.key_reconnect, false);
 	}
 
 	private boolean isSecureEnabled() {
-		return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_secure), true);
+		return WakefulIntentService.getPreference(this, R.string.key_secure, true);
 	}
 
 	private boolean isVibrationEnabled() {
-		return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_vibration), false);
+		return WakefulIntentService.getPreference(this, R.string.key_vibration, false);
 	}
 
 	private void login(final WifiManager wm, final boolean isLogin) {

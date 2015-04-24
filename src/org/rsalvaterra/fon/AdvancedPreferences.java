@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -42,16 +41,17 @@ public final class AdvancedPreferences extends PreferenceActivity {
 	};
 
 	private void bindListenerToPreferences() {
-		setListener(R.string.key_period, "300");
-		setListener(R.string.key_rssi, "-80");
+		setListener(R.string.key_period, Constants.DEFAULT_PERIOD);
+		setListener(R.string.key_rssi, Constants.DEFAULT_MINIMUM_RSSI);
 		setListener(R.string.key_success, "");
 		setListener(R.string.key_failure, "");
 	}
 
-	private void setListener(final int k, final String v) {
-		final Preference p = getPreferenceScreen().findPreference(getString(k));
+	private void setListener(final int id, final String v) {
+		final String k = getString(id);
+		final Preference p = getPreferenceScreen().findPreference(k);
 		p.setOnPreferenceChangeListener(AdvancedPreferences.LISTENER);
-		AdvancedPreferences.LISTENER.onPreferenceChange(p, PreferenceManager.getDefaultSharedPreferences(p.getContext()).getString(p.getKey(), v));
+		AdvancedPreferences.LISTENER.onPreferenceChange(p, WakefulIntentService.getPreference(p.getContext(), id, v));
 	}
 
 	@Override

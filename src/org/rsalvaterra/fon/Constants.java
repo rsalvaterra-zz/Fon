@@ -40,6 +40,9 @@ interface Constants {
 
 	static final int HTTP_TIMEOUT = 30 * 1000;
 
+	static final String DEFAULT_PERIOD = "300";
+	static final String DEFAULT_MINIMUM_RSSI = "-80";
+
 	static final String APP_ID = "org.rsalvaterra.fon";
 
 	static final String ACT_CANCEL_ALL = Constants.APP_ID + ".CANCEL_ALL";
