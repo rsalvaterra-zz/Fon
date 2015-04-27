@@ -24,10 +24,7 @@ final class LoginManager {
 			for (final String s : LoginManager.VALID_SUFFIX) {
 				final String h = u.substring(LoginManager.SAFE_PROTOCOL.length(), u.indexOf("/", LoginManager.SAFE_PROTOCOL.length()));
 				if (h.endsWith(s)) {
-					final String r = HttpUtils.post(u, LoginManager.getPrefixedUserName(h, user), pass);
-					if (r != null) {
-						return LoginManager.getWisprMessage(r);
-					}
+					return HttpUtils.post(u, LoginManager.getPrefixedUserName(h, user), pass);
 				}
 			}
 		}
@@ -58,14 +55,6 @@ final class LoginManager {
 
 	private static String getTestUrlContent() {
 		return HttpUtils.get(LoginManager.CONNECTION_TEST_URL, Constants.HTTP_TIMEOUT);
-	}
-
-	private static String getWisprMessage(final String source) {
-		final String res = LoginManager.getElementText(source, LoginManager.TAG_WISPR);
-		if (res.length() != 0) {
-			return res;
-		}
-		return null;
 	}
 
 	private static boolean isBt(final String ssid) {
@@ -156,18 +145,21 @@ final class LoginManager {
 			String c = LoginManager.getTestUrlContent();
 			if (c != null) {
 				if (!c.equals(LoginManager.CONNECTED)) {
-					c = LoginManager.getWisprMessage(c);
-					if ((c != null) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE) == Constants.WMT_INITIAL_REDIRECT) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE) == Constants.WRC_NO_ERROR)) {
+					c = LoginManager.getElementText(c, LoginManager.TAG_WISPR);
+					if ((c.length() != 0) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE) == Constants.WMT_INITIAL_REDIRECT) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE) == Constants.WRC_NO_ERROR)) {
 						c = LoginManager.doLogin(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL), user, password);
 						if (c != null) {
-							final int mt = LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE);
-							if ((mt == Constants.WMT_AUTH_NOTIFICATION) || (mt == Constants.WMT_RESPONSE_AUTH_POLL)) {
-								rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE);
-								if (rc == Constants.WRC_LOGIN_SUCCEEDED) {
-									lu = LoginManager.getElementText(c, LoginManager.TAG_LOGOFF_URL);
-								} else if (rc == Constants.WRC_LOGIN_FAILED) {
-									rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_FON_RESPONSE_CODE);
-									rm = LoginManager.getElementText(c, LoginManager.TAG_REPLY_MESSAGE);
+							c = LoginManager.getElementText(c, LoginManager.TAG_WISPR);
+							if (c.length() != 0) {
+								final int mt = LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE);
+								if ((mt == Constants.WMT_AUTH_NOTIFICATION) || (mt == Constants.WMT_RESPONSE_AUTH_POLL)) {
+									rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE);
+									if (rc == Constants.WRC_LOGIN_SUCCEEDED) {
+										lu = LoginManager.getElementText(c, LoginManager.TAG_LOGOFF_URL);
+									} else if (rc == Constants.WRC_LOGIN_FAILED) {
+										rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_FON_RESPONSE_CODE);
+										rm = LoginManager.getElementText(c, LoginManager.TAG_REPLY_MESSAGE);
+									}
 								}
 							}
 						}
