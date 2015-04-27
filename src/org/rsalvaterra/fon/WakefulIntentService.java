@@ -274,12 +274,12 @@ public final class WakefulIntentService extends IntentService {
 			final String text;
 			if (WakefulIntentService.isAutoConnectEnabled(this)) {
 				pi = PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
-				text = getString(R.string.notif_text_conn, ssid);
+				text = getString(R.string.connected, ssid);
 			} else {
 				pi = PendingIntent.getService(this, WakefulIntentService.REQUEST_CODE, i.setClass(this, WakefulIntentService.class).setAction(Constants.ACT_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
-				text = getString(R.string.notif_text_logoff);
+				text = getString(R.string.logoff);
 			}
-			notify(getString(R.string.notif_title_started), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), text, pi);
+			notify(getString(R.string.started), WakefulIntentService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), text, pi);
 		}
 		scheduleConnectivityCheck();
 	}
@@ -343,15 +343,15 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void notifyCredentialsError() {
-		notifyError(getString(R.string.notif_title_cred_err));
+		notifyError(getString(R.string.cred_error));
 	}
 
 	private void notifyError(final String title) {
-		notify(title, WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), getString(R.string.notif_text_config), PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
+		notify(title, WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), getString(R.string.configure), PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, BasicPreferences.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void notifyFonError(final LoginResult lr) {
-		notifyError(getString(R.string.notif_title_fon_err, Integer.valueOf(lr.getResponseCode()), lr.getReplyMessage()));
+		notifyError(getString(R.string.fon_error, Integer.valueOf(lr.getResponseCode()), lr.getReplyMessage()));
 	}
 
 	private void scheduleAction(final Intent intent, final int seconds) {

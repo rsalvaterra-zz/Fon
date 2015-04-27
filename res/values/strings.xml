@@ -41,6 +41,7 @@
 		name="kperiod"
 		translatable="false">period</string>
 	<string name="period">Period between scans</string>
+	<string name="periodSummary">%s seconds</string>
 	<string
 		name="kreject"
 		translatable="false">reject</string>
@@ -70,11 +71,10 @@
 		name="kvibrate"
 		translatable="false">vibrate</string>
 	<string name="vibrate">Vibrate</string>
-	<string name="notif_text_conn">Connected to \"%s\".</string>
-	<string name="notif_title_fon_err">Error %1$d: \"%2$s\"</string>
-	<string name="notif_title_cred_err">Invalid credentials</string>
-	<string name="notif_text_logoff">Touch to logoff.</string>
-	<string name="notif_text_config">Touch to configure.</string>
-	<string name="notif_title_started">Session started</string>
-	<string name="periodSummary">%s seconds</string>
+	<string name="connected">Connected to \"%s\".</string>
+	<string name="fon_error">Error %1$d: \"%2$s\"</string>
+	<string name="cred_error">Invalid credentials</string>
+	<string name="logoff">Touch to logoff.</string>
+	<string name="configure">Touch to configure.</string>
+	<string name="started">Session started</string>
 </resources>
