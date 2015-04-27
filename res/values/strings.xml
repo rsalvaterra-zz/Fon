@@ -13,41 +13,41 @@
 	<string name="basic">Basic settings</string>
 	<string name="about">About</string>
 	<string
-		name="key_username"
+		name="kusername"
 		translatable="false">username</string>
 	<string name="username">User name</string>
 	<string name="usernameSummary">Your user name (email).</string>
 	<string
-		name="key_password"
+		name="kpassword"
 		translatable="false">password</string>
 	<string name="password">Password</string>
 	<string name="passwordSummary">Your password.</string>
 	<string
-		name="key_autoconnect"
+		name="kautoconnect"
 		translatable="false">autoconnect</string>
 	<string name="autoconnect">Connect automatically</string>
 	<string name="autoconnectSummary">Automatically connect to any available Fon access point.</string>
 	<string
-		name="key_reconnect"
+		name="kreconnect"
 		translatable="false">reconnect</string>
 	<string name="reconnect">Allow reconnection</string>
 	<string name="reconnectSummary">Disconnect from Fon and connect to a known network, if found.</string>
 	<string
-		name="key_secure"
+		name="ksecure"
 		translatable="false">secure</string>
 	<string name="secure">Secure only</string>
 	<string name="secureSummary">Only consider secure networks for reconnection.</string>
 	<string
-		name="key_period"
+		name="kperiod"
 		translatable="false">period</string>
 	<string name="period">Period between scans</string>
 	<string
-		name="key_reject"
+		name="kreject"
 		translatable="false">reject</string>
 	<string name="reject">Reject weak APs</string>
 	<string name="rejectSummary">Avoid connections to APs with weak signal.</string>
 	<string
-		name="key_rssi"
+		name="krssi"
 		translatable="false">rssi</string>
 	<string name="rssi">Minimum power</string>
 	<string
@@ -55,21 +55,21 @@
 		translatable="false">%s dBm</string>
 	<string name="notifications">Notifications</string>
 	<string
-		name="key_notify"
+		name="knotify"
 		translatable="false">notify</string>
 	<string name="notify">Notify</string>
 	<string
-		name="key_success"
+		name="ksuccess"
 		translatable="false">success</string>
 	<string name="success">Tone (success)</string>
 	<string
-		name="key_failure"
+		name="kfailure"
 		translatable="false">failure</string>
 	<string name="failure">Tone (error)</string>
 	<string
-		name="key_vibration"
+		name="kvibrate"
 		translatable="false">vibrate</string>
-	<string name="vibration">Vibration</string>
+	<string name="vibrate">Vibrate</string>
 	<string name="notif_text_conn">Connected to \"%s\".</string>
 	<string name="notif_title_fon_err">Error %1$d: \"%2$s\"</string>
 	<string name="notif_title_cred_err">Invalid credentials</string>

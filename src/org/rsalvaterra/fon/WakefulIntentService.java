@@ -124,7 +124,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	static boolean isAutoConnectEnabled(final Context c) {
-		return WakefulIntentService.getPreference(c, R.string.key_autoconnect, true);
+		return WakefulIntentService.getPreference(c, R.string.kautoconnect, true);
 	}
 
 	static ComponentName startService(final Context context, final Intent intent) {
@@ -145,7 +145,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private boolean areNotificationsEnabled() {
-		return WakefulIntentService.getPreference(this, R.string.key_notify, true);
+		return WakefulIntentService.getPreference(this, R.string.knotify, true);
 	}
 
 	private void cancelAll() {
@@ -185,7 +185,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private String getFailureTone() {
-		return WakefulIntentService.getPreference(this, R.string.key_failure, "");
+		return WakefulIntentService.getPreference(this, R.string.kfailure, "");
 	}
 
 	private int getFonId(final WifiConfiguration[] wca, final ScanResult[] sra, final WifiManager wm) {
@@ -213,8 +213,8 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private int getMinimumRssi() {
-		if (WakefulIntentService.getPreference(this, R.string.key_reject, false)) {
-			return Integer.parseInt(WakefulIntentService.getPreference(this, R.string.key_rssi, Constants.DEFAULT_MINIMUM_RSSI));
+		if (WakefulIntentService.getPreference(this, R.string.kreject, false)) {
+			return Integer.parseInt(WakefulIntentService.getPreference(this, R.string.krssi, Constants.DEFAULT_MINIMUM_RSSI));
 		}
 		return Integer.MIN_VALUE;
 	}
@@ -243,19 +243,19 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private String getPassword() {
-		return WakefulIntentService.getPreference(this, R.string.key_password, "");
+		return WakefulIntentService.getPreference(this, R.string.kpassword, "");
 	}
 
 	private int getPeriod() {
-		return Integer.parseInt(WakefulIntentService.getPreference(this, R.string.key_period, Constants.DEFAULT_PERIOD));
+		return Integer.parseInt(WakefulIntentService.getPreference(this, R.string.kperiod, Constants.DEFAULT_PERIOD));
 	}
 
 	private String getSuccessTone() {
-		return WakefulIntentService.getPreference(this, R.string.key_success, "");
+		return WakefulIntentService.getPreference(this, R.string.ksuccess, "");
 	}
 
 	private String getUsername() {
-		return WakefulIntentService.getPreference(this, R.string.key_username, "");
+		return WakefulIntentService.getPreference(this, R.string.kusername, "");
 	}
 
 	private void handleError(final WifiManager wm, final WifiInfo wi, final LoginResult lr) {
@@ -285,15 +285,15 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private boolean isReconnectEnabled() {
-		return WakefulIntentService.getPreference(this, R.string.key_reconnect, false);
+		return WakefulIntentService.getPreference(this, R.string.kreconnect, false);
 	}
 
 	private boolean isSecureEnabled() {
-		return WakefulIntentService.getPreference(this, R.string.key_secure, true);
+		return WakefulIntentService.getPreference(this, R.string.ksecure, true);
 	}
 
 	private boolean isVibrationEnabled() {
-		return WakefulIntentService.getPreference(this, R.string.key_vibration, false);
+		return WakefulIntentService.getPreference(this, R.string.kvibrate, false);
 	}
 
 	private void login(final WifiManager wm, final boolean isLogin) {

@@ -22,11 +22,11 @@ public final class AdvancedPreferences extends PreferenceActivity {
 		public final boolean onPreferenceChange(final Preference p, final Object v) {
 			final Context c = p.getContext();
 			final String k = p.getKey();
-			if (k.equals(c.getString(R.string.key_period))) {
+			if (k.equals(c.getString(R.string.kperiod))) {
 				p.setSummary(c.getString(R.string.periodSummary, v));
-			} else if (k.equals(c.getString(R.string.key_rssi))) {
+			} else if (k.equals(c.getString(R.string.krssi))) {
 				p.setSummary(c.getString(R.string.rssiSummary, v));
-			} else if (k.equals(c.getString(R.string.key_success)) || k.equals(c.getString(R.string.key_failure))) {
+			} else if (k.equals(c.getString(R.string.ksuccess)) || k.equals(c.getString(R.string.kfailure))) {
 				String s = v.toString();
 				if (s.length() != 0) {
 					final Ringtone r = RingtoneManager.getRingtone(c, Uri.parse(s));
@@ -50,10 +50,10 @@ public final class AdvancedPreferences extends PreferenceActivity {
 	public void onCreate(final Bundle b) {
 		super.onCreate(b);
 		addPreferencesFromResource(R.layout.pref_advanced);
-		setListener(R.string.key_period, Constants.DEFAULT_PERIOD);
-		setListener(R.string.key_rssi, Constants.DEFAULT_MINIMUM_RSSI);
-		setListener(R.string.key_success, "");
-		setListener(R.string.key_failure, "");
+		setListener(R.string.kperiod, Constants.DEFAULT_PERIOD);
+		setListener(R.string.krssi, Constants.DEFAULT_MINIMUM_RSSI);
+		setListener(R.string.ksuccess, "");
+		setListener(R.string.kfailure, "");
 	}
 
 	@Override

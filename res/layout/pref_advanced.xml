@@ -13,7 +13,7 @@
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:defaultValue="false"
-			android:key="@string/key_reconnect"
+			android:key="@string/kreconnect"
 			android:summary="@string/reconnectSummary"
 			android:title="@string/reconnect" />
 
@@ -21,8 +21,8 @@
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:defaultValue="true"
-			android:dependency="@string/key_reconnect"
-			android:key="@string/key_secure"
+			android:dependency="@string/kreconnect"
+			android:key="@string/ksecure"
 			android:layout="?android:attr/preferenceLayoutChild"
 			android:summary="@string/secureSummary"
 			android:title="@string/secure" />
@@ -31,9 +31,9 @@
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:defaultValue="300"
-			android:dependency="@string/key_reconnect"
+			android:dependency="@string/kreconnect"
 			android:inputType="number"
-			android:key="@string/key_period"
+			android:key="@string/kperiod"
 			android:layout="?android:attr/preferenceLayoutChild"
 			android:maxLength="4"
 			android:title="@string/period" />
@@ -42,7 +42,7 @@
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:defaultValue="false"
-			android:key="@string/key_reject"
+			android:key="@string/kreject"
 			android:summary="@string/rejectSummary"
 			android:title="@string/reject" />
 
@@ -50,9 +50,9 @@
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:defaultValue="-80"
-			android:dependency="@string/key_reject"
+			android:dependency="@string/kreject"
 			android:inputType="numberSigned"
-			android:key="@string/key_rssi"
+			android:key="@string/krssi"
 			android:layout="?android:attr/preferenceLayoutChild"
 			android:maxLength="3"
 			android:title="@string/rssi" />
@@ -67,15 +67,15 @@
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:defaultValue="true"
-			android:key="@string/key_notify"
+			android:key="@string/knotify"
 			android:title="@string/notify" />
 
 		<RingtonePreference
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:defaultValue="content://settings/system/notification_sound"
-			android:dependency="@string/key_notify"
-			android:key="@string/key_success"
+			android:dependency="@string/knotify"
+			android:key="@string/ksuccess"
 			android:layout="?android:attr/preferenceLayoutChild"
 			android:ringtoneType="notification"
 			android:title="@string/success" />
@@ -84,8 +84,8 @@
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:defaultValue="content://settings/system/notification_sound"
-			android:dependency="@string/key_notify"
-			android:key="@string/key_failure"
+			android:dependency="@string/knotify"
+			android:key="@string/kfailure"
 			android:layout="?android:attr/preferenceLayoutChild"
 			android:ringtoneType="notification"
 			android:title="@string/failure" />
@@ -94,10 +94,10 @@
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:defaultValue="false"
-			android:dependency="@string/key_notify"
-			android:key="@string/key_vibration"
+			android:dependency="@string/knotify"
+			android:key="@string/kvibrate"
 			android:layout="?android:attr/preferenceLayoutChild"
-			android:title="@string/vibration" />
+			android:title="@string/vibrate" />
 	</PreferenceCategory>
 
 </PreferenceScreen>

@@ -13,7 +13,7 @@
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:defaultValue="true"
-			android:key="@string/key_autoconnect"
+			android:key="@string/kautoconnect"
 			android:summary="@string/autoconnectSummary"
 			android:title="@string/autoconnect" />
 
@@ -21,7 +21,7 @@
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:inputType="textEmailAddress"
-			android:key="@string/key_username"
+			android:key="@string/kusername"
 			android:summary="@string/usernameSummary"
 			android:title="@string/username" />
 
@@ -29,7 +29,7 @@
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:inputType="textPassword"
-			android:key="@string/key_password"
+			android:key="@string/kpassword"
 			android:summary="@string/passwordSummary"
 			android:title="@string/password" />
 	</PreferenceCategory>
