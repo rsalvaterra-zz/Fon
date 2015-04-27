@@ -23,7 +23,7 @@ public final class BasicPreferences extends PreferenceActivity {
 	@Override
 	public void onCreate(final Bundle b) {
 		super.onCreate(b);
-		addPreferencesFromResource(R.layout.preferences_main);
+		addPreferencesFromResource(R.layout.pref_basic);
 	}
 
 	@Override

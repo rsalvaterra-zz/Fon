@@ -40,16 +40,8 @@ public final class AdvancedPreferences extends PreferenceActivity {
 		}
 	};
 
-	private void bindListenerToPreferences() {
-		setListener(R.string.key_period, Constants.DEFAULT_PERIOD);
-		setListener(R.string.key_rssi, Constants.DEFAULT_MINIMUM_RSSI);
-		setListener(R.string.key_success, "");
-		setListener(R.string.key_failure, "");
-	}
-
 	private void setListener(final int id, final String v) {
-		final String k = getString(id);
-		final Preference p = getPreferenceScreen().findPreference(k);
+		final Preference p = getPreferenceScreen().findPreference(getString(id));
 		p.setOnPreferenceChangeListener(AdvancedPreferences.LISTENER);
 		AdvancedPreferences.LISTENER.onPreferenceChange(p, WakefulIntentService.getPreference(p.getContext(), id, v));
 	}
@@ -57,8 +49,11 @@ public final class AdvancedPreferences extends PreferenceActivity {
 	@Override
 	public void onCreate(final Bundle b) {
 		super.onCreate(b);
-		addPreferencesFromResource(R.layout.preferences_advanced);
-		bindListenerToPreferences();
+		addPreferencesFromResource(R.layout.pref_advanced);
+		setListener(R.string.key_period, Constants.DEFAULT_PERIOD);
+		setListener(R.string.key_rssi, Constants.DEFAULT_MINIMUM_RSSI);
+		setListener(R.string.key_success, "");
+		setListener(R.string.key_failure, "");
 	}
 
 	@Override
