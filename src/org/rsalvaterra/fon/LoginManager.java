@@ -58,11 +58,11 @@ final class LoginManager {
 	}
 
 	private static boolean isBt(final String ssid) {
-		return ssid.equals("BTWiFi") || ssid.equals("BTWiFi-with-FON") || ssid.equals("BTOpenzone") || ssid.equals("BTOpenzone-H") || ssid.equals("BTOpenzone-B") || ssid.equals("BTOpenzone-M") || ssid.equals("BTFON");
+		return ssid.equals("BTFON") || ssid.equals("BTWiFi") || ssid.equals("BTWiFi-with-FON") || ssid.startsWith("BTOpenzone");
 	}
 
 	private static boolean isDowntownBrooklyn(final String ssid) {
-		return ssid.equalsIgnoreCase("DowntownBrooklynWifi_Fon");
+		return ssid.equals("DowntownBrooklynWifi_Fon");
 	}
 
 	private static boolean isDt(final String ssid) {
@@ -113,8 +113,8 @@ final class LoginManager {
 		return ssid.equals("SFR WiFi FON");
 	}
 
-	private static boolean isSoftBank(final String ssid) {
-		return ssid.equalsIgnoreCase("NOC_SOFTBANK") || ssid.equals("FON");
+	private static boolean isSoftbank(final String ssid) {
+		return ssid.equals("FON");
 	}
 
 	private static boolean isSt(final String ssid) {
@@ -134,7 +134,7 @@ final class LoginManager {
 	}
 
 	static boolean isSupported(final String ssid) {
-		return LoginManager.isGenericFon(ssid) || LoginManager.isBt(ssid) || LoginManager.isSfr(ssid) || LoginManager.isProximus(ssid) || LoginManager.isKpn(ssid) || LoginManager.isDt(ssid) || LoginManager.isSt(ssid) || LoginManager.isJt(ssid) || LoginManager.isHt(ssid) || LoginManager.isOte(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isTtnet(ssid) || LoginManager.isOtherFon(ssid) || LoginManager.isOi(ssid) || LoginManager.isDowntownBrooklyn(ssid) || LoginManager.isMweb(ssid) || LoginManager.isSoftBank(ssid) || LoginManager.isTelstra(ssid);
+		return LoginManager.isGenericFon(ssid) || LoginManager.isBt(ssid) || LoginManager.isJt(ssid) || LoginManager.isSfr(ssid) || LoginManager.isProximus(ssid) || LoginManager.isKpn(ssid) || LoginManager.isDt(ssid) || LoginManager.isSt(ssid) || LoginManager.isHt(ssid) || LoginManager.isOte(ssid) || LoginManager.isRomtelecom(ssid) || LoginManager.isTtnet(ssid) || LoginManager.isOi(ssid) || LoginManager.isDowntownBrooklyn(ssid) || LoginManager.isMweb(ssid) || LoginManager.isOtherFon(ssid) || LoginManager.isSoftbank(ssid) || LoginManager.isTelstra(ssid);
 	}
 
 	static LoginResult login(final String user, final String password) {
