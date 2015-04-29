@@ -22,20 +22,21 @@ public final class AdvancedPreferences extends PreferenceActivity {
 		public final boolean onPreferenceChange(final Preference p, final Object v) {
 			final Context c = p.getContext();
 			final String k = p.getKey();
+			String s;
 			if (k.equals(c.getString(R.string.kperiod))) {
-				p.setSummary(c.getString(R.string.periodSummary, v));
+				s = c.getString(R.string.periodSummary, v);
 			} else if (k.equals(c.getString(R.string.krssi))) {
-				p.setSummary(c.getString(R.string.rssiSummary, v));
-			} else if (k.equals(c.getString(R.string.ksuccess)) || k.equals(c.getString(R.string.kfailure))) {
-				String s = v.toString();
+				s = c.getString(R.string.rssiSummary, v);
+			} else {
+				s = (String) v;
 				if (s.length() != 0) {
 					final Ringtone r = RingtoneManager.getRingtone(c, Uri.parse(s));
 					if (r != null) {
 						s = r.getTitle(c);
 					}
 				}
-				p.setSummary(s);
 			}
+			p.setSummary(s);
 			return true;
 		}
 	};
