@@ -31,7 +31,7 @@ public final class WakefulIntentService extends IntentService {
 
 	private static final int NOTIFICATION_ID = 1;
 	private static final int REQUEST_CODE = 1;
-	private static final int CONNECTIVITY_CHECK_INTERVAL = 60;
+	private static final int CONNECTIVITY_CHECK_PERIOD = 60 * 1000;
 	private static final int LOGOFF_HTTP_TIMEOUT = 2 * 1000;
 	private static final int WAKELOCK_TIMEOUT = 60 * 1000;
 
@@ -158,28 +158,27 @@ public final class WakefulIntentService extends IntentService {
 
 	private void connect(final WifiManager wm) {
 		final WifiInfo wi = wm.getConnectionInfo();
-		if (wi == null) {
-			return;
-		}
-		final SupplicantState ss = wi.getSupplicantState();
-		if (WakefulIntentService.isDisconnected(ss)) {
-			final WifiConfiguration[] wca = WakefulIntentService.getConfiguredNetworks(wm);
-			final ScanResult[] sra = WakefulIntentService.getScanResults(wm);
-			int id = getOtherId(wca, sra, false);
-			if (id == -1) {
-				id = getFonId(wca, sra, wm);
-				if ((id != -1) && wm.enableNetwork(id, true) && isReconnectEnabled()) {
+		if (wi != null) {
+			final SupplicantState ss = wi.getSupplicantState();
+			if (WakefulIntentService.isDisconnected(ss)) {
+				final WifiConfiguration[] wca = WakefulIntentService.getConfiguredNetworks(wm);
+				final ScanResult[] sra = WakefulIntentService.getScanResults(wm);
+				int id = getOtherId(wca, sra, false);
+				if (id == -1) {
+					id = getFonId(wca, sra, wm);
+					if ((id != -1) && wm.enableNetwork(id, true) && isReconnectEnabled()) {
+						scheduleScan();
+					}
+				} else {
+					wm.enableNetwork(id, true);
+				}
+			} else if (WakefulIntentService.isConnected(ss) && isReconnectEnabled() && LoginManager.isSupported(WakefulIntentService.stripQuotes(wi.getSSID()))) {
+				final int id = getOtherId(WakefulIntentService.getConfiguredNetworks(wm), WakefulIntentService.getScanResults(wm), isSecureEnabled());
+				if (id != -1) {
+					wm.enableNetwork(id, true);
+				} else {
 					scheduleScan();
 				}
-			} else {
-				wm.enableNetwork(id, true);
-			}
-		} else if (WakefulIntentService.isConnected(ss) && isReconnectEnabled() && LoginManager.isSupported(WakefulIntentService.stripQuotes(wi.getSSID()))) {
-			final int id = getOtherId(WakefulIntentService.getConfiguredNetworks(wm), WakefulIntentService.getScanResults(wm), isSecureEnabled());
-			if (id != -1) {
-				wm.enableNetwork(id, true);
-			} else {
-				scheduleScan();
 			}
 		}
 	}
@@ -299,33 +298,32 @@ public final class WakefulIntentService extends IntentService {
 	private void login(final WifiManager wm, final boolean isLogin) {
 		final WifiInfo wi = wm.getConnectionInfo();
 		final String ssid = WakefulIntentService.stripQuotes(wi.getSSID());
-		if (!LoginManager.isSupported(ssid)) {
-			return;
-		}
-		final LoginResult lr = LoginManager.login(getUsername(), getPassword());
-		switch (lr.getResponseCode()) {
-			case Constants.WRC_LOGIN_SUCCEEDED:
-			case Constants.CRC_ALREADY_CONNECTED:
-				handleSuccess(ssid, lr, isLogin);
-				break;
-			case Constants.WRC_RADIUS_ERROR:
-			case Constants.WRC_NETWORK_ADMIN_ERROR:
-			case Constants.FRC_SPOT_LIMIT_EXCEEDED:
-			case Constants.FRC_UNKNOWN_ERROR:
-			case Constants.CRC_WISPR_NOT_PRESENT:
-				handleError(wm, wi, lr);
-				break;
-			case Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR:
-				wm.removeNetwork(wi.getNetworkId());
-				break;
-			case Constants.FRC_INVALID_CREDENTIALS_ALT:
-			case Constants.FRC_INVALID_CREDENTIALS:
-			case Constants.CRC_CREDENTIALS_ERROR:
-				notifyCredentialsError();
-				break;
-			default:
-				notifyFonError(lr);
-				break;
+		if (LoginManager.isSupported(ssid)) {
+			final LoginResult lr = LoginManager.login(getUsername(), getPassword());
+			switch (lr.getResponseCode()) {
+				case Constants.WRC_LOGIN_SUCCEEDED:
+				case Constants.CRC_ALREADY_CONNECTED:
+					handleSuccess(ssid, lr, isLogin);
+					break;
+				case Constants.WRC_RADIUS_ERROR:
+				case Constants.WRC_NETWORK_ADMIN_ERROR:
+				case Constants.FRC_SPOT_LIMIT_EXCEEDED:
+				case Constants.FRC_UNKNOWN_ERROR:
+				case Constants.CRC_WISPR_NOT_PRESENT:
+					handleError(wm, wi, lr);
+					break;
+				case Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR:
+					wm.removeNetwork(wi.getNetworkId());
+					break;
+				case Constants.FRC_INVALID_CREDENTIALS_ALT:
+				case Constants.FRC_INVALID_CREDENTIALS:
+				case Constants.CRC_CREDENTIALS_ERROR:
+					notifyCredentialsError();
+					break;
+				default:
+					notifyFonError(lr);
+					break;
+			}
 		}
 	}
 
@@ -354,16 +352,16 @@ public final class WakefulIntentService extends IntentService {
 		notifyError(getString(R.string.fon_error, Integer.valueOf(lr.getResponseCode()), lr.getReplyMessage()));
 	}
 
-	private void scheduleAction(final Intent intent, final int seconds) {
-		((AlarmManager) getSystemService(Context.ALARM_SERVICE)).set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + (seconds * 1000), PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT));
+	private void scheduleAction(final Intent intent, final int milliseconds) {
+		((AlarmManager) getSystemService(Context.ALARM_SERVICE)).set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + milliseconds, PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void scheduleConnectivityCheck() {
-		scheduleAction(new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.ACT_LOGIN).putExtra(Constants.KEY_LOGIN, false), WakefulIntentService.CONNECTIVITY_CHECK_INTERVAL);
+		scheduleAction(new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.ACT_LOGIN).putExtra(Constants.KEY_LOGIN, false), WakefulIntentService.CONNECTIVITY_CHECK_PERIOD);
 	}
 
 	private void scheduleScan() {
-		scheduleAction(new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.ACT_SCAN), getPeriod());
+		scheduleAction(new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.ACT_SCAN), getPeriod() * 1000);
 	}
 
 	@Override
