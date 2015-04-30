@@ -1,6 +1,6 @@
 package org.rsalvaterra.fon;
 
-import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -9,12 +9,16 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
-public final class AdvancedPreferences extends PreferenceActivity {
+public final class SettingsActivity extends PreferenceActivity {
 
-	private static final int BASIC_ID = Menu.FIRST;
+	private static final int CLOSE_ID = Menu.FIRST;
+	private static final int ABOUT_ID = SettingsActivity.CLOSE_ID + 1;
 
 	private static final OnPreferenceChangeListener LISTENER = new OnPreferenceChangeListener() {
 
@@ -43,14 +47,18 @@ public final class AdvancedPreferences extends PreferenceActivity {
 
 	private void setListener(final int id, final String v) {
 		final Preference p = getPreferenceScreen().findPreference(getString(id));
-		p.setOnPreferenceChangeListener(AdvancedPreferences.LISTENER);
-		AdvancedPreferences.LISTENER.onPreferenceChange(p, WakefulIntentService.getPreference(p.getContext(), id, v));
+		p.setOnPreferenceChangeListener(SettingsActivity.LISTENER);
+		SettingsActivity.LISTENER.onPreferenceChange(p, WakefulIntentService.getPreference(p.getContext(), id, v));
+	}
+
+	private void showAbout() {
+		((TextView) new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setTitle(R.string.app_name).setMessage(Html.fromHtml(getString(R.string.app_credits, getString(R.string.app_copyright), getString(R.string.app_source)))).show().findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
 	}
 
 	@Override
 	public void onCreate(final Bundle b) {
 		super.onCreate(b);
-		addPreferencesFromResource(R.layout.pref_advanced);
+		addPreferencesFromResource(R.layout.settings);
 		setListener(R.string.kperiod, Constants.DEFAULT_PERIOD);
 		setListener(R.string.krssi, Constants.DEFAULT_MINIMUM_RSSI);
 		setListener(R.string.ksuccess, "");
@@ -59,21 +67,23 @@ public final class AdvancedPreferences extends PreferenceActivity {
 
 	@Override
 	public boolean onCreateOptionsMenu(final Menu m) {
-		m.add(Menu.NONE, AdvancedPreferences.BASIC_ID, Menu.NONE, R.string.basic).setIcon(android.R.drawable.ic_menu_revert);
+		m.add(Menu.NONE, SettingsActivity.CLOSE_ID, Menu.NONE, R.string.close).setIcon(android.R.drawable.ic_menu_save);
+		m.add(Menu.NONE, SettingsActivity.ABOUT_ID, Menu.NONE, R.string.about).setIcon(android.R.drawable.ic_menu_info_details);
 		return super.onCreateOptionsMenu(m);
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem mi) {
 		switch (mi.getItemId()) {
-			case BASIC_ID:
-				setResult(Activity.RESULT_OK);
+			case CLOSE_ID:
 				finish();
+				break;
+			case ABOUT_ID:
+				showAbout();
 				break;
 			default:
 				return super.onOptionsItemSelected(mi);
 		}
 		return true;
 	}
-
 }
