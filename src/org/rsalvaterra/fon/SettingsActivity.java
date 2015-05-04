@@ -2,7 +2,6 @@ package org.rsalvaterra.fon;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -34,10 +33,7 @@ public final class SettingsActivity extends PreferenceActivity {
 			} else {
 				s = (String) v;
 				if (s.length() != 0) {
-					final Ringtone r = RingtoneManager.getRingtone(c, Uri.parse(s));
-					if (r != null) {
-						s = r.getTitle(c);
-					}
+					s = RingtoneManager.getRingtone(c, Uri.parse(s)).getTitle(c);
 				}
 			}
 			p.setSummary(s);
