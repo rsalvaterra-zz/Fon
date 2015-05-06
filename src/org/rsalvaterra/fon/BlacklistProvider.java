@@ -19,10 +19,10 @@ public final class BlacklistProvider extends ContentProvider {
 
 	private static final Uri BLACKLIST_URI = Uri.parse("content://" + Constants.APP_ID + '.' + BlacklistProvider.TABLE_BLACKLIST);
 
-	private final SQLiteDatabase blacklist = SQLiteDatabase.create(null);
+	private final SQLiteDatabase db = SQLiteDatabase.create(null);
 
 	{
-		blacklist.execSQL("CREATE TABLE " + BlacklistProvider.TABLE_BLACKLIST + " (_ID INTEGER PRIMARY KEY ASC, " + BlacklistProvider.KEY_BSSID + " TEXT UNIQUE NOT NULL, " + BlacklistProvider.KEY_EXPIRY_TIME + " LONG NOT NULL)");
+		db.execSQL("CREATE TABLE " + BlacklistProvider.TABLE_BLACKLIST + " (_ID INTEGER PRIMARY KEY ASC, " + BlacklistProvider.KEY_BSSID + " TEXT UNIQUE NOT NULL, " + BlacklistProvider.KEY_EXPIRY_TIME + " LONG NOT NULL)");
 	}
 
 	static void addToBlacklist(final ContentResolver resolver, final String bssid) {
@@ -36,10 +36,10 @@ public final class BlacklistProvider extends ContentProvider {
 
 	static boolean isBlacklisted(final ContentResolver resolver, final String bssid) {
 		boolean blacklisted = false;
-		final Cursor cursor = resolver.query(BlacklistProvider.BLACKLIST_URI, new String[] { BlacklistProvider.KEY_BSSID, BlacklistProvider.KEY_EXPIRY_TIME }, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid }, null);
+		final Cursor cursor = resolver.query(BlacklistProvider.BLACKLIST_URI, new String[] { BlacklistProvider.KEY_EXPIRY_TIME }, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid }, null);
 		if (cursor != null) {
 			if (cursor.moveToFirst()) {
-				if (cursor.getLong(cursor.getColumnIndex(BlacklistProvider.KEY_EXPIRY_TIME)) > SystemClock.elapsedRealtime()) {
+				if (cursor.getLong(0) > SystemClock.elapsedRealtime()) {
 					blacklisted = true;
 				} else {
 					resolver.delete(BlacklistProvider.BLACKLIST_URI, BlacklistProvider.WHERE_CLAUSE, new String[] { bssid });
@@ -52,7 +52,7 @@ public final class BlacklistProvider extends ContentProvider {
 
 	@Override
 	public int delete(final Uri uri, final String whereClause, final String[] whereArgs) {
-		return blacklist.delete(BlacklistProvider.TABLE_BLACKLIST, whereClause, whereArgs);
+		return db.delete(BlacklistProvider.TABLE_BLACKLIST, whereClause, whereArgs);
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public final class BlacklistProvider extends ContentProvider {
 
 	@Override
 	public Uri insert(final Uri uri, final ContentValues values) {
-		blacklist.insert(BlacklistProvider.TABLE_BLACKLIST, null, values);
+		db.insert(BlacklistProvider.TABLE_BLACKLIST, null, values);
 		return null;
 	}
 
@@ -73,12 +73,12 @@ public final class BlacklistProvider extends ContentProvider {
 
 	@Override
 	public Cursor query(final Uri uri, final String[] columns, final String selection, final String[] selectionArgs, final String orderBy) {
-		return blacklist.query(BlacklistProvider.TABLE_BLACKLIST, columns, selection, selectionArgs, null, null, orderBy);
+		return db.query(BlacklistProvider.TABLE_BLACKLIST, columns, selection, selectionArgs, null, null, orderBy);
 	}
 
 	@Override
 	public int update(final Uri uri, final ContentValues values, final String whereClause, final String[] whereArgs) {
-		return blacklist.update(BlacklistProvider.TABLE_BLACKLIST, values, whereClause, whereArgs);
+		return db.update(BlacklistProvider.TABLE_BLACKLIST, values, whereClause, whereArgs);
 	}
 
 }
