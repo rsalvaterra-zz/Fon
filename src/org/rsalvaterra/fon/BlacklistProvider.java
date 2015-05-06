@@ -13,12 +13,11 @@ public final class BlacklistProvider extends ContentProvider {
 	private static final int BLACKLIST_PERIOD = 300000; // Five minutes
 
 	private static final String TABLE_BLACKLIST = "blacklist";
-	private static final String AUTHORITY = Constants.APP_ID + '.' + BlacklistProvider.TABLE_BLACKLIST;
 	private static final String KEY_BSSID = "bssid";
 	private static final String KEY_EXPIRY_TIME = "exptime";
 	private static final String WHERE_CLAUSE = BlacklistProvider.KEY_BSSID + " = ?";
 
-	private static final Uri BLACKLIST_URI = Uri.parse("content://" + BlacklistProvider.AUTHORITY + '/' + BlacklistProvider.TABLE_BLACKLIST);
+	private static final Uri BLACKLIST_URI = Uri.parse("content://" + Constants.APP_ID + '.' + BlacklistProvider.TABLE_BLACKLIST);
 
 	private final SQLiteDatabase blacklist = SQLiteDatabase.create(null);
 
