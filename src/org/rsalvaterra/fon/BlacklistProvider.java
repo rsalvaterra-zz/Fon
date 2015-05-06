@@ -3,7 +3,6 @@ package org.rsalvaterra.fon;
 import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -12,7 +11,6 @@ import android.os.SystemClock;
 
 public final class BlacklistProvider extends ContentProvider {
 
-	private static final int MATCHES = 1;
 	private static final int DATABASE_VERSION = 1;
 	private static final int BLACKLIST_PERIOD = 300000; // Five minutes
 
@@ -22,15 +20,9 @@ public final class BlacklistProvider extends ContentProvider {
 	private static final String KEY_EXPIRY_TIME = "exptime";
 	private static final String WHERE_CLAUSE = BlacklistProvider.KEY_BSSID + " = ?";
 
-	private static final UriMatcher MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
-
 	private static final Uri BLACKLIST_URI = Uri.parse("content://" + BlacklistProvider.AUTHORITY + '/' + BlacklistProvider.TABLE_BLACKLIST);
 
-	static {
-		BlacklistProvider.MATCHER.addURI(BlacklistProvider.AUTHORITY, BlacklistProvider.TABLE_BLACKLIST, BlacklistProvider.MATCHES);
-	}
-
-	private SQLiteOpenHelper helper;
+	private SQLiteDatabase blacklist;
 
 	static void addToBlacklist(final ContentResolver resolver, final String bssid) {
 		final ContentValues values = new ContentValues();
@@ -59,10 +51,7 @@ public final class BlacklistProvider extends ContentProvider {
 
 	@Override
 	public int delete(final Uri uri, final String whereClause, final String[] whereArgs) {
-		if (BlacklistProvider.MATCHER.match(uri) == BlacklistProvider.MATCHES) {
-			return helper.getWritableDatabase().delete(BlacklistProvider.TABLE_BLACKLIST, whereClause, whereArgs);
-		}
-		return 0;
+		return blacklist.delete(BlacklistProvider.TABLE_BLACKLIST, whereClause, whereArgs);
 	}
 
 	@Override
@@ -72,15 +61,13 @@ public final class BlacklistProvider extends ContentProvider {
 
 	@Override
 	public Uri insert(final Uri uri, final ContentValues values) {
-		if (BlacklistProvider.MATCHER.match(uri) == BlacklistProvider.MATCHES) {
-			helper.getWritableDatabase().insert(BlacklistProvider.TABLE_BLACKLIST, null, values);
-		}
+		blacklist.insert(BlacklistProvider.TABLE_BLACKLIST, null, values);
 		return null;
 	}
 
 	@Override
 	public boolean onCreate() {
-		helper = new SQLiteOpenHelper(getContext(), null, null, BlacklistProvider.DATABASE_VERSION) {
+		blacklist = new SQLiteOpenHelper(getContext(), null, null, BlacklistProvider.DATABASE_VERSION) {
 
 			@Override
 			public void onCreate(final SQLiteDatabase db) {
@@ -93,24 +80,18 @@ public final class BlacklistProvider extends ContentProvider {
 				onCreate(db);
 			}
 
-		};
+		}.getWritableDatabase();
 		return true;
 	}
 
 	@Override
 	public Cursor query(final Uri uri, final String[] columns, final String selection, final String[] selectionArgs, final String orderBy) {
-		if (BlacklistProvider.MATCHER.match(uri) == BlacklistProvider.MATCHES) {
-			return helper.getWritableDatabase().query(BlacklistProvider.TABLE_BLACKLIST, columns, selection, selectionArgs, null, null, orderBy);
-		}
-		return null;
+		return blacklist.query(BlacklistProvider.TABLE_BLACKLIST, columns, selection, selectionArgs, null, null, orderBy);
 	}
 
 	@Override
 	public int update(final Uri uri, final ContentValues values, final String whereClause, final String[] whereArgs) {
-		if (BlacklistProvider.MATCHER.match(uri) == BlacklistProvider.MATCHES) {
-			return helper.getWritableDatabase().update(BlacklistProvider.TABLE_BLACKLIST, values, whereClause, whereArgs);
-		}
-		return 0;
+		return blacklist.update(BlacklistProvider.TABLE_BLACKLIST, values, whereClause, whereArgs);
 	}
 
 }
