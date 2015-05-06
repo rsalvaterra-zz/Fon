@@ -94,7 +94,7 @@ public final class BlacklistProvider extends ContentProvider {
 			}
 
 		};
-		return false;
+		return true;
 	}
 
 	@Override
