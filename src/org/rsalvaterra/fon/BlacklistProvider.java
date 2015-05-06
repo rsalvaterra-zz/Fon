@@ -5,13 +5,11 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.os.SystemClock;
 
 public final class BlacklistProvider extends ContentProvider {
 
-	private static final int DATABASE_VERSION = 1;
 	private static final int BLACKLIST_PERIOD = 300000; // Five minutes
 
 	private static final String TABLE_BLACKLIST = "blacklist";
@@ -22,7 +20,11 @@ public final class BlacklistProvider extends ContentProvider {
 
 	private static final Uri BLACKLIST_URI = Uri.parse("content://" + BlacklistProvider.AUTHORITY + '/' + BlacklistProvider.TABLE_BLACKLIST);
 
-	private SQLiteDatabase blacklist;
+	private final SQLiteDatabase blacklist = SQLiteDatabase.create(null);
+
+	{
+		blacklist.execSQL("CREATE TABLE " + BlacklistProvider.TABLE_BLACKLIST + " (_ID INTEGER PRIMARY KEY ASC, " + BlacklistProvider.KEY_BSSID + " TEXT UNIQUE NOT NULL, " + BlacklistProvider.KEY_EXPIRY_TIME + " LONG NOT NULL)");
+	}
 
 	static void addToBlacklist(final ContentResolver resolver, final String bssid) {
 		final ContentValues values = new ContentValues();
@@ -55,7 +57,7 @@ public final class BlacklistProvider extends ContentProvider {
 	}
 
 	@Override
-	public String getType(final Uri arg0) {
+	public String getType(final Uri uri) {
 		return null;
 	}
 
@@ -67,20 +69,6 @@ public final class BlacklistProvider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-		blacklist = new SQLiteOpenHelper(getContext(), null, null, BlacklistProvider.DATABASE_VERSION) {
-
-			@Override
-			public void onCreate(final SQLiteDatabase db) {
-				db.execSQL("CREATE TABLE " + BlacklistProvider.TABLE_BLACKLIST + " (_ID INTEGER PRIMARY KEY ASC, " + BlacklistProvider.KEY_BSSID + " TEXT UNIQUE NOT NULL, " + BlacklistProvider.KEY_EXPIRY_TIME + " LONG NOT NULL)");
-			}
-
-			@Override
-			public void onUpgrade(final SQLiteDatabase db, final int oldVersion, final int newVersion) {
-				db.execSQL("DROP TABLE IF EXISTS " + BlacklistProvider.TABLE_BLACKLIST);
-				onCreate(db);
-			}
-
-		}.getWritableDatabase();
 		return true;
 	}
 
