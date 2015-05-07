@@ -87,6 +87,10 @@ public final class WakefulIntentService extends IntentService {
 		return (ss == SupplicantState.INACTIVE) || (ss == SupplicantState.DORMANT) || (ss == SupplicantState.DISCONNECTED) || (ss == SupplicantState.SCANNING);
 	}
 
+	private static boolean isInsecure(final ScanResult sr) {
+		return !(sr.capabilities.contains("WEP") || sr.capabilities.contains("PSK") || sr.capabilities.contains("EAP"));
+	}
+
 	private static boolean isSecure(final WifiConfiguration wc) {
 		return wc.allowedKeyManagement.get(KeyMgmt.WPA_PSK) || wc.allowedKeyManagement.get(KeyMgmt.WPA_EAP) || wc.allowedKeyManagement.get(KeyMgmt.IEEE8021X) || (wc.wepKeys[0] != null);
 	}
@@ -198,7 +202,7 @@ public final class WakefulIntentService extends IntentService {
 			if (sr.level < mr) {
 				break;
 			}
-			if (LoginManager.isSupported(sr.SSID) && !BlacklistProvider.isBlacklisted(getContentResolver(), sr.BSSID)) {
+			if (LoginManager.isSupported(sr.SSID) && WakefulIntentService.isInsecure(sr) && !BlacklistProvider.isBlacklisted(getContentResolver(), sr.BSSID)) {
 				final WifiConfiguration wc = new WifiConfiguration();
 				wc.SSID = '"' + sr.SSID + '"';
 				wc.BSSID = sr.BSSID;
