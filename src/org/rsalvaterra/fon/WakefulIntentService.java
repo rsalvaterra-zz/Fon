@@ -158,27 +158,25 @@ public final class WakefulIntentService extends IntentService {
 
 	private void connect(final WifiManager wm) {
 		final WifiInfo wi = wm.getConnectionInfo();
-		if (wi != null) {
-			final SupplicantState ss = wi.getSupplicantState();
-			if (WakefulIntentService.isDisconnected(ss)) {
-				final WifiConfiguration[] wca = WakefulIntentService.getConfiguredNetworks(wm);
-				final ScanResult[] sra = WakefulIntentService.getScanResults(wm);
-				int id = getOtherId(wca, sra, false);
-				if (id == -1) {
-					id = getFonId(wca, sra, wm);
-					if ((id != -1) && wm.enableNetwork(id, true) && isReconnectEnabled()) {
-						scheduleScan();
-					}
-				} else {
-					wm.enableNetwork(id, true);
-				}
-			} else if (WakefulIntentService.isConnected(ss) && isReconnectEnabled() && LoginManager.isSupported(WakefulIntentService.stripQuotes(wi.getSSID()))) {
-				final int id = getOtherId(WakefulIntentService.getConfiguredNetworks(wm), WakefulIntentService.getScanResults(wm), isSecureEnabled());
-				if (id != -1) {
-					wm.enableNetwork(id, true);
-				} else {
+		final SupplicantState ss = wi.getSupplicantState();
+		if (WakefulIntentService.isDisconnected(ss)) {
+			final WifiConfiguration[] wca = WakefulIntentService.getConfiguredNetworks(wm);
+			final ScanResult[] sra = WakefulIntentService.getScanResults(wm);
+			int id = getOtherId(wca, sra, false);
+			if (id == -1) {
+				id = getFonId(wca, sra, wm);
+				if ((id != -1) && wm.enableNetwork(id, true) && isReconnectEnabled()) {
 					scheduleScan();
 				}
+			} else {
+				wm.enableNetwork(id, true);
+			}
+		} else if (WakefulIntentService.isConnected(ss) && isReconnectEnabled() && LoginManager.isSupported(WakefulIntentService.stripQuotes(wi.getSSID()))) {
+			final int id = getOtherId(WakefulIntentService.getConfiguredNetworks(wm), WakefulIntentService.getScanResults(wm), isSecureEnabled());
+			if (id != -1) {
+				wm.enableNetwork(id, true);
+			} else {
+				scheduleScan();
 			}
 		}
 	}
