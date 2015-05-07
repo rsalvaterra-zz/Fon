@@ -84,7 +84,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private static boolean isDisconnected(final SupplicantState ss) {
-		return (ss == SupplicantState.INACTIVE) || (ss == SupplicantState.DISCONNECTED) || (ss == SupplicantState.SCANNING);
+		return (ss == SupplicantState.INACTIVE) || (ss == SupplicantState.DORMANT) || (ss == SupplicantState.DISCONNECTED) || (ss == SupplicantState.SCANNING);
 	}
 
 	private static boolean isSecure(final WifiConfiguration wc) {
