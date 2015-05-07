@@ -113,7 +113,7 @@ public final class WakefulIntentService extends IntentService {
 
 	private static String stripQuotes(final String ssid) {
 		final int length = ssid.length();
-		if ((length > 2) && (ssid.charAt(0) == '"') && (ssid.charAt(length - 1) == '"')) {
+		if ((ssid.charAt(0) == '"') && (ssid.charAt(length - 1) == '"')) {
 			return ssid.substring(1, length - 1);
 		}
 		return ssid;
