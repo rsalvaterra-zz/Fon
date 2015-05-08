@@ -95,7 +95,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private static boolean isInsecure(final WifiConfiguration wc) {
-		return wc.allowedKeyManagement.get(KeyMgmt.NONE) || (wc.wepKeys[0] == null);
+		return wc.allowedKeyManagement.get(KeyMgmt.NONE) && (wc.wepKeys[0] == null);
 	}
 
 	private static void logoff(final String url, final WifiManager wm) {
