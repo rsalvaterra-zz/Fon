@@ -183,11 +183,9 @@ public final class WakefulIntentService extends IntentService {
 			int id = getOtherId(wca, sra, false);
 			if (id == -1) {
 				id = getFonId(wca, sra, wm);
-				if ((id != -1) && wm.enableNetwork(id, true) && isReconnectEnabled()) {
+				if ((id != -1) && wm.enableNetwork(id, false) && isReconnectEnabled()) {
 					scheduleScan();
 				}
-			} else {
-				wm.enableNetwork(id, true);
 			}
 		} else if (WakefulIntentService.isConnected(ss) && isReconnectEnabled() && LoginManager.isSupported(WakefulIntentService.stripQuotes(wi.getSSID()))) {
 			final int id = getOtherId(WakefulIntentService.getConfiguredNetworks(wm), WakefulIntentService.getScanResults(wm), isSecureEnabled());
