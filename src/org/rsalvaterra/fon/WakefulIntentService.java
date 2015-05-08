@@ -58,10 +58,13 @@ public final class WakefulIntentService extends IntentService {
 
 	private static WifiConfiguration[] getConfiguredNetworks(final WifiManager wm) {
 		final List<WifiConfiguration> wcl = wm.getConfiguredNetworks();
+		final WifiConfiguration[] wca;
 		if (wcl == null) {
-			return null;
+			wca = new WifiConfiguration[] {};
+		} else {
+			wca = wcl.toArray(new WifiConfiguration[wcl.size()]);
 		}
-		return wcl.toArray(new WifiConfiguration[wcl.size()]);
+		return wca;
 	}
 
 	private static boolean getPreference(final Context c, final int id, final boolean v) {
@@ -91,8 +94,8 @@ public final class WakefulIntentService extends IntentService {
 		return !(sr.capabilities.contains("WEP") || sr.capabilities.contains("PSK") || sr.capabilities.contains("EAP"));
 	}
 
-	private static boolean isSecure(final WifiConfiguration wc) {
-		return wc.allowedKeyManagement.get(KeyMgmt.WPA_PSK) || wc.allowedKeyManagement.get(KeyMgmt.WPA_EAP) || wc.allowedKeyManagement.get(KeyMgmt.IEEE8021X) || (wc.wepKeys[0] != null);
+	private static boolean isInsecure(final WifiConfiguration wc) {
+		return wc.allowedKeyManagement.get(KeyMgmt.NONE) || (wc.wepKeys[0] == null);
 	}
 
 	private static void logoff(final String url, final WifiManager wm) {
@@ -110,6 +113,17 @@ public final class WakefulIntentService extends IntentService {
 				if (wl != null) {
 					wl.release();
 					WakefulIntentService.ACTIVE_WAKELOCKS.remove(id);
+				}
+			}
+		}
+	}
+
+	private static void removeConfiguration(final WifiConfiguration[] wca, final WifiManager wm, final String ssid) {
+		if (wca.length != 0) {
+			for (final WifiConfiguration wc : wca) {
+				if (WakefulIntentService.isInsecure(wc) && wc.SSID.equals(ssid)) {
+					wm.removeNetwork(wc.networkId);
+					break;
 				}
 			}
 		}
@@ -190,23 +204,18 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private int getFonId(final WifiConfiguration[] wca, final ScanResult[] sra, final WifiManager wm) {
-		if ((wca != null) && (wca.length != 0)) {
-			for (final WifiConfiguration wc : wca) {
-				if (!WakefulIntentService.isSecure(wc) && LoginManager.isSupported(WakefulIntentService.stripQuotes(wc.SSID))) {
-					wm.removeNetwork(wc.networkId);
-				}
-			}
-		}
 		final int mr = getMinimumRssi();
 		for (final ScanResult sr : sra) {
 			if (sr.level < mr) {
 				break;
 			}
 			if (LoginManager.isSupported(sr.SSID) && WakefulIntentService.isInsecure(sr) && !BlacklistProvider.isBlacklisted(getContentResolver(), sr.BSSID)) {
+				final String ssid = '"' + sr.SSID + '"';
+				WakefulIntentService.removeConfiguration(wca, wm, ssid);
 				final WifiConfiguration wc = new WifiConfiguration();
-				wc.SSID = '"' + sr.SSID + '"';
+				wc.SSID = ssid;
 				wc.BSSID = sr.BSSID;
-				wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+				wc.allowedKeyManagement.set(KeyMgmt.NONE);
 				return wm.addNetwork(wc);
 			}
 		}
@@ -221,11 +230,11 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private int getOtherId(final WifiConfiguration[] wca, final ScanResult[] sra, final boolean secureOnly) {
-		if ((wca != null) && (wca.length != 0)) {
+		if (wca.length != 0) {
 			final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
 			for (final WifiConfiguration wc : wca) {
 				final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
-				if ((!secureOnly || (secureOnly && WakefulIntentService.isSecure(wc))) && !LoginManager.isSupported(ssid)) {
+				if ((!secureOnly || (secureOnly && !WakefulIntentService.isInsecure(wc))) && !LoginManager.isSupported(ssid)) {
 					wcm.put(ssid, Integer.valueOf(wc.networkId));
 				}
 			}
