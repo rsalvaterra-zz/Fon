@@ -98,7 +98,7 @@ final class LoginManager {
 	}
 
 	private static boolean isOtherFon(final String ssid) {
-		return ssid.equalsIgnoreCase("Fon WiFi") || ssid.equalsIgnoreCase("Fon WiFi 5GHz") || ssid.equalsIgnoreCase("Fon WiFi 5G") || ssid.equalsIgnoreCase("Fon Free WiFi") || ssid.equalsIgnoreCase("Fon WiFi (free)");
+		return ssid.startsWith("Fon WiFi");
 	}
 
 	private static boolean isProximus(final String ssid) {
