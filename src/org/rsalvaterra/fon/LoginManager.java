@@ -39,7 +39,7 @@ final class LoginManager {
 				return source.substring(start + 1, end);
 			}
 		}
-		return "";
+		return null;
 	}
 
 	private static int getElementTextAsInt(final String source, final String elementName) {
@@ -146,11 +146,11 @@ final class LoginManager {
 			if (c != null) {
 				if (!c.equals(LoginManager.CONNECTED)) {
 					c = LoginManager.getElementText(c, LoginManager.TAG_WISPR);
-					if ((c.length() != 0) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE) == Constants.WMT_INITIAL_REDIRECT) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE) == Constants.WRC_NO_ERROR)) {
+					if ((c != null) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE) == Constants.WMT_INITIAL_REDIRECT) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE) == Constants.WRC_NO_ERROR)) {
 						c = LoginManager.doLogin(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL), user, password);
 						if (c != null) {
 							c = LoginManager.getElementText(c, LoginManager.TAG_WISPR);
-							if (c.length() != 0) {
+							if (c != null) {
 								final int mt = LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE);
 								if ((mt == Constants.WMT_AUTH_NOTIFICATION) || (mt == Constants.WMT_RESPONSE_AUTH_POLL)) {
 									rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE);
