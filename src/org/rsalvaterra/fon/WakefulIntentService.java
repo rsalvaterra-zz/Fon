@@ -337,14 +337,15 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void notify(final String title, final long[] vibratePattern, final int flags, final String ringtone, final String text, final PendingIntent pendingIntent) {
-		final Notification notification = new Notification(R.drawable.ic_stat_fon, title, System.currentTimeMillis());
+		final Notification notification = new Notification();
+		notification.flags |= flags;
+		notification.icon = R.drawable.ic_stat_fon;
 		if (areNotificationsEnabled()) {
+			notification.sound = Uri.parse(ringtone);
 			if (isVibrationEnabled()) {
 				notification.vibrate = vibratePattern;
 			}
-			notification.sound = Uri.parse(ringtone);
 		}
-		notification.flags |= flags;
 		notification.setLatestEventInfo(this, title, text, pendingIntent);
 		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).notify(WakefulIntentService.NOTIFICATION_ID, notification);
 	}
@@ -354,7 +355,7 @@ public final class WakefulIntentService extends IntentService {
 	}
 
 	private void notifyError(final String title) {
-		notify(title, WakefulIntentService.VIBRATE_PATTERN_FAILURE, 0, getFailureTone(), getString(R.string.configure), PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, SettingsActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
+		notify(title, WakefulIntentService.VIBRATE_PATTERN_FAILURE, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT, getFailureTone(), getString(R.string.configure), PendingIntent.getActivity(this, WakefulIntentService.REQUEST_CODE, new Intent(this, SettingsActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void notifyFonError(final LoginResult lr) {
