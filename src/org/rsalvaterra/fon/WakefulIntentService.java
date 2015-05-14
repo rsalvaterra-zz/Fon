@@ -362,16 +362,16 @@ public final class WakefulIntentService extends IntentService {
 		notifyError(getString(R.string.fon_error, Integer.valueOf(lr.getResponseCode()), lr.getReplyMessage()));
 	}
 
-	private void scheduleAction(final Intent intent, final int milliseconds) {
-		((AlarmManager) getSystemService(Context.ALARM_SERVICE)).set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + milliseconds, PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT));
+	private void scheduleAction(final String action, final int milliseconds) {
+		((AlarmManager) getSystemService(Context.ALARM_SERVICE)).set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + milliseconds, PendingIntent.getBroadcast(this, WakefulIntentService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(action), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void scheduleConnectivityCheck() {
-		scheduleAction(new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.ACT_LOGIN).putExtra(Constants.KEY_LOGIN, false), WakefulIntentService.CONNECTIVITY_CHECK_PERIOD);
+		scheduleAction(Constants.ACT_LOGIN, WakefulIntentService.CONNECTIVITY_CHECK_PERIOD);
 	}
 
 	private void scheduleScan() {
-		scheduleAction(new Intent(this, AlarmBroadcastReceiver.class).setAction(Constants.ACT_SCAN), getPeriod() * 1000);
+		scheduleAction(Constants.ACT_SCAN, getPeriod() * 1000);
 	}
 
 	@Override
