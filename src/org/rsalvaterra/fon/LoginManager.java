@@ -156,7 +156,7 @@ final class LoginManager {
 									rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE);
 									if (rc == Constants.WRC_LOGIN_SUCCEEDED) {
 										lu = LoginManager.getElementText(c, LoginManager.TAG_LOGOFF_URL);
-									} else if (rc == Constants.WRC_LOGIN_FAILED) {
+									} else if ((rc == Constants.WRC_LOGIN_FAILED) || (rc == Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR)) {
 										rc = LoginManager.getElementTextAsInt(c, LoginManager.TAG_FON_RESPONSE_CODE);
 										rm = LoginManager.getElementText(c, LoginManager.TAG_REPLY_MESSAGE);
 									}
