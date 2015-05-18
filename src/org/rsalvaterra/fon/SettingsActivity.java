@@ -44,7 +44,7 @@ public final class SettingsActivity extends PreferenceActivity {
 	private void setListener(final int id, final String v) {
 		final Preference p = getPreferenceScreen().findPreference(getString(id));
 		p.setOnPreferenceChangeListener(SettingsActivity.LISTENER);
-		SettingsActivity.LISTENER.onPreferenceChange(p, WakefulIntentService.getPreference(p.getContext(), id, v));
+		SettingsActivity.LISTENER.onPreferenceChange(p, ActionExecutor.getPreference(p.getContext(), id, v));
 	}
 
 	private void showAbout() {

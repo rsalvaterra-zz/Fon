@@ -12,15 +12,15 @@ public final class WifiBroadcastReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(final Context c, final Intent i) {
 		final String a = i.getAction();
-		if (a.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) && WakefulIntentService.isAutoConnectEnabled(c)) {
-			WakefulIntentService.startService(c, new Intent(c, WakefulIntentService.class).setAction(Constants.ACT_CONNECT));
+		if (a.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) && ActionExecutor.isAutoConnectEnabled(c)) {
+			ActionExecutor.execute(c, new Intent(c, ActionExecutor.class).setAction(Constants.ACT_CONNECT));
 		} else if (a.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
 			final NetworkInfo ni = (NetworkInfo) i.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
 			if ((ni.getType() == ConnectivityManager.TYPE_WIFI)) {
 				if (ni.getState() == NetworkInfo.State.CONNECTED) {
-					WakefulIntentService.startService(c, new Intent(c, WakefulIntentService.class).setAction(Constants.ACT_LOGIN).putExtra(Constants.KEY_LOGIN, true));
+					ActionExecutor.execute(c, new Intent(c, ActionExecutor.class).setAction(Constants.ACT_LOGIN).putExtra(Constants.KEY_LOGIN, true));
 				} else if (ni.getState() == NetworkInfo.State.DISCONNECTED) {
-					WakefulIntentService.startService(c, new Intent(c, WakefulIntentService.class).setAction(Constants.ACT_CANCEL_ALL));
+					ActionExecutor.execute(c, new Intent(c, ActionExecutor.class).setAction(Constants.ACT_CANCEL_ALL));
 				}
 			}
 		}

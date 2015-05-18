@@ -47,7 +47,7 @@
 
 		<receiver android:name=".AlarmBroadcastReceiver" />
 
-		<service android:name=".WakefulIntentService" />
+		<service android:name=".ActionExecutor" />
 
 	</application>
 
