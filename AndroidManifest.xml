@@ -33,11 +33,6 @@
 			</intent-filter>
 		</activity>
 
-		<provider
-			android:name=".BlacklistProvider"
-			android:authorities="org.rsalvaterra.fon.blacklist"
-			android:exported="false" />
-
 		<receiver android:name=".WifiBroadcastReceiver">
 			<intent-filter>
 				<action android:name="android.net.wifi.SCAN_RESULTS" />
