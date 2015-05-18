@@ -346,32 +346,35 @@ public final class ActionExecutor extends Service {
 
 	private void login(final WifiManager wm, final boolean isLogin) {
 		final WifiInfo wi = wm.getConnectionInfo();
-		final String ssid = ActionExecutor.stripQuotes(wi.getSSID());
-		if (LoginManager.isSupported(ssid)) {
-			final LoginResult lr = LoginManager.login(getUsername(), getPassword());
-			switch (lr.getResponseCode()) {
-				case Constants.WRC_LOGIN_SUCCEEDED:
-				case Constants.CRC_ALREADY_CONNECTED:
-					handleSuccess(ssid, lr, isLogin);
-					break;
-				case Constants.WRC_RADIUS_ERROR:
-				case Constants.WRC_NETWORK_ADMIN_ERROR:
-				case Constants.FRC_SPOT_LIMIT_EXCEEDED:
-				case Constants.FRC_UNKNOWN_ERROR:
-				case Constants.CRC_WISPR_NOT_PRESENT:
-					handleError(wm, wi, lr);
-					break;
-				case Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR:
-					wm.removeNetwork(wi.getNetworkId());
-					break;
-				case Constants.FRC_INVALID_CREDENTIALS_ALT:
-				case Constants.FRC_INVALID_CREDENTIALS:
-				case Constants.CRC_CREDENTIALS_ERROR:
-					notifyCredentialsError();
-					break;
-				default:
-					notifyFonError(lr);
-					break;
+		String ssid = wi.getSSID();
+		if (ssid != null) {
+			ssid = ActionExecutor.stripQuotes(ssid);
+			if (LoginManager.isSupported(ssid)) {
+				final LoginResult lr = LoginManager.login(getUsername(), getPassword());
+				switch (lr.getResponseCode()) {
+					case Constants.WRC_LOGIN_SUCCEEDED:
+					case Constants.CRC_ALREADY_CONNECTED:
+						handleSuccess(ssid, lr, isLogin);
+						break;
+					case Constants.WRC_RADIUS_ERROR:
+					case Constants.WRC_NETWORK_ADMIN_ERROR:
+					case Constants.FRC_SPOT_LIMIT_EXCEEDED:
+					case Constants.FRC_UNKNOWN_ERROR:
+					case Constants.CRC_WISPR_NOT_PRESENT:
+						handleError(wm, wi, lr);
+						break;
+					case Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR:
+						wm.removeNetwork(wi.getNetworkId());
+						break;
+					case Constants.FRC_INVALID_CREDENTIALS_ALT:
+					case Constants.FRC_INVALID_CREDENTIALS:
+					case Constants.CRC_CREDENTIALS_ERROR:
+						notifyCredentialsError();
+						break;
+					default:
+						notifyFonError(lr);
+						break;
+				}
 			}
 		}
 	}
