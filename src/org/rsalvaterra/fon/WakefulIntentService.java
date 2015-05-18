@@ -118,8 +118,7 @@ public final class WakefulIntentService extends IntentService {
 		}
 	}
 
-	private static void removeConfiguration(final WifiManager wm, final String ssid) {
-		final WifiConfiguration[] wca = WakefulIntentService.getConfiguredNetworks(wm);
+	private static void removeConfiguration(final WifiConfiguration[] wca, final WifiManager wm, final String ssid) {
 		if (wca.length != 0) {
 			for (final WifiConfiguration wc : wca) {
 				if (WakefulIntentService.isInsecure(wc) && wc.SSID.equals(ssid)) {
@@ -179,12 +178,17 @@ public final class WakefulIntentService extends IntentService {
 		final WifiInfo wi = wm.getConnectionInfo();
 		final SupplicantState ss = wi.getSupplicantState();
 		if (WakefulIntentService.isDisconnected(ss)) {
-			final int id = getFonId(wm);
-			if ((id != -1) && wm.enableNetwork(id, false) && isReconnectEnabled()) {
-				scheduleScan();
+			final WifiConfiguration[] wca = WakefulIntentService.getConfiguredNetworks(wm);
+			final ScanResult[] sra = WakefulIntentService.getScanResults(wm);
+			int id = getOtherId(wca, sra, false);
+			if (id == -1) {
+				id = getFonId(wca, sra, wm);
+				if ((id != -1) && wm.enableNetwork(id, true) && isReconnectEnabled()) {
+					scheduleScan();
+				}
 			}
 		} else if (WakefulIntentService.isConnected(ss) && isReconnectEnabled() && LoginManager.isSupported(WakefulIntentService.stripQuotes(wi.getSSID()))) {
-			final int id = getOtherId(wm);
+			final int id = getOtherId(WakefulIntentService.getConfiguredNetworks(wm), WakefulIntentService.getScanResults(wm), isSecureEnabled());
 			if (id != -1) {
 				wm.enableNetwork(id, true);
 			} else {
@@ -197,16 +201,15 @@ public final class WakefulIntentService extends IntentService {
 		return WakefulIntentService.getPreference(this, R.string.kfailure, "");
 	}
 
-	private int getFonId(final WifiManager wm) {
+	private int getFonId(final WifiConfiguration[] wca, final ScanResult[] sra, final WifiManager wm) {
 		final int mr = getMinimumRssi();
-		final ScanResult[] sra = WakefulIntentService.getScanResults(wm);
 		for (final ScanResult sr : sra) {
 			if (sr.level < mr) {
 				break;
 			}
 			if (LoginManager.isSupported(sr.SSID) && WakefulIntentService.isInsecure(sr) && !BlacklistProvider.isBlacklisted(getContentResolver(), sr.BSSID)) {
 				final String ssid = '"' + sr.SSID + '"';
-				WakefulIntentService.removeConfiguration(wm, ssid);
+				WakefulIntentService.removeConfiguration(wca, wm, ssid);
 				final WifiConfiguration wc = new WifiConfiguration();
 				wc.SSID = ssid;
 				wc.BSSID = sr.BSSID;
@@ -224,10 +227,8 @@ public final class WakefulIntentService extends IntentService {
 		return Integer.MIN_VALUE;
 	}
 
-	private int getOtherId(final WifiManager wm) {
-		final WifiConfiguration[] wca = WakefulIntentService.getConfiguredNetworks(wm);
+	private int getOtherId(final WifiConfiguration[] wca, final ScanResult[] sra, final boolean secure) {
 		if (wca.length != 0) {
-			final boolean secure = isSecureEnabled();
 			final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
 			for (final WifiConfiguration wc : wca) {
 				final String ssid = WakefulIntentService.stripQuotes(wc.SSID);
@@ -236,7 +237,6 @@ public final class WakefulIntentService extends IntentService {
 				}
 			}
 			final int mr = getMinimumRssi();
-			final ScanResult[] sra = WakefulIntentService.getScanResults(wm);
 			for (final ScanResult sr : sra) {
 				if (sr.level < mr) {
 					break;
