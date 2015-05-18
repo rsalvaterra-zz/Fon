@@ -139,8 +139,8 @@ final class LoginManager {
 
 	static LoginResult login(final String user, final String password) {
 		int rc = Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR;
-		String rm = null;
-		String lu = null;
+		String rm = "";
+		String lu = "";
 		if ((user.length() != 0) && (password.length() != 0)) {
 			String c = LoginManager.getTestUrlContent();
 			if (c != null) {

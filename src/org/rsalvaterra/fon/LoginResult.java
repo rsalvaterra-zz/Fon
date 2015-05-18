@@ -2,27 +2,27 @@ package org.rsalvaterra.fon;
 
 final class LoginResult {
 
-	private final int responseCode;
+	private final int rc;
 
-	private final String replyMessage;
-	private final String logOffUrl;
+	private final String rm;
+	private final String lu;
 
-	LoginResult(final int responseCode, final String replyMessage, final String logOffUrl) {
-		this.responseCode = responseCode;
-		this.replyMessage = replyMessage;
-		this.logOffUrl = logOffUrl;
+	LoginResult(final int rc, final String rm, final String lu) {
+		this.rc = rc;
+		this.rm = new String(rm);
+		this.lu = new String(lu);
 	}
 
 	String getLogOffUrl() {
-		return logOffUrl;
+		return lu;
 	}
 
 	String getReplyMessage() {
-		return replyMessage;
+		return rm;
 	}
 
 	int getResponseCode() {
-		return responseCode;
+		return rc;
 	}
 
 }

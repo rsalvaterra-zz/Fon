@@ -61,6 +61,7 @@ public final class ActionExecutor extends Service {
 	private static int NEXT_WAKELOCK_ID = 1;
 
 	private final Looper looper;
+
 	private final Handler handler;
 
 	{
@@ -138,7 +139,7 @@ public final class ActionExecutor extends Service {
 	}
 
 	private static void logoff(final String url, final WifiManager wm) {
-		if ((url != null) && (url.length() != 0)) {
+		if (url.length() != 0) {
 			HttpUtils.get(url, ActionExecutor.LOGOFF_HTTP_TIMEOUT);
 		}
 		wm.disconnect();
@@ -433,7 +434,7 @@ public final class ActionExecutor extends Service {
 	}
 
 	@Override
-	public IBinder onBind(final Intent intent) {
+	public IBinder onBind(final Intent i) {
 		return null;
 	}
 
