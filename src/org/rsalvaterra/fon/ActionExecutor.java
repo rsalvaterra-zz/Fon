@@ -11,12 +11,9 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.SupplicantState;
@@ -47,13 +44,11 @@ public final class ActionExecutor extends Service {
 	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
 	private static final long[] VIBRATE_PATTERN_SUCCESS = { 100, 250 };
 
-	private static final String KEY_BSSID = "bssid";
-	private static final String KEY_EXPIRY_TIME = "exptime";
 	private static final String KEY_WAKELOCK_ID = Constants.APP_ID + ".wakelock";
-	private static final String TABLE_BLACKLIST = "blacklist";
-	private static final String WHERE_CLAUSE = ActionExecutor.KEY_BSSID + " = ?";
 
 	private static final SparseArray<WakeLock> ACTIVE_WAKELOCKS = new SparseArray<WakeLock>();
+
+	private static final HashMap<String, Long> BLACKLIST = new HashMap<String, Long>();
 
 	private static final Comparator<ScanResult> BY_DESCENDING_SIGNAL_LEVEL = new Comparator<ScanResult>() {
 
@@ -65,12 +60,10 @@ public final class ActionExecutor extends Service {
 
 	private static int NEXT_WAKELOCK_ID = 1;
 
-	private final SQLiteDatabase blacklist = SQLiteDatabase.create(null);
 	private final Looper looper;
 	private final Handler handler;
 
 	{
-		blacklist.execSQL("CREATE TABLE " + ActionExecutor.TABLE_BLACKLIST + " (_ID INTEGER PRIMARY KEY ASC, " + ActionExecutor.KEY_BSSID + " TEXT UNIQUE NOT NULL, " + ActionExecutor.KEY_EXPIRY_TIME + " LONG NOT NULL)");
 		final HandlerThread thread = new HandlerThread(Constants.APP_ID);
 		thread.start();
 		looper = thread.getLooper();
@@ -81,6 +74,12 @@ public final class ActionExecutor extends Service {
 				executeAction((Intent) msg.obj);
 			}
 		};
+	}
+
+	private static void addToBlacklist(final String bssid) {
+		synchronized (ActionExecutor.BLACKLIST) {
+			ActionExecutor.BLACKLIST.put(bssid, Long.valueOf(SystemClock.elapsedRealtime() + ActionExecutor.BLACKLIST_PERIOD));
+		}
 	}
 
 	private static WifiConfiguration[] getConfiguredNetworks(final WifiManager wm) {
@@ -107,6 +106,19 @@ public final class ActionExecutor extends Service {
 		final ScanResult[] sra = srl.toArray(new ScanResult[srl.size()]);
 		Arrays.sort(sra, ActionExecutor.BY_DESCENDING_SIGNAL_LEVEL);
 		return sra;
+	}
+
+	private static boolean isBlacklisted(final String bssid) {
+		synchronized (ActionExecutor.BLACKLIST) {
+			final Long time = ActionExecutor.BLACKLIST.get(bssid);
+			if (time != null) {
+				if (time.longValue() > SystemClock.elapsedRealtime()) {
+					return true;
+				}
+				ActionExecutor.BLACKLIST.remove(bssid);
+			}
+		}
+		return false;
 	}
 
 	private static boolean isConnected(final SupplicantState ss) {
@@ -189,15 +201,6 @@ public final class ActionExecutor extends Service {
 		return ActionExecutor.getPreference(c, R.string.kautoconnect, true);
 	}
 
-	private void addToBlacklist(final String bssid) {
-		final ContentValues values = new ContentValues();
-		values.put(ActionExecutor.KEY_EXPIRY_TIME, Long.valueOf(SystemClock.elapsedRealtime() + ActionExecutor.BLACKLIST_PERIOD));
-		if (blacklist.update(ActionExecutor.TABLE_BLACKLIST, values, ActionExecutor.WHERE_CLAUSE, new String[] { bssid }) == 0) {
-			values.put(ActionExecutor.KEY_BSSID, bssid);
-			blacklist.insert(ActionExecutor.TABLE_BLACKLIST, null, values);
-		}
-	}
-
 	private boolean areNotificationsEnabled() {
 		return ActionExecutor.getPreference(this, R.string.knotify, true);
 	}
@@ -243,7 +246,7 @@ public final class ActionExecutor extends Service {
 			if (sr.level < mr) {
 				break;
 			}
-			if (LoginManager.isSupported(sr.SSID) && ActionExecutor.isInsecure(sr) && !isBlacklisted(sr.BSSID)) {
+			if (LoginManager.isSupported(sr.SSID) && ActionExecutor.isInsecure(sr) && !ActionExecutor.isBlacklisted(sr.BSSID)) {
 				final String ssid = '"' + sr.SSID + '"';
 				ActionExecutor.removeConfiguration(wca, wm, ssid);
 				final WifiConfiguration wc = new WifiConfiguration();
@@ -304,7 +307,7 @@ public final class ActionExecutor extends Service {
 
 	private void handleError(final WifiManager wm, final WifiInfo wi, final LoginResult lr) {
 		if (ActionExecutor.isAutoConnectEnabled(this)) {
-			addToBlacklist(wi.getBSSID());
+			ActionExecutor.addToBlacklist(wi.getBSSID());
 			wm.removeNetwork(wi.getNetworkId());
 		} else {
 			notifyFonError(lr);
@@ -326,22 +329,6 @@ public final class ActionExecutor extends Service {
 			notify(getString(R.string.started), ActionExecutor.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), text, pi);
 		}
 		scheduleConnectivityCheck();
-	}
-
-	private boolean isBlacklisted(final String bssid) {
-		boolean blacklisted = false;
-		final Cursor cursor = blacklist.query(ActionExecutor.TABLE_BLACKLIST, new String[] { ActionExecutor.KEY_EXPIRY_TIME }, ActionExecutor.WHERE_CLAUSE, new String[] { bssid }, null, null, null);
-		if (cursor != null) {
-			if (cursor.moveToFirst()) {
-				if (cursor.getLong(0) > SystemClock.elapsedRealtime()) {
-					blacklisted = true;
-				} else {
-					blacklist.delete(ActionExecutor.TABLE_BLACKLIST, ActionExecutor.WHERE_CLAUSE, new String[] { bssid });
-				}
-			}
-			cursor.close();
-		}
-		return blacklisted;
 	}
 
 	private boolean isReconnectEnabled() {
