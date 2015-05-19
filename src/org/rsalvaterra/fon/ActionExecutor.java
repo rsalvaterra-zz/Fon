@@ -44,8 +44,6 @@ public final class ActionExecutor extends Service {
 	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
 	private static final long[] VIBRATE_PATTERN_SUCCESS = { 100, 250 };
 
-	private static final String KEY_WAKELOCK_ID = Constants.APP_ID + ".wakelock";
-
 	private static final SparseArray<WakeLock> ACTIVE_WAKELOCKS = new SparseArray<WakeLock>();
 
 	private static final HashMap<String, Long> BLACKLIST = new HashMap<String, Long>();
@@ -146,7 +144,7 @@ public final class ActionExecutor extends Service {
 	}
 
 	private static void releaseWakeLock(final Intent i) {
-		final int id = i.getIntExtra(ActionExecutor.KEY_WAKELOCK_ID, 0);
+		final int id = i.getIntExtra(Constants.APP_ID, 0);
 		if (id != 0) {
 			synchronized (ActionExecutor.ACTIVE_WAKELOCKS) {
 				final WakeLock wl = ActionExecutor.ACTIVE_WAKELOCKS.get(id);
@@ -183,9 +181,9 @@ public final class ActionExecutor extends Service {
 			if (ActionExecutor.NEXT_WAKELOCK_ID <= 0) {
 				ActionExecutor.NEXT_WAKELOCK_ID = 1;
 			}
-			final ComponentName cn = context.startService(intent.putExtra(ActionExecutor.KEY_WAKELOCK_ID, id));
+			final ComponentName cn = context.startService(intent.putExtra(Constants.APP_ID, id));
 			if (cn != null) {
-				final WakeLock wl = ((PowerManager) context.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, ActionExecutor.KEY_WAKELOCK_ID);
+				final WakeLock wl = ((PowerManager) context.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.APP_ID);
 				wl.setReferenceCounted(false);
 				wl.acquire(ActionExecutor.WAKELOCK_TIMEOUT);
 				ActionExecutor.ACTIVE_WAKELOCKS.put(id, wl);
