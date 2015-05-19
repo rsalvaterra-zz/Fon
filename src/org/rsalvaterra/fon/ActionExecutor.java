@@ -449,7 +449,6 @@ public final class ActionExecutor extends Service {
 	@Override
 	public void onStart(final Intent i, final int id) {
 		final Message m = Message.obtain();
-		m.arg1 = id;
 		m.obj = i;
 		handler.sendMessage(m);
 	}
