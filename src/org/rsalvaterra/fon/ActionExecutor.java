@@ -24,7 +24,6 @@ import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -58,15 +57,12 @@ public final class ActionExecutor extends Service {
 
 	private static int NEXT_WAKELOCK_ID = 1;
 
-	private final Looper looper;
-
 	private final Handler handler;
 
 	{
 		final HandlerThread thread = new HandlerThread(Constants.APP_ID);
 		thread.start();
-		looper = thread.getLooper();
-		handler = new Handler(looper) {
+		handler = new Handler(thread.getLooper()) {
 
 			@Override
 			public void handleMessage(final Message msg) {
@@ -441,7 +437,7 @@ public final class ActionExecutor extends Service {
 
 	@Override
 	public void onDestroy() {
-		looper.quit();
+		handler.getLooper().quit();
 	}
 
 	@Override
