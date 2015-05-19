@@ -16,6 +16,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.params.ClientPNames;
 import org.apache.http.entity.HttpEntityWrapper;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
@@ -37,7 +38,7 @@ final class HttpUtils {
 	private static final String UTF_8 = "UTF-8";
 
 	private static final DefaultHttpClient HTTP_CLIENT = new DefaultHttpClient();
-	private static final HttpParams HTTP_PARAMETERS = new BasicHttpParams().setParameter(HttpUtils.USER_AGENT, HttpUtils.USER_AGENT_STRING);
+	private static final HttpParams HTTP_PARAMETERS = new BasicHttpParams().setParameter(HttpUtils.USER_AGENT, HttpUtils.USER_AGENT_STRING).setBooleanParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true);
 
 	static {
 		HttpUtils.HTTP_CLIENT.setCookieStore(null);
