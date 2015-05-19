@@ -33,16 +33,22 @@
 			</intent-filter>
 		</activity>
 
-		<receiver android:name=".WifiBroadcastReceiver">
+		<receiver
+			android:name=".WifiBroadcastReceiver"
+			android:process=":core">
 			<intent-filter>
 				<action android:name="android.net.wifi.SCAN_RESULTS" />
 				<action android:name="android.net.wifi.STATE_CHANGE" />
 			</intent-filter>
 		</receiver>
 
-		<receiver android:name=".AlarmBroadcastReceiver" />
+		<receiver
+			android:name=".AlarmBroadcastReceiver"
+			android:process=":core" />
 
-		<service android:name=".ActionExecutor" />
+		<service
+			android:name=".ActionExecutor"
+			android:process=":core" />
 
 	</application>
 
