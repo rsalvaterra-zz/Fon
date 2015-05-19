@@ -352,7 +352,7 @@ public final class ActionExecutor extends Service {
 						break;
 					case Constants.WRC_RADIUS_ERROR:
 					case Constants.WRC_NETWORK_ADMIN_ERROR:
-					case Constants.FRC_SPOT_LIMIT_EXCEEDED:
+					case Constants.FRC_HOTSPOT_LIMIT_EXCEEDED:
 					case Constants.FRC_UNKNOWN_ERROR:
 					case Constants.CRC_WISPR_NOT_PRESENT:
 						handleError(wm, wi, lr);
@@ -360,8 +360,7 @@ public final class ActionExecutor extends Service {
 					case Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR:
 						wm.removeNetwork(wi.getNetworkId());
 						break;
-					case Constants.FRC_INVALID_CREDENTIALS_ALT:
-					case Constants.FRC_INVALID_CREDENTIALS:
+					case Constants.FRC_BAD_CREDENTIALS:
 					case Constants.CRC_CREDENTIALS_ERROR:
 						notifyCredentialsError();
 						break;
