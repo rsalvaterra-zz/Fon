@@ -141,24 +141,26 @@ public final class ActionExecutor extends Service {
 
 	private static void releaseWakeLock(final Intent i) {
 		final int id = i.getIntExtra(Constants.APP_ID, 0);
-		if (id != 0) {
-			synchronized (ActionExecutor.ACTIVE_WAKELOCKS) {
-				final WakeLock wl = ActionExecutor.ACTIVE_WAKELOCKS.get(id);
-				if (wl != null) {
-					wl.release();
-					ActionExecutor.ACTIVE_WAKELOCKS.remove(id);
-				}
+		if (id == 0) {
+			return;
+		}
+		synchronized (ActionExecutor.ACTIVE_WAKELOCKS) {
+			final WakeLock wl = ActionExecutor.ACTIVE_WAKELOCKS.get(id);
+			if (wl != null) {
+				wl.release();
+				ActionExecutor.ACTIVE_WAKELOCKS.remove(id);
 			}
 		}
 	}
 
 	private static void removeConfiguration(final WifiConfiguration[] wca, final WifiManager wm, final String ssid) {
-		if (wca.length != 0) {
-			for (final WifiConfiguration wc : wca) {
-				if (ActionExecutor.isInsecure(wc) && wc.SSID.equals(ssid)) {
-					wm.removeNetwork(wc.networkId);
-					break;
-				}
+		if (wca.length == 0) {
+			return;
+		}
+		for (final WifiConfiguration wc : wca) {
+			if (ActionExecutor.isInsecure(wc) && wc.SSID.equals(ssid)) {
+				wm.removeNetwork(wc.networkId);
+				break;
 			}
 		}
 	}
@@ -307,20 +309,21 @@ public final class ActionExecutor extends Service {
 	}
 
 	private void handleSuccess(final String ssid, final LoginResult lr, final boolean isLogin) {
-		if (isLogin) {
-			final Intent i = new Intent();
-			final PendingIntent pi;
-			final String text;
-			if (ActionExecutor.isAutoConnectEnabled(this)) {
-				pi = PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
-				text = getString(R.string.connected, ssid);
-			} else {
-				pi = PendingIntent.getService(this, ActionExecutor.REQUEST_CODE, i.setClass(this, ActionExecutor.class).setAction(Constants.ACT_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
-				text = getString(R.string.logoff);
-			}
-			notify(getString(R.string.started), ActionExecutor.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), text, pi);
-			startPeriodicConnectivityCheck();
+		if (!isLogin) {
+			return;
 		}
+		final Intent i = new Intent();
+		final PendingIntent pi;
+		final String text;
+		if (ActionExecutor.isAutoConnectEnabled(this)) {
+			pi = PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
+			text = getString(R.string.connected, ssid);
+		} else {
+			pi = PendingIntent.getService(this, ActionExecutor.REQUEST_CODE, i.setClass(this, ActionExecutor.class).setAction(Constants.ACT_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
+			text = getString(R.string.logoff);
+		}
+		notify(getString(R.string.started), ActionExecutor.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), text, pi);
+		startPeriodicConnectivityCheck();
 	}
 
 	private boolean isReconnectEnabled() {
@@ -338,33 +341,34 @@ public final class ActionExecutor extends Service {
 	private void login(final WifiManager wm, final boolean isLogin) {
 		final WifiInfo wi = wm.getConnectionInfo();
 		String ssid = wi.getSSID();
-		if (ssid != null) {
-			ssid = ActionExecutor.stripQuotes(ssid);
-			if (LoginManager.isSupported(ssid)) {
-				final LoginResult lr = LoginManager.login(getUsername(), getPassword());
-				switch (lr.getResponseCode()) {
-					case Constants.WRC_LOGIN_SUCCEEDED:
-					case Constants.CRC_ALREADY_CONNECTED:
-						handleSuccess(ssid, lr, isLogin);
-						break;
-					case Constants.WRC_RADIUS_ERROR:
-					case Constants.WRC_NETWORK_ADMIN_ERROR:
-					case Constants.FRC_HOTSPOT_LIMIT_EXCEEDED:
-					case Constants.FRC_UNKNOWN_ERROR:
-					case Constants.CRC_WISPR_NOT_PRESENT:
-						handleError(wm, wi, lr);
-						break;
-					case Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR:
-						wm.removeNetwork(wi.getNetworkId());
-						break;
-					case Constants.FRC_BAD_CREDENTIALS:
-					case Constants.CRC_CREDENTIALS_ERROR:
-						notifyCredentialsError();
-						break;
-					default:
-						notifyFonError(lr);
-						break;
-				}
+		if (ssid == null) {
+			return;
+		}
+		ssid = ActionExecutor.stripQuotes(ssid);
+		if (LoginManager.isSupported(ssid)) {
+			final LoginResult lr = LoginManager.login(getUsername(), getPassword());
+			switch (lr.getResponseCode()) {
+				case Constants.WRC_LOGIN_SUCCEEDED:
+				case Constants.CRC_ALREADY_CONNECTED:
+					handleSuccess(ssid, lr, isLogin);
+					break;
+				case Constants.WRC_RADIUS_ERROR:
+				case Constants.WRC_NETWORK_ADMIN_ERROR:
+				case Constants.FRC_HOTSPOT_LIMIT_EXCEEDED:
+				case Constants.FRC_UNKNOWN_ERROR:
+				case Constants.CRC_WISPR_NOT_PRESENT:
+					handleError(wm, wi, lr);
+					break;
+				case Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR:
+					wm.removeNetwork(wi.getNetworkId());
+					break;
+				case Constants.FRC_BAD_CREDENTIALS:
+				case Constants.CRC_CREDENTIALS_ERROR:
+					notifyCredentialsError();
+					break;
+				default:
+					notifyFonError(lr);
+					break;
 			}
 		}
 	}
