@@ -201,11 +201,9 @@ public final class ActionExecutor extends Service {
 	}
 
 	private void cancelAll() {
-		final AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-		final Intent i = new Intent(this, AlarmBroadcastReceiver.class);
-		am.cancel(PendingIntent.getBroadcast(this, ActionExecutor.REQUEST_CODE, i.setAction(Constants.ACT_SCAN), PendingIntent.FLAG_UPDATE_CURRENT));
-		am.cancel(PendingIntent.getBroadcast(this, ActionExecutor.REQUEST_CODE, i.setAction(Constants.ACT_LOGIN), PendingIntent.FLAG_UPDATE_CURRENT));
-		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(ActionExecutor.NOTIFICATION_ID);
+		stopPeriodicConnectivityCheck();
+		stopPeriodicScan();
+		removeNotification();
 	}
 
 	private void connect(final WifiManager wm) {
@@ -218,15 +216,14 @@ public final class ActionExecutor extends Service {
 			if (id == -1) {
 				id = getFonId(wca, sra, wm);
 				if ((id != -1) && wm.enableNetwork(id, true) && isReconnectEnabled()) {
-					scheduleScan();
+					startPeriodicScan();
 				}
 			}
 		} else if (ActionExecutor.isConnected(ss) && isReconnectEnabled() && LoginManager.isSupported(ActionExecutor.stripQuotes(wi.getSSID()))) {
 			final int id = getOtherId(ActionExecutor.getConfiguredNetworks(wm), ActionExecutor.getScanResults(wm), isSecureEnabled());
 			if (id != -1) {
+				stopPeriodicScan();
 				wm.enableNetwork(id, true);
-			} else {
-				scheduleScan();
 			}
 		}
 	}
@@ -322,8 +319,8 @@ public final class ActionExecutor extends Service {
 				text = getString(R.string.logoff);
 			}
 			notify(getString(R.string.started), ActionExecutor.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), text, pi);
+			startPeriodicConnectivityCheck();
 		}
-		scheduleConnectivityCheck();
 	}
 
 	private boolean isReconnectEnabled() {
@@ -398,16 +395,32 @@ public final class ActionExecutor extends Service {
 		notifyError(getString(R.string.fon_error, Integer.valueOf(lr.getResponseCode()), lr.getReplyMessage()));
 	}
 
-	private void scheduleAction(final String action, final int milliseconds) {
-		((AlarmManager) getSystemService(Context.ALARM_SERVICE)).set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + milliseconds, PendingIntent.getBroadcast(this, ActionExecutor.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(action), PendingIntent.FLAG_UPDATE_CURRENT));
+	private void removeNotification() {
+		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(ActionExecutor.NOTIFICATION_ID);
 	}
 
-	private void scheduleConnectivityCheck() {
-		scheduleAction(Constants.ACT_LOGIN, ActionExecutor.CONNECTIVITY_CHECK_PERIOD);
+	private void startPeriodicAction(final int milliseconds, final String action) {
+		((AlarmManager) getSystemService(Context.ALARM_SERVICE)).setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + milliseconds, milliseconds, PendingIntent.getBroadcast(this, ActionExecutor.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(action), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
-	private void scheduleScan() {
-		scheduleAction(Constants.ACT_SCAN, getPeriod() * 1000);
+	private void startPeriodicConnectivityCheck() {
+		startPeriodicAction(ActionExecutor.CONNECTIVITY_CHECK_PERIOD, Constants.ACT_LOGIN);
+	}
+
+	private void startPeriodicScan() {
+		startPeriodicAction(getPeriod() * 1000, Constants.ACT_SCAN);
+	}
+
+	private void stopPeriodicAction(final String action) {
+		((AlarmManager) getSystemService(Context.ALARM_SERVICE)).cancel(PendingIntent.getBroadcast(this, ActionExecutor.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(action), PendingIntent.FLAG_UPDATE_CURRENT));
+	}
+
+	private void stopPeriodicConnectivityCheck() {
+		stopPeriodicAction(Constants.ACT_LOGIN);
+	}
+
+	private void stopPeriodicScan() {
+		stopPeriodicAction(Constants.ACT_SCAN);
 	}
 
 	protected void executeAction(final Intent i) {
