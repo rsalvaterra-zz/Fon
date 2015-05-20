@@ -19,12 +19,11 @@ final class LoginManager {
 	private LoginManager() {}
 
 	private static String doLogin(final String url, final String user, final String pass) {
-		final String u = LoginManager.replaceAmpEntities(url);
-		if (u.startsWith(LoginManager.SAFE_PROTOCOL)) {
+		if (url.startsWith(LoginManager.SAFE_PROTOCOL)) {
 			for (final String s : LoginManager.VALID_SUFFIX) {
-				final String h = u.substring(LoginManager.SAFE_PROTOCOL.length(), u.indexOf("/", LoginManager.SAFE_PROTOCOL.length()));
+				final String h = url.substring(LoginManager.SAFE_PROTOCOL.length(), url.indexOf("/", LoginManager.SAFE_PROTOCOL.length()));
 				if (h.endsWith(s)) {
-					return HttpUtils.post(u, LoginManager.getPrefixedUserName(h, user), pass);
+					return HttpUtils.post(LoginManager.replaceAmpEntities(url), LoginManager.getPrefixedUserName(h, user), pass);
 				}
 			}
 		}
@@ -47,7 +46,7 @@ final class LoginManager {
 	}
 
 	private static String getPrefixedUserName(final String h, final String username) {
-		if ((h.endsWith("portal.fon.com") || h.endsWith("wifi.sfr.fr") || h.equals("www.btopenzone.com")) && !(h.contains("belgacom") || h.contains("telekom"))) {
+		if ((h.contains("portal.fon.com") || h.contains("wifi.sfr.fr") || h.equals("www.btopenzone.com")) && !(h.contains("belgacom") || h.contains("telekom"))) {
 			return LoginManager.FON_USERNAME_PREFIX + username;
 		}
 		return username;
