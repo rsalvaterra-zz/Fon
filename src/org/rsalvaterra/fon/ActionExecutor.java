@@ -224,7 +224,6 @@ public final class ActionExecutor extends Service {
 		} else if (ActionExecutor.isConnected(ss) && isReconnectEnabled() && LoginManager.isSupported(ActionExecutor.stripQuotes(wi.getSSID()))) {
 			final int id = getOtherId(ActionExecutor.getConfiguredNetworks(wm), ActionExecutor.getScanResults(wm), isSecureEnabled());
 			if (id != -1) {
-				stopPeriodicScan();
 				wm.enableNetwork(id, true);
 			}
 		}
