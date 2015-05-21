@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="app_name">Fon Settings</string>
+	<string
+		name="svc_name"
+		translatable="false">ConMan</string>
 	<string name="app_credits"><![CDATA[Automatic authenticator for Fon networks.<p>%1$s</p>This application is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License (GPL) version 3, as published by the Free Software Foundation.<p>Source code available on %2$s.</p>]]></string>
 	<string
 		name="app_copyright"

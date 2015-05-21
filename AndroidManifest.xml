@@ -35,7 +35,7 @@
 
 		<receiver
 			android:name=".WifiBroadcastReceiver"
-			android:process=":core">
+			android:process=":main">
 			<intent-filter>
 				<action android:name="android.net.wifi.SCAN_RESULTS" />
 				<action android:name="android.net.wifi.STATE_CHANGE" />
@@ -44,11 +44,12 @@
 
 		<receiver
 			android:name=".AlarmBroadcastReceiver"
-			android:process=":core" />
+			android:process=":main" />
 
 		<service
-			android:name=".ActionExecutor"
-			android:process=":core" />
+			android:name=".WakefulService"
+			android:label="@string/svc_name"
+			android:process=":main" />
 
 	</application>
 
