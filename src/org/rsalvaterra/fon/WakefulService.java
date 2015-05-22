@@ -426,7 +426,7 @@ public final class WakefulService extends Service {
 		stopPeriodicAction(Constants.ACT_SCAN);
 	}
 
-	protected void executeAction(final Intent i) {
+	void executeAction(final Intent i) {
 		final String a = i.getAction();
 		if (a.equals(Constants.ACT_CANCEL_ALL)) {
 			cancelAll();

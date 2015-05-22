@@ -17,6 +17,23 @@ import android.widget.TextView;
 
 public final class SettingsActivity extends PreferenceActivity {
 
+	private static final OnPreferenceClickListener OC_LISTENER = new OnPreferenceClickListener() {
+
+		@Override
+		public boolean onPreferenceClick(final Preference p) {
+			final Context c = p.getContext();
+			((TextView) new Builder(c).setIcon(R.drawable.ic_launcher).setTitle(R.string.app_name).setMessage(Html.fromHtml(c.getString(R.string.app_credits, c.getString(R.string.app_copyright), c.getString(R.string.app_source)))).setNeutralButton(R.string.accept, new OnClickListener() {
+
+				@Override
+				public void onClick(final DialogInterface dialog, final int which) {
+					dialog.dismiss();
+
+				}
+			}).show().findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
+			return true;
+		}
+	};
+
 	private static final OnPreferenceChangeListener OPC_LISTENER = new OnPreferenceChangeListener() {
 
 		@Override
@@ -35,23 +52,6 @@ public final class SettingsActivity extends PreferenceActivity {
 				}
 			}
 			p.setSummary(s);
-			return true;
-		}
-	};
-
-	private static final OnPreferenceClickListener OC_LISTENER = new OnPreferenceClickListener() {
-
-		@Override
-		public boolean onPreferenceClick(final Preference p) {
-			final Context c = p.getContext();
-			((TextView) new Builder(c).setIcon(R.drawable.ic_launcher).setTitle(R.string.app_name).setMessage(Html.fromHtml(c.getString(R.string.app_credits, c.getString(R.string.app_copyright), c.getString(R.string.app_source)))).setNeutralButton(R.string.accept, new OnClickListener() {
-
-				@Override
-				public void onClick(final DialogInterface dialog, final int which) {
-					dialog.dismiss();
-
-				}
-			}).show().findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
 			return true;
 		}
 	};
