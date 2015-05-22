@@ -72,9 +72,7 @@ public final class WakefulService extends Service {
 	}
 
 	private static void addToBlacklist(final String bssid) {
-		synchronized (WakefulService.BLACKLIST) {
-			WakefulService.BLACKLIST.put(bssid, Long.valueOf(SystemClock.elapsedRealtime() + WakefulService.BLACKLIST_PERIOD));
-		}
+		WakefulService.BLACKLIST.put(bssid, Long.valueOf(SystemClock.elapsedRealtime() + WakefulService.BLACKLIST_PERIOD));
 	}
 
 	private static WifiConfiguration[] getConfiguredNetworks(final WifiManager wm) {
@@ -104,14 +102,12 @@ public final class WakefulService extends Service {
 	}
 
 	private static boolean isBlacklisted(final String bssid) {
-		synchronized (WakefulService.BLACKLIST) {
-			final Long time = WakefulService.BLACKLIST.get(bssid);
-			if (time != null) {
-				if (time.longValue() > SystemClock.elapsedRealtime()) {
-					return true;
-				}
-				WakefulService.BLACKLIST.remove(bssid);
+		final Long t = WakefulService.BLACKLIST.get(bssid);
+		if (t != null) {
+			if (t.longValue() > SystemClock.elapsedRealtime()) {
+				return true;
 			}
+			WakefulService.BLACKLIST.remove(bssid);
 		}
 		return false;
 	}
