@@ -1,25 +1,23 @@
 package org.rsalvaterra.fon;
 
-import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
+import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.TextView;
 
 public final class SettingsActivity extends PreferenceActivity {
 
-	private static final int CLOSE_ID = Menu.FIRST;
-	private static final int ABOUT_ID = SettingsActivity.CLOSE_ID + 1;
-
-	private static final OnPreferenceChangeListener LISTENER = new OnPreferenceChangeListener() {
+	private static final OnPreferenceChangeListener OPC_LISTENER = new OnPreferenceChangeListener() {
 
 		@Override
 		public final boolean onPreferenceChange(final Preference p, final Object v) {
@@ -41,45 +39,45 @@ public final class SettingsActivity extends PreferenceActivity {
 		}
 	};
 
-	private void setListener(final int id, final String v) {
-		final Preference p = getPreferenceScreen().findPreference(getString(id));
-		p.setOnPreferenceChangeListener(SettingsActivity.LISTENER);
-		SettingsActivity.LISTENER.onPreferenceChange(p, WakefulService.getPreference(p.getContext(), id, v));
+	private static final OnPreferenceClickListener OC_LISTENER = new OnPreferenceClickListener() {
+
+		@Override
+		public boolean onPreferenceClick(final Preference p) {
+			final Context c = p.getContext();
+			((TextView) new Builder(c).setIcon(R.drawable.ic_launcher).setTitle(R.string.app_name).setMessage(Html.fromHtml(c.getString(R.string.app_credits, c.getString(R.string.app_copyright), c.getString(R.string.app_source)))).setNeutralButton(R.string.accept, new OnClickListener() {
+
+				@Override
+				public void onClick(final DialogInterface dialog, final int which) {
+					dialog.dismiss();
+
+				}
+			}).show().findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
+			return true;
+		}
+	};
+
+	private Preference getPreference(final int id) {
+		return getPreferenceScreen().findPreference(getString(id));
 	}
 
-	private void showAbout() {
-		((TextView) new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setTitle(R.string.app_name).setMessage(Html.fromHtml(getString(R.string.app_credits, getString(R.string.app_copyright), getString(R.string.app_source)))).show().findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
+	private void setOnPreferenceChangeListener(final int id, final String v) {
+		final Preference p = getPreference(id);
+		p.setOnPreferenceChangeListener(SettingsActivity.OPC_LISTENER);
+		SettingsActivity.OPC_LISTENER.onPreferenceChange(p, WakefulService.getPreference(p.getContext(), id, v));
+	}
+
+	private void setOnPreferenceClickListener(final int id) {
+		getPreference(id).setOnPreferenceClickListener(SettingsActivity.OC_LISTENER);
 	}
 
 	@Override
 	public void onCreate(final Bundle b) {
 		super.onCreate(b);
 		addPreferencesFromResource(R.layout.settings);
-		setListener(R.string.kperiod, Constants.DEFAULT_PERIOD);
-		setListener(R.string.krssi, Constants.DEFAULT_MINIMUM_RSSI);
-		setListener(R.string.ksuccess, "");
-		setListener(R.string.kfailure, "");
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(final Menu m) {
-		m.add(Menu.NONE, SettingsActivity.CLOSE_ID, Menu.NONE, R.string.close).setIcon(android.R.drawable.ic_menu_save);
-		m.add(Menu.NONE, SettingsActivity.ABOUT_ID, Menu.NONE, R.string.about).setIcon(android.R.drawable.ic_menu_info_details);
-		return super.onCreateOptionsMenu(m);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(final MenuItem mi) {
-		switch (mi.getItemId()) {
-			case CLOSE_ID:
-				finish();
-				break;
-			case ABOUT_ID:
-				showAbout();
-				break;
-			default:
-				return super.onOptionsItemSelected(mi);
-		}
-		return true;
+		setOnPreferenceChangeListener(R.string.kperiod, Constants.DEFAULT_PERIOD);
+		setOnPreferenceChangeListener(R.string.krssi, Constants.DEFAULT_MINIMUM_RSSI);
+		setOnPreferenceChangeListener(R.string.ksuccess, "");
+		setOnPreferenceChangeListener(R.string.kfailure, "");
+		setOnPreferenceClickListener(R.string.kabout);
 	}
 }

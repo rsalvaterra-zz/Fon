@@ -16,6 +16,10 @@
 	<string name="basic">Basic settings</string>
 	<string name="about">About</string>
 	<string
+		name="kabout"
+		translatable="false">about</string>
+	<string name="accept">Accept</string>
+	<string
 		name="kusername"
 		translatable="false">username</string>
 	<string name="username">User name</string>
