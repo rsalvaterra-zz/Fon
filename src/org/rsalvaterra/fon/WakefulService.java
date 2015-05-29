@@ -55,7 +55,7 @@ public final class WakefulService extends Service {
 		}
 	};
 
-	private static int NEXT_WAKELOCK_ID = 1;
+	private static int NEXT_WAKELOCK_ID = 0;
 
 	private final Handler handler;
 
@@ -136,8 +136,8 @@ public final class WakefulService extends Service {
 	}
 
 	private static void releaseWakeLock(final Intent i) {
-		final int id = i.getIntExtra(Constants.APP_ID, 0);
-		if (id == 0) {
+		final int id = i.getIntExtra(Constants.APP_ID, -1);
+		if (id == -1) {
 			return;
 		}
 		synchronized (WakefulService.ACTIVE_WAKELOCKS) {
@@ -172,8 +172,8 @@ public final class WakefulService extends Service {
 	static ComponentName execute(final Context context, final Intent intent) {
 		synchronized (WakefulService.ACTIVE_WAKELOCKS) {
 			final int id = WakefulService.NEXT_WAKELOCK_ID++;
-			if (WakefulService.NEXT_WAKELOCK_ID <= 0) {
-				WakefulService.NEXT_WAKELOCK_ID = 1;
+			if (WakefulService.NEXT_WAKELOCK_ID < 0) {
+				WakefulService.NEXT_WAKELOCK_ID = 0;
 			}
 			final ComponentName cn = context.startService(intent.putExtra(Constants.APP_ID, id));
 			if (cn != null) {
