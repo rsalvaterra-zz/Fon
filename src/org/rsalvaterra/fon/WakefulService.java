@@ -171,10 +171,7 @@ public final class WakefulService extends Service {
 
 	static ComponentName execute(final Context context, final Intent intent) {
 		synchronized (WakefulService.ACTIVE_WAKELOCKS) {
-			final int id = WakefulService.NEXT_WAKELOCK_ID++;
-			if (WakefulService.NEXT_WAKELOCK_ID < 0) {
-				WakefulService.NEXT_WAKELOCK_ID = 0;
-			}
+			final int id = WakefulService.NEXT_WAKELOCK_ID++ & Integer.MAX_VALUE;
 			final ComponentName cn = context.startService(intent.putExtra(Constants.APP_ID, id));
 			if (cn != null) {
 				final WakeLock wl = ((PowerManager) context.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.APP_ID);
