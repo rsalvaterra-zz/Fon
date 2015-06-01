@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
+import android.annotation.TargetApi;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -21,14 +22,15 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
-import android.preference.PreferenceManager;
 import android.util.SparseArray;
 
 public final class WakefulService extends Service {
@@ -90,8 +92,9 @@ public final class WakefulService extends Service {
 		return WakefulService.getPreferences(c).getBoolean(c.getString(id), v);
 	}
 
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	private static SharedPreferences getPreferences(final Context c) {
-		return PreferenceManager.getDefaultSharedPreferences(c);
+		return c.getSharedPreferences(Constants.PREFERENCES_NAME, Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1 ? Context.MODE_MULTI_PROCESS : Context.MODE_PRIVATE);
 	}
 
 	private static ScanResult[] getScanResults(final WifiManager wm) {
@@ -442,16 +445,22 @@ public final class WakefulService extends Service {
 		return null;
 	}
 
+	@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 	@Override
 	public void onDestroy() {
-		handler.getLooper().quit();
+		final Looper looper = handler.getLooper();
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
+			looper.quit();
+		} else {
+			looper.quitSafely();
+		}
 	}
 
 	@Override
-	public void onStart(final Intent i, final int id) {
+	public int onStartCommand(final Intent i, final int f, final int id) {
 		final Message m = Message.obtain();
 		m.obj = i;
 		handler.sendMessage(m);
+		return Service.START_STICKY;
 	}
-
 }

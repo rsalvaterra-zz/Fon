@@ -57,6 +57,8 @@ interface Constants {
 
 	static final String APP_ID = "org.rsalvaterra.fon";
 
+	static final String PREFERENCES_NAME = Constants.APP_ID + "_preferences";
+
 	static final String ACT_CANCEL_ALL = Constants.APP_ID + ".CANCEL_ALL";
 	static final String ACT_CONNECT = Constants.APP_ID + ".CONNECT";
 	static final String ACT_LOGIN = Constants.APP_ID + ".LOGIN";
