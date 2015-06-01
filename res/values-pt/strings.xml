@@ -2,7 +2,6 @@
 <resources>
 	<string name="app_name">Definições Fon</string>
 	<string name="app_credits"><![CDATA[Autenticador automático para redes Fon.<p>%1$s</p>Esta aplicação é software livre: pode redistribuí-la e/ou modificá-la segundo os termos da GNU General Public License (GPL) versão 3, tal como publicada pela Free Software Foundation.<p>Código fonte disponível no %2$s.</p>]]></string>
-	<string name="close">Fechar</string>
 	<string name="advanced">Definições avançadas</string>
 	<string name="basic">Definições básicas</string>
 	<string name="about">Acerca</string>
