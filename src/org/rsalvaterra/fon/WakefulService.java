@@ -149,24 +149,29 @@ public final class WakefulService extends Service {
 		}
 	}
 
-	private static void removeConfiguration(final WifiConfiguration[] wca, final WifiManager wm, final String ssid) {
-		if (wca.length == 0) {
-			return;
-		}
-		for (final WifiConfiguration wc : wca) {
-			if (WakefulService.isInsecure(wc) && wc.SSID.equals(ssid)) {
-				wm.removeNetwork(wc.networkId);
-				break;
-			}
-		}
-	}
-
 	private static String stripQuotes(final String ssid) {
 		final int length = ssid.length();
 		if ((ssid.charAt(0) == '"') && (ssid.charAt(length - 1) == '"')) {
 			return ssid.substring(1, length - 1);
 		}
 		return ssid;
+	}
+
+	private static int updateOrAddFonConfiguration(final WifiConfiguration[] wca, final WifiManager wm, final ScanResult sr) {
+		final String ssid = '"' + sr.SSID + '"';
+		if (wca.length != 0) {
+			for (final WifiConfiguration wc : wca) {
+				if (WakefulService.isInsecure(wc) && wc.SSID.equals(ssid)) {
+					wc.BSSID = sr.BSSID;
+					return wm.updateNetwork(wc);
+				}
+			}
+		}
+		final WifiConfiguration wc = new WifiConfiguration();
+		wc.SSID = ssid;
+		wc.BSSID = sr.BSSID;
+		wc.allowedKeyManagement.set(KeyMgmt.NONE);
+		return wm.addNetwork(wc);
 	}
 
 	static ComponentName execute(final Context context, final Intent intent) {
@@ -233,13 +238,7 @@ public final class WakefulService extends Service {
 				break;
 			}
 			if (LoginManager.isSupported(sr.SSID) && WakefulService.isInsecure(sr) && !WakefulService.isBlacklisted(sr.BSSID)) {
-				final String ssid = '"' + sr.SSID + '"';
-				WakefulService.removeConfiguration(wca, wm, ssid);
-				final WifiConfiguration wc = new WifiConfiguration();
-				wc.SSID = ssid;
-				wc.BSSID = sr.BSSID;
-				wc.allowedKeyManagement.set(KeyMgmt.NONE);
-				return wm.addNetwork(wc);
+				return WakefulService.updateOrAddFonConfiguration(wca, wm, sr);
 			}
 		}
 		return -1;
