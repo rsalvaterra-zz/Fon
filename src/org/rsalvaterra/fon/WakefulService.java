@@ -24,6 +24,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Handler.Callback;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
@@ -33,7 +34,7 @@ import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
 import android.util.SparseArray;
 
-public final class WakefulService extends Service {
+public final class WakefulService extends Service implements Callback {
 
 	private static final int NOTIFICATION_ID = 1;
 	private static final int REQUEST_CODE = 1;
@@ -59,18 +60,12 @@ public final class WakefulService extends Service {
 
 	private static int NEXT_WAKELOCK_ID = 0;
 
-	private final Handler handler;
+	private final Handler messageHandler;
 
 	{
-		final HandlerThread thread = new HandlerThread(Constants.APP_ID);
-		thread.start();
-		handler = new Handler(thread.getLooper()) {
-
-			@Override
-			public void handleMessage(final Message msg) {
-				executeAction((Intent) msg.obj);
-			}
-		};
+		final HandlerThread ht = new HandlerThread(Constants.APP_ID);
+		ht.start();
+		messageHandler = new Handler(ht.getLooper(), this);
 	}
 
 	private static void addToBlacklist(final String bssid) {
@@ -94,7 +89,13 @@ public final class WakefulService extends Service {
 
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	private static SharedPreferences getPreferences(final Context c) {
-		return c.getSharedPreferences(Constants.PREFERENCES_NAME, Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1 ? Context.MODE_MULTI_PROCESS : Context.MODE_PRIVATE);
+		final int mode;
+		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+			mode = Context.MODE_MULTI_PROCESS;
+		} else {
+			mode = Context.MODE_PRIVATE;
+		}
+		return c.getSharedPreferences(Constants.PREFERENCES_NAME, mode);
 	}
 
 	private static ScanResult[] getScanResults(final WifiManager wm) {
@@ -367,18 +368,18 @@ public final class WakefulService extends Service {
 		}
 	}
 
-	private void notify(final String title, final long[] vibratePattern, final int flags, final String ringtone, final String text, final PendingIntent pendingIntent) {
-		final Notification notification = new Notification();
-		notification.flags |= flags;
-		notification.icon = R.drawable.ic_stat_fon;
+	private void notify(final String title, final long[] vibratePattern, final int flags, final String ringtone, final String text, final PendingIntent pi) {
+		final Notification n = new Notification();
+		n.flags |= flags;
+		n.icon = R.drawable.ic_stat_fon;
 		if (areNotificationsEnabled()) {
-			notification.sound = Uri.parse(ringtone);
+			n.sound = Uri.parse(ringtone);
 			if (isVibrationEnabled()) {
-				notification.vibrate = vibratePattern;
+				n.vibrate = vibratePattern;
 			}
 		}
-		notification.setLatestEventInfo(this, title, text, pendingIntent);
-		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).notify(WakefulService.NOTIFICATION_ID, notification);
+		n.setLatestEventInfo(this, title, text, pi);
+		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).notify(WakefulService.NOTIFICATION_ID, n);
 	}
 
 	private void notifyCredentialsError() {
@@ -421,23 +422,26 @@ public final class WakefulService extends Service {
 		stopPeriodicAction(Constants.ACT_SCAN);
 	}
 
-	void executeAction(final Intent i) {
-		final String a = i.getAction();
-		if (a.equals(Constants.ACT_CANCEL_ALL)) {
+	@Override
+	public boolean handleMessage(final Message m) {
+		final Intent i = (Intent) m.obj;
+		final String s = i.getAction();
+		if (s.equals(Constants.ACT_CANCEL_ALL)) {
 			cancelAll();
 		} else {
 			final WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-			if (a.equals(Constants.ACT_CONNECT)) {
+			if (s.equals(Constants.ACT_CONNECT)) {
 				connect(wm);
-			} else if (a.equals(Constants.ACT_LOGIN)) {
+			} else if (s.equals(Constants.ACT_LOGIN)) {
 				login(wm, i.getBooleanExtra(Constants.KEY_LOGIN, false));
-			} else if (a.equals(Constants.ACT_LOGOFF)) {
+			} else if (s.equals(Constants.ACT_LOGOFF)) {
 				WakefulService.logoff(i.getStringExtra(Constants.KEY_LOGOFF_URL), wm);
-			} else if (a.equals(Constants.ACT_SCAN)) {
+			} else if (s.equals(Constants.ACT_SCAN)) {
 				wm.startScan();
 			}
 		}
 		WakefulService.releaseWakeLock(i);
+		return true;
 	}
 
 	@Override
@@ -448,11 +452,11 @@ public final class WakefulService extends Service {
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 	@Override
 	public void onDestroy() {
-		final Looper looper = handler.getLooper();
+		final Looper l = messageHandler.getLooper();
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
-			looper.quit();
+			l.quit();
 		} else {
-			looper.quitSafely();
+			l.quitSafely();
 		}
 	}
 
@@ -460,7 +464,7 @@ public final class WakefulService extends Service {
 	public int onStartCommand(final Intent i, final int f, final int id) {
 		final Message m = Message.obtain();
 		m.obj = i;
-		handler.sendMessage(m);
+		messageHandler.sendMessage(m);
 		return Service.START_STICKY;
 	}
 }
