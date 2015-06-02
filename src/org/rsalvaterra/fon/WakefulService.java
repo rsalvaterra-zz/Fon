@@ -40,7 +40,6 @@ public final class WakefulService extends Service implements Callback, Comparato
 	private static final int REQUEST_CODE = 1;
 	private static final int CONNECTIVITY_CHECK_PERIOD = 60 * 1000;
 	private static final int LOGOFF_HTTP_TIMEOUT = 2 * 1000;
-	private static final int WAKELOCK_TIMEOUT = 60 * 1000;
 	private static final int BLACKLIST_PERIOD = 300 * 1000;
 
 	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
@@ -149,8 +148,6 @@ public final class WakefulService extends Service implements Callback, Comparato
 
 	private static void wakeLockAcquire(final Context c) {
 		final WakeLock wl = ((PowerManager) c.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.APP_ID);
-		wl.setReferenceCounted(false);
-		wl.acquire(WakefulService.WAKELOCK_TIMEOUT);
 		synchronized (WakefulService.ACTIVE_WAKELOCKS) {
 			WakefulService.ACTIVE_WAKELOCKS.add(wl);
 		}
