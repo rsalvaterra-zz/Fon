@@ -3,6 +3,7 @@ package org.rsalvaterra.fon;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 import android.annotation.TargetApi;
@@ -32,7 +33,6 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
-import android.util.SparseArray;
 
 public final class WakefulService extends Service implements Callback, Comparator<ScanResult> {
 
@@ -46,11 +46,9 @@ public final class WakefulService extends Service implements Callback, Comparato
 	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
 	private static final long[] VIBRATE_PATTERN_SUCCESS = { 100, 250 };
 
-	private static final SparseArray<WakeLock> ACTIVE_WAKELOCKS = new SparseArray<WakeLock>();
+	private static final LinkedList<WakeLock> ACTIVE_WAKELOCKS = new LinkedList<WakeLock>();
 
 	private static final HashMap<String, Long> BLACKLIST = new HashMap<String, Long>();
-
-	private static int NEXT_WAKELOCK_ID = 0;
 
 	private final Handler messageHandler;
 
@@ -124,20 +122,6 @@ public final class WakefulService extends Service implements Callback, Comparato
 		wm.disconnect();
 	}
 
-	private static void releaseWakeLock(final Intent i) {
-		final int id = i.getIntExtra(Constants.APP_ID, -1);
-		if (id == -1) {
-			return;
-		}
-		synchronized (WakefulService.ACTIVE_WAKELOCKS) {
-			final WakeLock wl = WakefulService.ACTIVE_WAKELOCKS.get(id);
-			if (wl != null) {
-				wl.release();
-				WakefulService.ACTIVE_WAKELOCKS.remove(id);
-			}
-		}
-	}
-
 	private static String stripQuotes(final String ssid) {
 		final int length = ssid.length();
 		if ((ssid.charAt(0) == '"') && (ssid.charAt(length - 1) == '"')) {
@@ -163,18 +147,24 @@ public final class WakefulService extends Service implements Callback, Comparato
 		return wm.addNetwork(wc);
 	}
 
-	static ComponentName execute(final Context context, final Intent intent) {
+	private static void wakeLockAcquire(final Context c) {
+		final WakeLock wl = ((PowerManager) c.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.APP_ID);
+		wl.setReferenceCounted(false);
+		wl.acquire(WakefulService.WAKELOCK_TIMEOUT);
 		synchronized (WakefulService.ACTIVE_WAKELOCKS) {
-			final int id = WakefulService.NEXT_WAKELOCK_ID++ & Integer.MAX_VALUE;
-			final ComponentName cn = context.startService(intent.putExtra(Constants.APP_ID, id));
-			if (cn != null) {
-				final WakeLock wl = ((PowerManager) context.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.APP_ID);
-				wl.setReferenceCounted(false);
-				wl.acquire(WakefulService.WAKELOCK_TIMEOUT);
-				WakefulService.ACTIVE_WAKELOCKS.put(id, wl);
-			}
-			return cn;
+			WakefulService.ACTIVE_WAKELOCKS.add(wl);
 		}
+	}
+
+	private static void wakeLockRelease() {
+		synchronized (WakefulService.ACTIVE_WAKELOCKS) {
+			WakefulService.ACTIVE_WAKELOCKS.remove().release();
+		}
+	}
+
+	static ComponentName execute(final Context c, final Intent i) {
+		WakefulService.wakeLockAcquire(c);
+		return c.startService(i);
 	}
 
 	static String getPreference(final Context c, final int id, final String v) {
@@ -437,7 +427,7 @@ public final class WakefulService extends Service implements Callback, Comparato
 				wm.startScan();
 			}
 		}
-		WakefulService.releaseWakeLock(i);
+		WakefulService.wakeLockRelease();
 		return true;
 	}
 
