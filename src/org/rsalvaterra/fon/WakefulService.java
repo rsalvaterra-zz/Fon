@@ -34,7 +34,7 @@ import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
 import android.util.SparseArray;
 
-public final class WakefulService extends Service implements Callback {
+public final class WakefulService extends Service implements Callback, Comparator<ScanResult> {
 
 	private static final int NOTIFICATION_ID = 1;
 	private static final int REQUEST_CODE = 1;
@@ -49,14 +49,6 @@ public final class WakefulService extends Service implements Callback {
 	private static final SparseArray<WakeLock> ACTIVE_WAKELOCKS = new SparseArray<WakeLock>();
 
 	private static final HashMap<String, Long> BLACKLIST = new HashMap<String, Long>();
-
-	private static final Comparator<ScanResult> BY_DESCENDING_SIGNAL_LEVEL = new Comparator<ScanResult>() {
-
-		@Override
-		public int compare(final ScanResult sr1, final ScanResult sr2) {
-			return sr2.level - sr1.level;
-		}
-	};
 
 	private static int NEXT_WAKELOCK_ID = 0;
 
@@ -96,13 +88,6 @@ public final class WakefulService extends Service implements Callback {
 			mode = Context.MODE_PRIVATE;
 		}
 		return c.getSharedPreferences(Constants.PREFERENCES_NAME, mode);
-	}
-
-	private static ScanResult[] getScanResults(final WifiManager wm) {
-		final List<ScanResult> srl = wm.getScanResults();
-		final ScanResult[] sra = srl.toArray(new ScanResult[srl.size()]);
-		Arrays.sort(sra, WakefulService.BY_DESCENDING_SIGNAL_LEVEL);
-		return sra;
 	}
 
 	private static boolean isBlacklisted(final String bssid) {
@@ -215,7 +200,7 @@ public final class WakefulService extends Service implements Callback {
 		final SupplicantState ss = wi.getSupplicantState();
 		if (WakefulService.isDisconnected(ss)) {
 			final WifiConfiguration[] wca = WakefulService.getConfiguredNetworks(wm);
-			final ScanResult[] sra = WakefulService.getScanResults(wm);
+			final ScanResult[] sra = getScanResults(wm);
 			int id = getOtherId(wca, sra, false);
 			if (id == -1) {
 				id = getFonId(wca, sra, wm);
@@ -224,7 +209,7 @@ public final class WakefulService extends Service implements Callback {
 				}
 			}
 		} else if (WakefulService.isConnected(ss) && isReconnectEnabled() && LoginManager.isSupported(WakefulService.stripQuotes(wi.getSSID()))) {
-			final int id = getOtherId(WakefulService.getConfiguredNetworks(wm), WakefulService.getScanResults(wm), isSecureEnabled());
+			final int id = getOtherId(WakefulService.getConfiguredNetworks(wm), getScanResults(wm), isSecureEnabled());
 			if (id != -1) {
 				wm.enableNetwork(id, true);
 			}
@@ -284,6 +269,13 @@ public final class WakefulService extends Service implements Callback {
 
 	private int getPeriod() {
 		return Integer.parseInt(WakefulService.getPreference(this, R.string.kperiod, Constants.DEFAULT_PERIOD));
+	}
+
+	private ScanResult[] getScanResults(final WifiManager wm) {
+		final List<ScanResult> srl = wm.getScanResults();
+		final ScanResult[] sra = srl.toArray(new ScanResult[srl.size()]);
+		Arrays.sort(sra, this);
+		return sra;
 	}
 
 	private String getSuccessTone() {
@@ -420,6 +412,11 @@ public final class WakefulService extends Service implements Callback {
 
 	private void stopPeriodicScan() {
 		stopPeriodicAction(Constants.ACT_SCAN);
+	}
+
+	@Override
+	public int compare(final ScanResult sr1, final ScanResult sr2) {
+		return sr2.level - sr1.level;
 	}
 
 	@Override
