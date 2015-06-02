@@ -148,6 +148,7 @@ public final class WakefulService extends Service implements Callback, Comparato
 
 	private static void wakeLockAcquire(final Context c) {
 		final WakeLock wl = ((PowerManager) c.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.APP_ID);
+		wl.acquire();
 		synchronized (WakefulService.ACTIVE_WAKELOCKS) {
 			WakefulService.ACTIVE_WAKELOCKS.add(wl);
 		}
