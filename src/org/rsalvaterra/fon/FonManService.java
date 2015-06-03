@@ -454,7 +454,7 @@ public final class FonManService extends Service implements Callback, Comparator
 	}
 
 	private void stopPeriodicConnectivityCheck() {
-		stopPeriodicAction(Constants.ACT_LOGIN);
+		stopPeriodicAction(Constants.ACT_CHECK);
 	}
 
 	private void stopPeriodicScan() {
