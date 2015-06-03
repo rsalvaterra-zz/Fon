@@ -12,7 +12,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -34,12 +33,11 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
 
-public final class WakefulService extends Service implements Callback, Comparator<ScanResult> {
+public final class FonManService extends Service implements Callback, Comparator<ScanResult> {
 
 	private static final int NOTIFICATION_ID = 1;
 	private static final int REQUEST_CODE = 1;
 	private static final int CONNECTIVITY_CHECK_PERIOD = 60 * 1000;
-	private static final int LOGOFF_HTTP_TIMEOUT = 2 * 1000;
 	private static final int BLACKLIST_PERIOD = 300 * 1000;
 
 	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
@@ -48,6 +46,8 @@ public final class WakefulService extends Service implements Callback, Comparato
 	private static final LinkedList<WakeLock> ACTIVE_WAKELOCKS = new LinkedList<WakeLock>();
 
 	private static final HashMap<String, Long> BLACKLIST = new HashMap<String, Long>();
+
+	private final LoginManager loginManager = new LoginManager();
 
 	private final Handler messageHandler;
 
@@ -58,7 +58,7 @@ public final class WakefulService extends Service implements Callback, Comparato
 	}
 
 	private static void addToBlacklist(final String bssid) {
-		WakefulService.BLACKLIST.put(bssid, Long.valueOf(SystemClock.elapsedRealtime() + WakefulService.BLACKLIST_PERIOD));
+		FonManService.BLACKLIST.put(bssid, Long.valueOf(SystemClock.elapsedRealtime() + FonManService.BLACKLIST_PERIOD));
 	}
 
 	private static WifiConfiguration[] getConfiguredNetworks(final WifiManager wm) {
@@ -73,7 +73,7 @@ public final class WakefulService extends Service implements Callback, Comparato
 	}
 
 	private static boolean getPreference(final Context c, final int id, final boolean v) {
-		return WakefulService.getPreferences(c).getBoolean(c.getString(id), v);
+		return FonManService.getPreferences(c).getBoolean(c.getString(id), v);
 	}
 
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -88,14 +88,18 @@ public final class WakefulService extends Service implements Callback, Comparato
 	}
 
 	private static boolean isBlacklisted(final String bssid) {
-		final Long t = WakefulService.BLACKLIST.get(bssid);
+		final Long t = FonManService.BLACKLIST.get(bssid);
 		if (t != null) {
 			if (t.longValue() > SystemClock.elapsedRealtime()) {
 				return true;
 			}
-			WakefulService.BLACKLIST.remove(bssid);
+			FonManService.BLACKLIST.remove(bssid);
 		}
 		return false;
+	}
+
+	private static boolean isBt(final String ssid) {
+		return ssid.equals("BTFON") || ssid.equals("BTWiFi") || ssid.equals("BTWiFi-with-FON") || ssid.startsWith("BTOpenzone");
 	}
 
 	private static boolean isConnected(final SupplicantState ss) {
@@ -106,6 +110,22 @@ public final class WakefulService extends Service implements Callback, Comparato
 		return (ss == SupplicantState.INACTIVE) || (ss == SupplicantState.DORMANT) || (ss == SupplicantState.DISCONNECTED) || (ss == SupplicantState.SCANNING);
 	}
 
+	private static boolean isDowntownBrooklyn(final String ssid) {
+		return ssid.equals("DowntownBrooklynWifi_Fon");
+	}
+
+	private static boolean isDt(final String ssid) {
+		return ssid.equals("Telekom_FON");
+	}
+
+	private static boolean isGenericFon(final String ssid) {
+		return ssid.startsWith("FON_");
+	}
+
+	private static boolean isHt(final String ssid) {
+		return ssid.equals("HotSpot Fon");
+	}
+
 	private static boolean isInsecure(final ScanResult sr) {
 		return !(sr.capabilities.contains("WEP") || sr.capabilities.contains("PSK") || sr.capabilities.contains("EAP"));
 	}
@@ -114,11 +134,60 @@ public final class WakefulService extends Service implements Callback, Comparato
 		return wc.allowedKeyManagement.get(KeyMgmt.NONE) && (wc.wepKeys[0] == null);
 	}
 
-	private static void logoff(final String url, final WifiManager wm) {
-		if (url.length() != 0) {
-			HttpUtils.get(url, WakefulService.LOGOFF_HTTP_TIMEOUT);
-		}
-		wm.disconnect();
+	private static boolean isJt(final String ssid) {
+		return ssid.equalsIgnoreCase("JT Fon");
+	}
+
+	private static boolean isKpn(final String ssid) {
+		return ssid.equals("KPN Fon");
+	}
+
+	private static boolean isMweb(final String ssid) {
+		return ssid.equals("@MWEB FON");
+	}
+
+	private static boolean isOi(final String ssid) {
+		return ssid.equals("Oi WiFi Fon") || ssid.equals("OI_WIFI_FON");
+	}
+
+	private static boolean isOte(final String ssid) {
+		return ssid.equals("OTE WiFi Fon");
+	}
+
+	private static boolean isOtherFon(final String ssid) {
+		return ssid.startsWith("Fon WiFi");
+	}
+
+	private static boolean isProximus(final String ssid) {
+		return ssid.equals("PROXIMUS_FON");
+	}
+
+	private static boolean isRomtelecom(final String ssid) {
+		return ssid.equals("Romtelecom Fon");
+	}
+
+	private static boolean isSfr(final String ssid) {
+		return ssid.equals("SFR WiFi FON");
+	}
+
+	private static boolean isSoftbank(final String ssid) {
+		return ssid.equals("FON");
+	}
+
+	private static boolean isSt(final String ssid) {
+		return ssid.equalsIgnoreCase("Telekom FON");
+	}
+
+	private static boolean isSupported(final String ssid) {
+		return FonManService.isGenericFon(ssid) || FonManService.isBt(ssid) || FonManService.isJt(ssid) || FonManService.isSfr(ssid) || FonManService.isProximus(ssid) || FonManService.isKpn(ssid) || FonManService.isDt(ssid) || FonManService.isSt(ssid) || FonManService.isHt(ssid) || FonManService.isOte(ssid) || FonManService.isRomtelecom(ssid) || FonManService.isTtnet(ssid) || FonManService.isOi(ssid) || FonManService.isDowntownBrooklyn(ssid) || FonManService.isMweb(ssid) || FonManService.isOtherFon(ssid) || FonManService.isSoftbank(ssid) || FonManService.isTelstra(ssid);
+	}
+
+	private static boolean isTelstra(final String ssid) {
+		return ssid.equalsIgnoreCase("Telstra Air");
+	}
+
+	private static boolean isTtnet(final String ssid) {
+		return ssid.equalsIgnoreCase("TTNET WiFi FON");
 	}
 
 	private static String stripQuotes(final String ssid) {
@@ -133,7 +202,7 @@ public final class WakefulService extends Service implements Callback, Comparato
 		final String ssid = '"' + sr.SSID + '"';
 		if (wca.length != 0) {
 			for (final WifiConfiguration wc : wca) {
-				if (WakefulService.isInsecure(wc) && wc.SSID.equals(ssid)) {
+				if (FonManService.isInsecure(wc) && wc.SSID.equals(ssid)) {
 					wc.BSSID = sr.BSSID;
 					return wm.updateNetwork(wc);
 				}
@@ -149,32 +218,32 @@ public final class WakefulService extends Service implements Callback, Comparato
 	private static void wakeLockAcquire(final Context c) {
 		final WakeLock wl = ((PowerManager) c.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.APP_ID);
 		wl.acquire();
-		synchronized (WakefulService.ACTIVE_WAKELOCKS) {
-			WakefulService.ACTIVE_WAKELOCKS.add(wl);
+		synchronized (FonManService.ACTIVE_WAKELOCKS) {
+			FonManService.ACTIVE_WAKELOCKS.add(wl);
 		}
 	}
 
 	private static void wakeLockRelease() {
-		synchronized (WakefulService.ACTIVE_WAKELOCKS) {
-			WakefulService.ACTIVE_WAKELOCKS.remove().release();
+		synchronized (FonManService.ACTIVE_WAKELOCKS) {
+			FonManService.ACTIVE_WAKELOCKS.remove().release();
 		}
 	}
 
-	static ComponentName execute(final Context c, final Intent i) {
-		WakefulService.wakeLockAcquire(c);
-		return c.startService(i);
+	static void execute(final Context c, final String a) {
+		FonManService.wakeLockAcquire(c);
+		c.startService(new Intent(c, FonManService.class).setAction(a));
 	}
 
 	static String getPreference(final Context c, final int id, final String v) {
-		return WakefulService.getPreferences(c).getString(c.getString(id), v);
+		return FonManService.getPreferences(c).getString(c.getString(id), v);
 	}
 
 	static boolean isAutoConnectEnabled(final Context c) {
-		return WakefulService.getPreference(c, R.string.kautoconnect, true);
+		return FonManService.getPreference(c, R.string.kautoconnect, true);
 	}
 
 	private boolean areNotificationsEnabled() {
-		return WakefulService.getPreference(this, R.string.knotify, true);
+		return FonManService.getPreference(this, R.string.knotify, true);
 	}
 
 	private void cancelAll() {
@@ -186,8 +255,8 @@ public final class WakefulService extends Service implements Callback, Comparato
 	private void connect(final WifiManager wm) {
 		final WifiInfo wi = wm.getConnectionInfo();
 		final SupplicantState ss = wi.getSupplicantState();
-		if (WakefulService.isDisconnected(ss)) {
-			final WifiConfiguration[] wca = WakefulService.getConfiguredNetworks(wm);
+		if (FonManService.isDisconnected(ss)) {
+			final WifiConfiguration[] wca = FonManService.getConfiguredNetworks(wm);
 			final ScanResult[] sra = getScanResults(wm);
 			int id = getOtherId(wca, sra, false);
 			if (id == -1) {
@@ -196,8 +265,8 @@ public final class WakefulService extends Service implements Callback, Comparato
 					startPeriodicScan();
 				}
 			}
-		} else if (WakefulService.isConnected(ss) && isReconnectEnabled() && LoginManager.isSupported(WakefulService.stripQuotes(wi.getSSID()))) {
-			final int id = getOtherId(WakefulService.getConfiguredNetworks(wm), getScanResults(wm), isSecureEnabled());
+		} else if (FonManService.isConnected(ss) && isReconnectEnabled() && FonManService.isSupported(FonManService.stripQuotes(wi.getSSID()))) {
+			final int id = getOtherId(FonManService.getConfiguredNetworks(wm), getScanResults(wm), isSecureEnabled());
 			if (id != -1) {
 				wm.enableNetwork(id, true);
 			}
@@ -205,7 +274,7 @@ public final class WakefulService extends Service implements Callback, Comparato
 	}
 
 	private String getFailureTone() {
-		return WakefulService.getPreference(this, R.string.kfailure, "");
+		return FonManService.getPreference(this, R.string.kfailure, "");
 	}
 
 	private int getFonId(final WifiConfiguration[] wca, final ScanResult[] sra, final WifiManager wm) {
@@ -214,16 +283,16 @@ public final class WakefulService extends Service implements Callback, Comparato
 			if (sr.level < mr) {
 				break;
 			}
-			if (LoginManager.isSupported(sr.SSID) && WakefulService.isInsecure(sr) && !WakefulService.isBlacklisted(sr.BSSID)) {
-				return WakefulService.updateOrAddFonConfiguration(wca, wm, sr);
+			if (FonManService.isSupported(sr.SSID) && FonManService.isInsecure(sr) && !FonManService.isBlacklisted(sr.BSSID)) {
+				return FonManService.updateOrAddFonConfiguration(wca, wm, sr);
 			}
 		}
 		return -1;
 	}
 
 	private int getMinimumRssi() {
-		if (WakefulService.getPreference(this, R.string.kreject, false)) {
-			return Integer.parseInt(WakefulService.getPreference(this, R.string.krssi, Constants.DEFAULT_MINIMUM_RSSI));
+		if (FonManService.getPreference(this, R.string.kreject, false)) {
+			return Integer.parseInt(FonManService.getPreference(this, R.string.krssi, Constants.DEFAULT_MINIMUM_RSSI));
 		}
 		return Integer.MIN_VALUE;
 	}
@@ -232,8 +301,8 @@ public final class WakefulService extends Service implements Callback, Comparato
 		if (wca.length != 0) {
 			final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
 			for (final WifiConfiguration wc : wca) {
-				final String ssid = WakefulService.stripQuotes(wc.SSID);
-				if ((!secure || (secure && !WakefulService.isInsecure(wc))) && !LoginManager.isSupported(ssid)) {
+				final String ssid = FonManService.stripQuotes(wc.SSID);
+				if ((!secure || (secure && !FonManService.isInsecure(wc))) && !FonManService.isSupported(ssid)) {
 					wcm.put(ssid, Integer.valueOf(wc.networkId));
 				}
 			}
@@ -252,11 +321,11 @@ public final class WakefulService extends Service implements Callback, Comparato
 	}
 
 	private String getPassword() {
-		return WakefulService.getPreference(this, R.string.kpassword, "");
+		return FonManService.getPreference(this, R.string.kpassword, "");
 	}
 
 	private int getPeriod() {
-		return Integer.parseInt(WakefulService.getPreference(this, R.string.kperiod, Constants.DEFAULT_PERIOD));
+		return Integer.parseInt(FonManService.getPreference(this, R.string.kperiod, Constants.DEFAULT_PERIOD));
 	}
 
 	private ScanResult[] getScanResults(final WifiManager wm) {
@@ -267,50 +336,40 @@ public final class WakefulService extends Service implements Callback, Comparato
 	}
 
 	private String getSuccessTone() {
-		return WakefulService.getPreference(this, R.string.ksuccess, "");
+		return FonManService.getPreference(this, R.string.ksuccess, "");
 	}
 
 	private String getUsername() {
-		return WakefulService.getPreference(this, R.string.kusername, "");
+		return FonManService.getPreference(this, R.string.kusername, "");
 	}
 
 	private void handleError(final WifiManager wm, final WifiInfo wi, final LoginResult lr) {
-		if (WakefulService.isAutoConnectEnabled(this)) {
-			WakefulService.addToBlacklist(wi.getBSSID());
+		if (FonManService.isAutoConnectEnabled(this)) {
+			FonManService.addToBlacklist(wi.getBSSID());
 			wm.removeNetwork(wi.getNetworkId());
 		} else {
 			notifyFonError(lr);
 		}
 	}
 
-	private void handleSuccess(final String ssid, final LoginResult lr, final boolean isLogin) {
+	private void handleSuccess(final String ssid, final boolean isLogin) {
 		if (!isLogin) {
 			return;
 		}
-		final Intent i = new Intent();
-		final PendingIntent pi;
-		final String text;
-		if (WakefulService.isAutoConnectEnabled(this)) {
-			pi = PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
-			text = getString(R.string.connected, ssid);
-		} else {
-			pi = PendingIntent.getService(this, WakefulService.REQUEST_CODE, i.setClass(this, WakefulService.class).setAction(Constants.ACT_LOGOFF).putExtra(Constants.KEY_LOGOFF_URL, lr.getLogOffUrl()), PendingIntent.FLAG_UPDATE_CURRENT);
-			text = getString(R.string.logoff);
-		}
-		notify(getString(R.string.started), WakefulService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), text, pi);
+		notify(getString(R.string.started), FonManService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), getString(R.string.connected, ssid), PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT));
 		startPeriodicConnectivityCheck();
 	}
 
 	private boolean isReconnectEnabled() {
-		return WakefulService.getPreference(this, R.string.kreconnect, false);
+		return FonManService.getPreference(this, R.string.kreconnect, false);
 	}
 
 	private boolean isSecureEnabled() {
-		return WakefulService.getPreference(this, R.string.ksecure, true);
+		return FonManService.getPreference(this, R.string.ksecure, true);
 	}
 
 	private boolean isVibrationEnabled() {
-		return WakefulService.getPreference(this, R.string.kvibrate, false);
+		return FonManService.getPreference(this, R.string.kvibrate, false);
 	}
 
 	private void login(final WifiManager wm, final boolean isLogin) {
@@ -319,13 +378,13 @@ public final class WakefulService extends Service implements Callback, Comparato
 		if (ssid == null) {
 			return;
 		}
-		ssid = WakefulService.stripQuotes(ssid);
-		if (LoginManager.isSupported(ssid)) {
-			final LoginResult lr = LoginManager.login(getUsername(), getPassword());
+		ssid = FonManService.stripQuotes(ssid);
+		if (FonManService.isSupported(ssid)) {
+			final LoginResult lr = loginManager.login(getUsername(), getPassword());
 			switch (lr.getResponseCode()) {
 				case Constants.WRC_LOGIN_SUCCEEDED:
 				case Constants.CRC_ALREADY_CONNECTED:
-					handleSuccess(ssid, lr, isLogin);
+					handleSuccess(ssid, isLogin);
 					break;
 				case Constants.WRC_RADIUS_ERROR:
 				case Constants.WRC_NETWORK_ADMIN_ERROR:
@@ -359,7 +418,7 @@ public final class WakefulService extends Service implements Callback, Comparato
 			}
 		}
 		n.setLatestEventInfo(this, title, text, pi);
-		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).notify(WakefulService.NOTIFICATION_ID, n);
+		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).notify(FonManService.NOTIFICATION_ID, n);
 	}
 
 	private void notifyCredentialsError() {
@@ -367,7 +426,7 @@ public final class WakefulService extends Service implements Callback, Comparato
 	}
 
 	private void notifyError(final String title) {
-		notify(title, WakefulService.VIBRATE_PATTERN_FAILURE, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT, getFailureTone(), getString(R.string.configure), PendingIntent.getActivity(this, WakefulService.REQUEST_CODE, new Intent(this, SettingsActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
+		notify(title, FonManService.VIBRATE_PATTERN_FAILURE, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT, getFailureTone(), getString(R.string.configure), PendingIntent.getActivity(this, FonManService.REQUEST_CODE, new Intent(this, SettingsActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void notifyFonError(final LoginResult lr) {
@@ -375,15 +434,15 @@ public final class WakefulService extends Service implements Callback, Comparato
 	}
 
 	private void removeNotification() {
-		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(WakefulService.NOTIFICATION_ID);
+		((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(FonManService.NOTIFICATION_ID);
 	}
 
 	private void startPeriodicAction(final int milliseconds, final String action) {
-		((AlarmManager) getSystemService(Context.ALARM_SERVICE)).setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + milliseconds, milliseconds, PendingIntent.getBroadcast(this, WakefulService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(action), PendingIntent.FLAG_UPDATE_CURRENT));
+		((AlarmManager) getSystemService(Context.ALARM_SERVICE)).setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + milliseconds, milliseconds, PendingIntent.getBroadcast(this, FonManService.REQUEST_CODE, new Intent(this, FonManAlarmReceiver.class).setAction(action), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void startPeriodicConnectivityCheck() {
-		startPeriodicAction(WakefulService.CONNECTIVITY_CHECK_PERIOD, Constants.ACT_LOGIN);
+		startPeriodicAction(FonManService.CONNECTIVITY_CHECK_PERIOD, Constants.ACT_CHECK);
 	}
 
 	private void startPeriodicScan() {
@@ -391,7 +450,7 @@ public final class WakefulService extends Service implements Callback, Comparato
 	}
 
 	private void stopPeriodicAction(final String action) {
-		((AlarmManager) getSystemService(Context.ALARM_SERVICE)).cancel(PendingIntent.getBroadcast(this, WakefulService.REQUEST_CODE, new Intent(this, AlarmBroadcastReceiver.class).setAction(action), PendingIntent.FLAG_UPDATE_CURRENT));
+		((AlarmManager) getSystemService(Context.ALARM_SERVICE)).cancel(PendingIntent.getBroadcast(this, FonManService.REQUEST_CODE, new Intent(this, FonManAlarmReceiver.class).setAction(action), PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	private void stopPeriodicConnectivityCheck() {
@@ -409,23 +468,22 @@ public final class WakefulService extends Service implements Callback, Comparato
 
 	@Override
 	public boolean handleMessage(final Message m) {
-		final Intent i = (Intent) m.obj;
-		final String s = i.getAction();
+		final String s = (String) m.obj;
 		if (s.equals(Constants.ACT_CANCEL_ALL)) {
 			cancelAll();
 		} else {
 			final WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-			if (s.equals(Constants.ACT_CONNECT)) {
+			if (s.equals(Constants.ACT_CHECK)) {
+				login(wm, false);
+			} else if (s.equals(Constants.ACT_CONNECT)) {
 				connect(wm);
 			} else if (s.equals(Constants.ACT_LOGIN)) {
-				login(wm, i.getBooleanExtra(Constants.KEY_LOGIN, false));
-			} else if (s.equals(Constants.ACT_LOGOFF)) {
-				WakefulService.logoff(i.getStringExtra(Constants.KEY_LOGOFF_URL), wm);
+				login(wm, true);
 			} else if (s.equals(Constants.ACT_SCAN)) {
 				wm.startScan();
 			}
 		}
-		WakefulService.wakeLockRelease();
+		FonManService.wakeLockRelease();
 		return true;
 	}
 
@@ -448,7 +506,7 @@ public final class WakefulService extends Service implements Callback, Comparato
 	@Override
 	public int onStartCommand(final Intent i, final int f, final int id) {
 		final Message m = Message.obtain();
-		m.obj = i;
+		m.obj = i.getAction();
 		messageHandler.sendMessage(m);
 		return Service.START_STICKY;
 	}

@@ -24,7 +24,7 @@ public final class SettingsActivity extends PreferenceActivity implements OnClic
 	private void setOnPreferenceChangeListener(final int id, final String v) {
 		final Preference p = getPreference(id);
 		p.setOnPreferenceChangeListener(this);
-		onPreferenceChange(p, WakefulService.getPreference(p.getContext(), id, v));
+		onPreferenceChange(p, FonManService.getPreference(p.getContext(), id, v));
 	}
 
 	private void setOnPreferenceClickListener(final int id) {

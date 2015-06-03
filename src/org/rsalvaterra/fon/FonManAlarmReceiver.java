@@ -4,11 +4,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-public final class AlarmBroadcastReceiver extends BroadcastReceiver {
+public final class FonManAlarmReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(final Context c, final Intent i) {
-		WakefulService.execute(c, i.setClass(c, WakefulService.class));
+		FonManService.execute(c, i.getAction());
 	}
 
 }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">Fon Settings</string>
 	<string
-		name="svc_name"
-		translatable="false">ConMan</string>
+		name="app_name"
+		translatable="false">FonMan</string>
+	<string name="app_label">FonMan Settings</string>
 	<string name="app_credits"><![CDATA[Automatic authenticator for Fon networks.<p>%1$s</p>This application is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License (GPL) version 3, as published by the Free Software Foundation.<p>Source code available on %2$s.</p>]]></string>
 	<string
 		name="app_copyright"
@@ -80,7 +80,6 @@
 	<string name="connected">Connected to \"%s\".</string>
 	<string name="fon_error">Error %1$d: \"%2$s\"</string>
 	<string name="cred_error">Invalid credentials</string>
-	<string name="logoff">Touch to logoff.</string>
 	<string name="configure">Touch to configure.</string>
 	<string name="started">Session started</string>
 </resources>

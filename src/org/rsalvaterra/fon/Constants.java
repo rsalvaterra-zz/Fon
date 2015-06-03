@@ -50,8 +50,6 @@ interface Constants {
 	static final int WRC_AUTH_PENDING = 201;
 	static final int WRC_ACCESS_GATEWAY_INTERNAL_ERROR = 255;
 
-	static final int HTTP_TIMEOUT = 30 * 1000;
-
 	static final String DEFAULT_PERIOD = "300";
 	static final String DEFAULT_MINIMUM_RSSI = "-80";
 
@@ -59,12 +57,10 @@ interface Constants {
 
 	static final String PREFERENCES_NAME = Constants.APP_ID + "_preferences";
 
-	static final String ACT_CANCEL_ALL = Constants.APP_ID + ".CANCEL_ALL";
-	static final String ACT_CONNECT = Constants.APP_ID + ".CONNECT";
-	static final String ACT_LOGIN = Constants.APP_ID + ".LOGIN";
-	static final String ACT_LOGOFF = Constants.APP_ID + ".LOGOFF";
-	static final String ACT_SCAN = Constants.APP_ID + ".SCAN";
-	static final String KEY_LOGIN = Constants.ACT_LOGIN;
-	static final String KEY_LOGOFF_URL = Constants.APP_ID + ".LOGOFF_URL";
+	static final String ACT_CANCEL_ALL = "0";
+	static final String ACT_CHECK = "1";
+	static final String ACT_CONNECT = "2";
+	static final String ACT_LOGIN = "3";
+	static final String ACT_SCAN = "4";
 
 }

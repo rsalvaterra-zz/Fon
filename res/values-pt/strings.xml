@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">Definições Fon</string>
+	<string name="app_label">Definições FonMan</string>
 	<string name="app_credits"><![CDATA[Autenticador automático para redes Fon.<p>%1$s</p>Esta aplicação é software livre: pode redistribuí-la e/ou modificá-la segundo os termos da GNU General Public License (GPL) versão 3, tal como publicada pela Free Software Foundation.<p>Código fonte disponível no %2$s.</p>]]></string>
 	<string name="advanced">Definições avançadas</string>
 	<string name="basic">Definições básicas</string>
@@ -29,7 +29,6 @@
 	<string name="connected">Ligado a «%s».</string>
 	<string name="fon_error">Erro %1$d: «%2$s»</string>
 	<string name="cred_error">Credenciais inválidas</string>
-	<string name="logoff">Toque para terminar.</string>
 	<string name="configure">Toque para configurar.</string>
 	<string name="started">Sessão iniciada</string>
 </resources>
