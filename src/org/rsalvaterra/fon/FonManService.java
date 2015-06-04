@@ -3,7 +3,6 @@ package org.rsalvaterra.fon;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 
 import android.annotation.TargetApi;
@@ -32,6 +31,7 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
+import android.util.SparseArray;
 
 public final class FonManService extends Service implements Callback, Comparator<ScanResult> {
 
@@ -43,11 +43,13 @@ public final class FonManService extends Service implements Callback, Comparator
 	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
 	private static final long[] VIBRATE_PATTERN_SUCCESS = { 100, 250 };
 
-	private static final LinkedList<WakeLock> ACTIVE_WAKELOCKS = new LinkedList<WakeLock>();
+	private static final SparseArray<WakeLock> ACTIVE_WAKELOCKS = new SparseArray<WakeLock>();
 
 	private static final HashMap<String, Long> BLACKLIST = new HashMap<String, Long>();
 
 	private static final LoginManager LOGIN_MANAGER = new LoginManager();
+
+	private static int NEXT_WAKELOCK_ID = 0;
 
 	private final Handler messageHandler;
 
@@ -215,23 +217,26 @@ public final class FonManService extends Service implements Callback, Comparator
 		return wm.addNetwork(wc);
 	}
 
-	private static void wakeLockAcquire(final Context c) {
+	private static int wakeLockAcquire(final Context c) {
 		final WakeLock wl = ((PowerManager) c.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.APP_ID);
 		wl.acquire();
+		final int id;
 		synchronized (FonManService.ACTIVE_WAKELOCKS) {
-			FonManService.ACTIVE_WAKELOCKS.add(wl);
+			id = FonManService.NEXT_WAKELOCK_ID++ & Integer.MAX_VALUE;
+			FonManService.ACTIVE_WAKELOCKS.put(id, wl);
 		}
+		return id;
 	}
 
-	private static void wakeLockRelease() {
+	private static void wakeLockRelease(final int id) {
 		synchronized (FonManService.ACTIVE_WAKELOCKS) {
-			FonManService.ACTIVE_WAKELOCKS.remove().release();
+			FonManService.ACTIVE_WAKELOCKS.get(id).release();
+			FonManService.ACTIVE_WAKELOCKS.remove(id);
 		}
 	}
 
 	static void execute(final Context c, final String a) {
-		FonManService.wakeLockAcquire(c);
-		c.startService(new Intent(c, FonManService.class).setAction(a));
+		c.startService(new Intent(c, FonManService.class).setAction(a).putExtra(Constants.APP_ID, FonManService.wakeLockAcquire(c)));
 	}
 
 	static String getPreference(final Context c, final int id, final String v) {
@@ -492,7 +497,7 @@ public final class FonManService extends Service implements Callback, Comparator
 				wm.startScan();
 			}
 		}
-		FonManService.wakeLockRelease();
+		FonManService.wakeLockRelease(m.arg1);
 		return true;
 	}
 
@@ -516,6 +521,7 @@ public final class FonManService extends Service implements Callback, Comparator
 	public int onStartCommand(final Intent i, final int f, final int id) {
 		final Message m = Message.obtain();
 		m.obj = i.getAction();
+		m.arg1 = i.getIntExtra(Constants.APP_ID, Integer.MIN_VALUE);
 		messageHandler.sendMessage(m);
 		return Service.START_STICKY;
 	}
