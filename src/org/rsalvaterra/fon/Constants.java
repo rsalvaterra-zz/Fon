@@ -2,7 +2,7 @@ package org.rsalvaterra.fon;
 
 interface Constants {
 
-	static final int CRC_ALREADY_CONNECTED = 1000;
+	static final int CRC_ALREADY_AUTHORISED = 1000;
 	static final int CRC_CREDENTIALS_ERROR = 1001;
 	static final int CRC_WISPR_NOT_PRESENT = 1002;
 
@@ -57,7 +57,7 @@ interface Constants {
 
 	static final String PREFERENCES_NAME = Constants.APP_ID + "_preferences";
 
-	static final String ACT_CANCEL_ALL = "0";
+	static final String ACT_CANCEL = "0";
 	static final String ACT_CHECK = "1";
 	static final String ACT_CONNECT = "2";
 	static final String ACT_LOGIN = "3";

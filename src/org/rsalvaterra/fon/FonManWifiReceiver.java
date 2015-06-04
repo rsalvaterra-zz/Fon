@@ -22,7 +22,7 @@ public final class FonManWifiReceiver extends BroadcastReceiver {
 				if (s == State.CONNECTED) {
 					FonManService.execute(c, Constants.ACT_LOGIN);
 				} else if (s == State.DISCONNECTED) {
-					FonManService.execute(c, Constants.ACT_CANCEL_ALL);
+					FonManService.execute(c, Constants.ACT_CANCEL);
 				}
 			}
 		}

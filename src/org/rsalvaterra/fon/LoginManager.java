@@ -1,9 +1,27 @@
 package org.rsalvaterra.fon;
 
-final class LoginManager {
+import java.io.IOException;
+import java.util.ArrayList;
+
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.params.ClientPNames;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.util.EntityUtils;
+
+@SuppressWarnings("deprecation")
+final class LoginManager extends DefaultHttpClient {
+
+	private static final int HTTP_TIMEOUT = 30 * 1000;
 
 	private static final String CONNECTED = "CONNECTED";
-	private static final String CONNECTION_TEST_URL = "http://cm.fon.mobi/android.txt";
 	private static final String FON_USERNAME_PREFIX = "FON_WISPR/";
 	private static final String SAFE_PROTOCOL = "https://";
 	private static final String TAG_FON_RESPONSE_CODE = "FONResponseCode";
@@ -12,10 +30,23 @@ final class LoginManager {
 	private static final String TAG_REPLY_MESSAGE = "ReplyMessage";
 	private static final String TAG_RESPONSE_CODE = "ResponseCode";
 	private static final String TAG_WISPR = "WISPAccessGatewayParam";
+	private static final String TAG_WISPR_PASSWORD = "Password";
+	private static final String TAG_WISPR_USERNAME = "UserName";
+	private static final String USER_AGENT = "User-Agent";
+	private static final String USER_AGENT_STRING = "FONAccess; wispr; (Linux; U; Android)";
+	private static final String UTF_8 = "UTF-8";
 
 	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
 
-	private final HttpClient httpClient = new HttpClient();
+	private static final HttpGet TEST_URI_REQUEST = new HttpGet("http://cm.fon.mobi/android.txt");
+
+	{
+		setCookieStore(null);
+		final HttpParams p = new BasicHttpParams().setParameter(LoginManager.USER_AGENT, LoginManager.USER_AGENT_STRING).setBooleanParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true);
+		HttpConnectionParams.setConnectionTimeout(p, LoginManager.HTTP_TIMEOUT);
+		HttpConnectionParams.setSoTimeout(p, LoginManager.HTTP_TIMEOUT);
+		setParams(p);
+	}
 
 	private static String getElementText(final String source, final String elementName) {
 		final int start = source.indexOf(">", source.indexOf(elementName));
@@ -32,15 +63,19 @@ final class LoginManager {
 		return Integer.parseInt(LoginManager.getElementText(source, elementName));
 	}
 
-	private static String getPrefixedUserName(final String h, final String username) {
-		if ((h.contains("portal.fon.com") || h.contains("wifi.sfr.fr") || h.equals("www.btopenzone.com")) && !(h.contains("belgacom") || h.contains("telekom"))) {
-			return LoginManager.FON_USERNAME_PREFIX + username;
+	private static String getPrefixedUserName(final String host, final String user) {
+		if ((host.contains("portal.fon.com") || host.contains("wifi.sfr.fr") || host.equals("www.btopenzone.com")) && !(host.contains("belgacom") || host.contains("telekom"))) {
+			return LoginManager.FON_USERNAME_PREFIX + user;
 		}
-		return username;
+		return user;
 	}
 
 	private static String replaceAmpEntities(final String s) {
 		return s.replace("&amp;", "&");
+	}
+
+	private String getTestUrl() {
+		return request(LoginManager.TEST_URI_REQUEST);
 	}
 
 	private String postCredentials(final String url, final String user, final String pass) {
@@ -48,23 +83,40 @@ final class LoginManager {
 			for (final String s : LoginManager.VALID_SUFFIX) {
 				final String h = url.substring(LoginManager.SAFE_PROTOCOL.length(), url.indexOf("/", LoginManager.SAFE_PROTOCOL.length()));
 				if (h.endsWith(s)) {
-					return httpClient.post(LoginManager.replaceAmpEntities(url), LoginManager.getPrefixedUserName(h, user), pass);
+					try {
+						final ArrayList<BasicNameValuePair> p = new ArrayList<BasicNameValuePair>();
+						p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_USERNAME, LoginManager.getPrefixedUserName(h, user)));
+						p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_PASSWORD, pass));
+						final HttpPost r = new HttpPost(LoginManager.replaceAmpEntities(url));
+						r.setEntity(new UrlEncodedFormEntity(p, LoginManager.UTF_8));
+						return request(r);
+					} catch (final IOException e) {
+						break;
+					}
 				}
 			}
 		}
 		return null;
 	}
 
-	LoginResult login(final String user, final String password) {
+	private String request(final HttpUriRequest r) {
+		try {
+			return EntityUtils.toString(execute(r, new BasicHttpContext()).getEntity()).trim();
+		} catch (final IOException e) {
+			return null;
+		}
+	}
+
+	LoginResult login(final String user, final String pass) {
 		int rc = Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR;
 		String rm = "";
-		if ((user.length() != 0) && (password.length() != 0)) {
-			String c = httpClient.get(LoginManager.CONNECTION_TEST_URL);
+		if ((user.length() != 0) && (pass.length() != 0)) {
+			String c = getTestUrl();
 			if (c != null) {
 				if (!c.equals(LoginManager.CONNECTED)) {
 					c = LoginManager.getElementText(c, LoginManager.TAG_WISPR);
 					if ((c != null) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE) == Constants.WMT_INITIAL_REDIRECT) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE) == Constants.WRC_NO_ERROR)) {
-						c = postCredentials(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL), user, password);
+						c = postCredentials(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL), user, pass);
 						if (c != null) {
 							c = LoginManager.getElementText(c, LoginManager.TAG_WISPR);
 							if (c != null) {
@@ -82,7 +134,7 @@ final class LoginManager {
 						rc = Constants.CRC_WISPR_NOT_PRESENT;
 					}
 				} else {
-					rc = Constants.CRC_ALREADY_CONNECTED;
+					rc = Constants.CRC_ALREADY_AUTHORISED;
 				}
 			}
 		} else {

@@ -47,7 +47,7 @@ public final class FonManService extends Service implements Callback, Comparator
 
 	private static final HashMap<String, Long> BLACKLIST = new HashMap<String, Long>();
 
-	private final LoginManager loginManager = new LoginManager();
+	private static final LoginManager LOGIN_MANAGER = new LoginManager();
 
 	private final Handler messageHandler;
 
@@ -246,10 +246,14 @@ public final class FonManService extends Service implements Callback, Comparator
 		return FonManService.getPreference(this, R.string.knotify, true);
 	}
 
-	private void cancelAll() {
+	private void cancel() {
 		stopPeriodicConnectivityCheck();
 		stopPeriodicScan();
 		removeNotification();
+	}
+
+	private void check(final WifiManager wm) {
+		login(wm, true);
 	}
 
 	private void connect(final WifiManager wm) {
@@ -352,8 +356,8 @@ public final class FonManService extends Service implements Callback, Comparator
 		}
 	}
 
-	private void handleSuccess(final String ssid, final boolean isLogin) {
-		if (!isLogin) {
+	private void handleSuccess(final String ssid, final boolean check) {
+		if (check) {
 			return;
 		}
 		notify(getString(R.string.started), FonManService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), getString(R.string.connected, ssid), PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT));
@@ -372,38 +376,43 @@ public final class FonManService extends Service implements Callback, Comparator
 		return FonManService.getPreference(this, R.string.kvibrate, false);
 	}
 
-	private void login(final WifiManager wm, final boolean isLogin) {
+	private void login(final WifiManager wm) {
+		login(wm, false);
+	}
+
+	private void login(final WifiManager wm, final boolean check) {
 		final WifiInfo wi = wm.getConnectionInfo();
 		String ssid = wi.getSSID();
 		if (ssid == null) {
 			return;
 		}
 		ssid = FonManService.stripQuotes(ssid);
-		if (FonManService.isSupported(ssid)) {
-			final LoginResult lr = loginManager.login(getUsername(), getPassword());
-			switch (lr.getResponseCode()) {
-				case Constants.WRC_LOGIN_SUCCEEDED:
-				case Constants.CRC_ALREADY_CONNECTED:
-					handleSuccess(ssid, isLogin);
-					break;
-				case Constants.WRC_RADIUS_ERROR:
-				case Constants.WRC_NETWORK_ADMIN_ERROR:
-				case Constants.FRC_HOTSPOT_LIMIT_EXCEEDED:
-				case Constants.FRC_UNKNOWN_ERROR:
-				case Constants.CRC_WISPR_NOT_PRESENT:
-					handleError(wm, wi, lr);
-					break;
-				case Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR:
-					wm.removeNetwork(wi.getNetworkId());
-					break;
-				case Constants.FRC_BAD_CREDENTIALS:
-				case Constants.CRC_CREDENTIALS_ERROR:
-					notifyCredentialsError();
-					break;
-				default:
-					notifyFonError(lr);
-					break;
-			}
+		if (!FonManService.isSupported(ssid)) {
+			return;
+		}
+		final LoginResult lr = FonManService.LOGIN_MANAGER.login(getUsername(), getPassword());
+		switch (lr.getResponseCode()) {
+			case Constants.WRC_LOGIN_SUCCEEDED:
+			case Constants.CRC_ALREADY_AUTHORISED:
+				handleSuccess(ssid, check);
+				break;
+			case Constants.WRC_RADIUS_ERROR:
+			case Constants.WRC_NETWORK_ADMIN_ERROR:
+			case Constants.FRC_HOTSPOT_LIMIT_EXCEEDED:
+			case Constants.FRC_UNKNOWN_ERROR:
+			case Constants.CRC_WISPR_NOT_PRESENT:
+				handleError(wm, wi, lr);
+				break;
+			case Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR:
+				wm.removeNetwork(wi.getNetworkId());
+				break;
+			case Constants.FRC_BAD_CREDENTIALS:
+			case Constants.CRC_CREDENTIALS_ERROR:
+				notifyCredentialsError();
+				break;
+			default:
+				notifyFonError(lr);
+				break;
 		}
 	}
 
@@ -469,16 +478,16 @@ public final class FonManService extends Service implements Callback, Comparator
 	@Override
 	public boolean handleMessage(final Message m) {
 		final String s = (String) m.obj;
-		if (s.equals(Constants.ACT_CANCEL_ALL)) {
-			cancelAll();
+		if (s.equals(Constants.ACT_CANCEL)) {
+			cancel();
 		} else {
 			final WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 			if (s.equals(Constants.ACT_CHECK)) {
-				login(wm, false);
+				check(wm);
 			} else if (s.equals(Constants.ACT_CONNECT)) {
 				connect(wm);
 			} else if (s.equals(Constants.ACT_LOGIN)) {
-				login(wm, true);
+				login(wm);
 			} else if (s.equals(Constants.ACT_SCAN)) {
 				wm.startScan();
 			}
