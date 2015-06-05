@@ -31,7 +31,6 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
-import android.util.SparseArray;
 
 public final class FonManService extends Service implements Callback, Comparator<ScanResult> {
 
@@ -43,13 +42,11 @@ public final class FonManService extends Service implements Callback, Comparator
 	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
 	private static final long[] VIBRATE_PATTERN_SUCCESS = { 100, 250 };
 
-	private static final SparseArray<WakeLock> ACTIVE_WAKELOCKS = new SparseArray<WakeLock>();
+	private static volatile WakeLock WAKELOCK;
 
-	private static final HashMap<String, Long> BLACKLIST = new HashMap<String, Long>();
+	private final HashMap<String, Long> blacklist = new HashMap<String, Long>();
 
-	private static final LoginManager LOGIN_MANAGER = new LoginManager();
-
-	private static int NEXT_WAKELOCK_ID = 0;
+	private final LoginManager loginManager = new LoginManager();
 
 	private final Handler messageHandler;
 
@@ -57,10 +54,6 @@ public final class FonManService extends Service implements Callback, Comparator
 		final HandlerThread ht = new HandlerThread(Constants.APP_ID);
 		ht.start();
 		messageHandler = new Handler(ht.getLooper(), this);
-	}
-
-	private static void addToBlacklist(final String bssid) {
-		FonManService.BLACKLIST.put(bssid, Long.valueOf(SystemClock.elapsedRealtime() + FonManService.BLACKLIST_PERIOD));
 	}
 
 	private static WifiConfiguration[] getConfiguredNetworks(final WifiManager wm) {
@@ -89,15 +82,15 @@ public final class FonManService extends Service implements Callback, Comparator
 		return c.getSharedPreferences(Constants.PREFERENCES_NAME, mode);
 	}
 
-	private static boolean isBlacklisted(final String bssid) {
-		final Long t = FonManService.BLACKLIST.get(bssid);
-		if (t != null) {
-			if (t.longValue() > SystemClock.elapsedRealtime()) {
-				return true;
+	private static WakeLock getWakeLock(final Context c) {
+		if (FonManService.WAKELOCK == null) {
+			synchronized (FonManService.class) {
+				if (FonManService.WAKELOCK == null) {
+					FonManService.WAKELOCK = ((PowerManager) c.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.APP_ID);
+				}
 			}
-			FonManService.BLACKLIST.remove(bssid);
 		}
-		return false;
+		return FonManService.WAKELOCK;
 	}
 
 	private static boolean isBt(final String ssid) {
@@ -217,26 +210,9 @@ public final class FonManService extends Service implements Callback, Comparator
 		return wm.addNetwork(wc);
 	}
 
-	private static int wakeLockAcquire(final Context c) {
-		final WakeLock wl = ((PowerManager) c.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.APP_ID);
-		wl.acquire();
-		final int id;
-		synchronized (FonManService.ACTIVE_WAKELOCKS) {
-			id = FonManService.NEXT_WAKELOCK_ID++ & Integer.MAX_VALUE;
-			FonManService.ACTIVE_WAKELOCKS.put(id, wl);
-		}
-		return id;
-	}
-
-	private static void wakeLockRelease(final int id) {
-		synchronized (FonManService.ACTIVE_WAKELOCKS) {
-			FonManService.ACTIVE_WAKELOCKS.get(id).release();
-			FonManService.ACTIVE_WAKELOCKS.remove(id);
-		}
-	}
-
 	static void execute(final Context c, final String a) {
-		c.startService(new Intent(c, FonManService.class).setAction(a).putExtra(Constants.APP_ID, FonManService.wakeLockAcquire(c)));
+		FonManService.getWakeLock(c).acquire();
+		c.startService(new Intent(c, FonManService.class).setAction(a));
 	}
 
 	static String getPreference(final Context c, final int id, final String v) {
@@ -245,6 +221,10 @@ public final class FonManService extends Service implements Callback, Comparator
 
 	static boolean isAutoConnectEnabled(final Context c) {
 		return FonManService.getPreference(c, R.string.kautoconnect, true);
+	}
+
+	private void addToBlacklist(final String bssid) {
+		blacklist.put(bssid, Long.valueOf(SystemClock.elapsedRealtime() + FonManService.BLACKLIST_PERIOD));
 	}
 
 	private boolean areNotificationsEnabled() {
@@ -292,7 +272,7 @@ public final class FonManService extends Service implements Callback, Comparator
 			if (sr.level < mr) {
 				break;
 			}
-			if (FonManService.isSupported(sr.SSID) && FonManService.isInsecure(sr) && !FonManService.isBlacklisted(sr.BSSID)) {
+			if (FonManService.isSupported(sr.SSID) && FonManService.isInsecure(sr) && !isBlacklisted(sr.BSSID)) {
 				return FonManService.updateOrAddFonConfiguration(wca, wm, sr);
 			}
 		}
@@ -354,7 +334,7 @@ public final class FonManService extends Service implements Callback, Comparator
 
 	private void handleError(final WifiManager wm, final WifiInfo wi, final LoginResult lr) {
 		if (FonManService.isAutoConnectEnabled(this)) {
-			FonManService.addToBlacklist(wi.getBSSID());
+			addToBlacklist(wi.getBSSID());
 			wm.removeNetwork(wi.getNetworkId());
 		} else {
 			notifyFonError(lr);
@@ -367,6 +347,17 @@ public final class FonManService extends Service implements Callback, Comparator
 		}
 		notify(getString(R.string.started), FonManService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), getString(R.string.connected, ssid), PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT));
 		startPeriodicConnectivityCheck();
+	}
+
+	private boolean isBlacklisted(final String bssid) {
+		final Long t = blacklist.get(bssid);
+		if (t != null) {
+			if (t.longValue() > SystemClock.elapsedRealtime()) {
+				return true;
+			}
+			blacklist.remove(bssid);
+		}
+		return false;
 	}
 
 	private boolean isReconnectEnabled() {
@@ -395,7 +386,7 @@ public final class FonManService extends Service implements Callback, Comparator
 		if (!FonManService.isSupported(ssid)) {
 			return;
 		}
-		final LoginResult lr = FonManService.LOGIN_MANAGER.login(getUsername(), getPassword());
+		final LoginResult lr = loginManager.login(getUsername(), getPassword());
 		switch (lr.getResponseCode()) {
 			case Constants.WRC_LOGIN_SUCCEEDED:
 			case Constants.CRC_ALREADY_AUTHORISED:
@@ -497,7 +488,7 @@ public final class FonManService extends Service implements Callback, Comparator
 				wm.startScan();
 			}
 		}
-		FonManService.wakeLockRelease(m.arg1);
+		FonManService.getWakeLock(this).release();
 		return true;
 	}
 
@@ -521,7 +512,6 @@ public final class FonManService extends Service implements Callback, Comparator
 	public int onStartCommand(final Intent i, final int f, final int id) {
 		final Message m = Message.obtain();
 		m.obj = i.getAction();
-		m.arg1 = i.getIntExtra(Constants.APP_ID, Integer.MIN_VALUE);
 		messageHandler.sendMessage(m);
 		return Service.START_STICKY;
 	}
