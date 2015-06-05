@@ -16,12 +16,12 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
 
-@SuppressWarnings("deprecation")
 final class LoginManager extends DefaultHttpClient {
 
 	private static final int HTTP_TIMEOUT = 30 * 1000;
 
 	private static final String CONNECTED = "CONNECTED";
+	private static final String CONNECTION_TEST_URL = "http://cm.fon.mobi/android.txt";
 	private static final String FON_USERNAME_PREFIX = "FON_WISPR/";
 	private static final String SAFE_PROTOCOL = "https://";
 	private static final String TAG_FON_RESPONSE_CODE = "FONResponseCode";
@@ -38,8 +38,6 @@ final class LoginManager extends DefaultHttpClient {
 
 	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
 
-	private static final HttpGet TEST_URI_REQUEST = new HttpGet("http://cm.fon.mobi/android.txt");
-
 	{
 		setCookieStore(null);
 		final HttpParams p = new BasicHttpParams().setParameter(LoginManager.USER_AGENT, LoginManager.USER_AGENT_STRING).setBooleanParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true);
@@ -48,19 +46,19 @@ final class LoginManager extends DefaultHttpClient {
 		setParams(p);
 	}
 
-	private static String getElementText(final String source, final String elementName) {
-		final int start = source.indexOf(">", source.indexOf(elementName));
+	private static String getElementText(final String s, final String e) {
+		final int start = s.indexOf(">", s.indexOf(e));
 		if (start != -1) {
-			final int end = source.indexOf("</" + elementName, start);
+			final int end = s.indexOf("</" + e, start);
 			if (end != -1) {
-				return source.substring(start + 1, end);
+				return s.substring(start + 1, end);
 			}
 		}
 		return null;
 	}
 
-	private static int getElementTextAsInt(final String source, final String elementName) {
-		return Integer.parseInt(LoginManager.getElementText(source, elementName));
+	private static int getElementTextAsInt(final String s, final String e) {
+		return Integer.parseInt(LoginManager.getElementText(s, e));
 	}
 
 	private static String getPrefixedUserName(final String host, final String user) {
@@ -75,7 +73,7 @@ final class LoginManager extends DefaultHttpClient {
 	}
 
 	private String getTestUrl() {
-		return request(LoginManager.TEST_URI_REQUEST);
+		return request(new HttpGet(LoginManager.CONNECTION_TEST_URL));
 	}
 
 	private String postCredentials(final String url, final String user, final String pass) {
@@ -142,5 +140,4 @@ final class LoginManager extends DefaultHttpClient {
 		}
 		return new LoginResult(rc, rm);
 	}
-
 }
