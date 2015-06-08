@@ -82,17 +82,6 @@ public final class FonManService extends Service implements Callback, Comparator
 		return c.getSharedPreferences(Constants.PREFERENCES_NAME, mode);
 	}
 
-	private static WakeLock getWakeLock(final Context c) {
-		if (FonManService.WAKELOCK == null) {
-			synchronized (FonManService.class) {
-				if (FonManService.WAKELOCK == null) {
-					FonManService.WAKELOCK = ((PowerManager) c.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.APP_ID);
-				}
-			}
-		}
-		return FonManService.WAKELOCK;
-	}
-
 	private static boolean isBt(final String ssid) {
 		return ssid.equals("BTFON") || ssid.equals("BTWiFi") || ssid.equals("BTWiFi-with-FON") || ssid.startsWith("BTOpenzone");
 	}
@@ -210,8 +199,23 @@ public final class FonManService extends Service implements Callback, Comparator
 		return wm.addNetwork(wc);
 	}
 
+	private static void wakeLockAcquire(final Context c) {
+		if (FonManService.WAKELOCK == null) {
+			synchronized (FonManService.class) {
+				if (FonManService.WAKELOCK == null) {
+					FonManService.WAKELOCK = ((PowerManager) c.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.APP_ID);
+				}
+			}
+		}
+		FonManService.WAKELOCK.acquire();
+	}
+
+	private static void wakeLockRelease() {
+		FonManService.WAKELOCK.release();
+	}
+
 	static void execute(final Context c, final String a) {
-		FonManService.getWakeLock(c).acquire();
+		FonManService.wakeLockAcquire(c);
 		c.startService(new Intent(c, FonManService.class).setAction(a));
 	}
 
@@ -488,7 +492,7 @@ public final class FonManService extends Service implements Callback, Comparator
 				wm.startScan();
 			}
 		}
-		FonManService.getWakeLock(this).release();
+		FonManService.wakeLockRelease();
 		return true;
 	}
 
