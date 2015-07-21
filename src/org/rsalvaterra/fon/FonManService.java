@@ -163,7 +163,7 @@ public final class FonManService extends Service implements Callback, Comparator
 	}
 
 	private static boolean isSupported(final String ssid) {
-		return FonManService.isGenericFon(ssid) || FonManService.isBt(ssid) || FonManService.isJt(ssid) || FonManService.isSfr(ssid) || FonManService.isProximus(ssid) || FonManService.isKpn(ssid) || FonManService.isDt(ssid) || FonManService.isSt(ssid) || FonManService.isHt(ssid) || FonManService.isOte(ssid) || FonManService.isRomtelecom(ssid) || FonManService.isTtnet(ssid) || FonManService.isOi(ssid) || FonManService.isDowntownBrooklyn(ssid) || FonManService.isMweb(ssid) || FonManService.isOtherFon(ssid) || FonManService.isSoftbank(ssid) || FonManService.isTelstra(ssid);
+		return FonManService.isGenericFon(ssid) || FonManService.isVodafone(ssid) || FonManService.isBt(ssid) || FonManService.isJt(ssid) || FonManService.isSfr(ssid) || FonManService.isProximus(ssid) || FonManService.isKpn(ssid) || FonManService.isDt(ssid) || FonManService.isSt(ssid) || FonManService.isHt(ssid) || FonManService.isOte(ssid) || FonManService.isRomtelecom(ssid) || FonManService.isTtnet(ssid) || FonManService.isOi(ssid) || FonManService.isDowntownBrooklyn(ssid) || FonManService.isMweb(ssid) || FonManService.isOtherFon(ssid) || FonManService.isSoftbank(ssid) || FonManService.isTelstra(ssid);
 	}
 
 	private static boolean isTelstra(final String ssid) {
@@ -172,6 +172,10 @@ public final class FonManService extends Service implements Callback, Comparator
 
 	private static boolean isTtnet(final String ssid) {
 		return ssid.equalsIgnoreCase("TTNET WiFi FON");
+	}
+
+	private static boolean isVodafone(final String ssid) {
+		return ssid.equals("_ONOWiFi");
 	}
 
 	private static String stripQuotes(final String ssid) {
