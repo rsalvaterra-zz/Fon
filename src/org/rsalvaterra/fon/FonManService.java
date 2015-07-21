@@ -210,12 +210,16 @@ public final class FonManService extends Service implements Callback, Comparator
 					FonManService.WAKELOCK = ((PowerManager) c.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.APP_ID);
 				}
 			}
+		} else if (FonManService.WAKELOCK.isHeld()) {
+			return;
 		}
 		FonManService.WAKELOCK.acquire();
 	}
 
 	private static void wakeLockRelease() {
-		FonManService.WAKELOCK.release();
+		if ((FonManService.WAKELOCK != null) && FonManService.WAKELOCK.isHeld()) {
+			FonManService.WAKELOCK.release();
+		}
 	}
 
 	static void execute(final Context c, final String a) {
