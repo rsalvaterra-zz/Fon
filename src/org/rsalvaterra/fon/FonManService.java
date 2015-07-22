@@ -167,7 +167,7 @@ public final class FonManService extends Service implements Callback, Comparator
 	}
 
 	private static boolean isTelstra(final String ssid) {
-		return ssid.equalsIgnoreCase("Telstra Air");
+		return ssid.equals("Telstra AIR");
 	}
 
 	private static boolean isTtnet(final String ssid) {
