@@ -115,7 +115,12 @@ public final class FonManService extends Service implements Callback, Comparator
 	}
 
 	private static boolean isInsecure(final WifiConfiguration wc) {
-		return wc.allowedKeyManagement.get(KeyMgmt.NONE) && (wc.wepKeys[0] == null);
+		for (final String s : wc.wepKeys) {
+			if (s != null) {
+				return false;
+			}
+		}
+		return wc.allowedKeyManagement.get(KeyMgmt.NONE);
 	}
 
 	private static boolean isJt(final String ssid) {
