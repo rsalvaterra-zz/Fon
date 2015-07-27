@@ -33,22 +33,16 @@
 			</intent-filter>
 		</activity>
 
-		<receiver
-			android:name=".FonManWifiReceiver"
-			android:process=":main">
+		<receiver android:name=".FonManWifiReceiver">
 			<intent-filter>
 				<action android:name="android.net.wifi.SCAN_RESULTS" />
 				<action android:name="android.net.wifi.STATE_CHANGE" />
 			</intent-filter>
 		</receiver>
 
-		<receiver
-			android:name=".FonManAlarmReceiver"
-			android:process=":main" />
+		<receiver android:name=".FonManAlarmReceiver" />
 
-		<service
-			android:name=".FonManService"
-			android:process=":main" />
+		<service android:name=".FonManService" />
 
 	</application>
 

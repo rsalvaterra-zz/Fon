@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-import android.annotation.TargetApi;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -21,16 +20,15 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Handler.Callback;
 import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 
 public final class FonManService extends Service implements Callback, Comparator<ScanResult> {
 
@@ -71,15 +69,8 @@ public final class FonManService extends Service implements Callback, Comparator
 		return FonManService.getPreferences(c).getBoolean(c.getString(id), v);
 	}
 
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	private static SharedPreferences getPreferences(final Context c) {
-		final int mode;
-		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
-			mode = Context.MODE_MULTI_PROCESS;
-		} else {
-			mode = Context.MODE_PRIVATE;
-		}
-		return c.getSharedPreferences(Constants.PREFERENCES_NAME, mode);
+		return PreferenceManager.getDefaultSharedPreferences(c);
 	}
 
 	private static boolean isBt(final String ssid) {
@@ -518,15 +509,9 @@ public final class FonManService extends Service implements Callback, Comparator
 		return null;
 	}
 
-	@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 	@Override
 	public void onDestroy() {
-		final Looper l = messageHandler.getLooper();
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
-			l.quit();
-		} else {
-			l.quitSafely();
-		}
+		messageHandler.getLooper().quit();
 	}
 
 	@Override
