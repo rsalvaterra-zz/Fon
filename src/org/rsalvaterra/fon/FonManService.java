@@ -154,20 +154,12 @@ public final class FonManService extends Service implements Callback, Comparator
 		return ssid.equals("FON");
 	}
 
-	private static boolean isSt(final String ssid) {
-		return ssid.equalsIgnoreCase("Telekom FON");
-	}
-
 	private static boolean isSupported(final String ssid) {
-		return FonManService.isGenericFon(ssid) || FonManService.isVodafoneSpain(ssid) || FonManService.isBt(ssid) || FonManService.isJt(ssid) || FonManService.isSfr(ssid) || FonManService.isVodafoneItaly(ssid) || FonManService.isProximus(ssid) || FonManService.isKpn(ssid) || FonManService.isDt(ssid) || FonManService.isSt(ssid) || FonManService.isHt(ssid) || FonManService.isOte(ssid) || FonManService.isRomtelecom(ssid) || FonManService.isTtnet(ssid) || FonManService.isOi(ssid) || FonManService.isDowntownBrooklyn(ssid) || FonManService.isMweb(ssid) || FonManService.isOtherFon(ssid) || FonManService.isSoftbank(ssid) || FonManService.isTelstra(ssid);
+		return FonManService.isGenericFon(ssid) || FonManService.isVodafoneSpain(ssid) || FonManService.isBt(ssid) || FonManService.isJt(ssid) || FonManService.isSfr(ssid) || FonManService.isVodafoneItaly(ssid) || FonManService.isProximus(ssid) || FonManService.isKpn(ssid) || FonManService.isDt(ssid) || FonManService.isHt(ssid) || FonManService.isOte(ssid) || FonManService.isRomtelecom(ssid) || FonManService.isOi(ssid) || FonManService.isDowntownBrooklyn(ssid) || FonManService.isMweb(ssid) || FonManService.isOtherFon(ssid) || FonManService.isSoftbank(ssid) || FonManService.isTelstra(ssid);
 	}
 
 	private static boolean isTelstra(final String ssid) {
 		return ssid.equals("Telstra AIR");
-	}
-
-	private static boolean isTtnet(final String ssid) {
-		return ssid.equalsIgnoreCase("TTNET WiFi FON");
 	}
 
 	private static boolean isVodafoneItaly(final String ssid) {
