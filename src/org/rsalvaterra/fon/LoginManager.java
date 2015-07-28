@@ -1,27 +1,40 @@
 package org.rsalvaterra.fon;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.zip.GZIPInputStream;
 
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.params.ClientPNames;
+import org.apache.http.entity.HttpEntityWrapper;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
-final class LoginManager extends DefaultHttpClient {
+final class LoginManager extends DefaultHttpClient implements HttpRequestInterceptor, HttpResponseInterceptor {
 
 	private static final int HTTP_TIMEOUT = 30 * 1000;
 
+	private static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
 	private static final String CONNECTED = "CONNECTED";
 	private static final String CONNECTION_TEST_URL = "http://cm.fon.mobi/android.txt";
+	private static final String ENCODING_GZIP = "gzip";
 	private static final String FON_USERNAME_PREFIX = "FON_WISPR/";
 	private static final String SAFE_PROTOCOL = "https://";
 	private static final String TAG_FON_RESPONSE_CODE = "FONResponseCode";
@@ -40,6 +53,8 @@ final class LoginManager extends DefaultHttpClient {
 
 	{
 		setCookieStore(null);
+		addRequestInterceptor(this);
+		addResponseInterceptor(this);
 		final HttpParams p = new BasicHttpParams().setParameter(LoginManager.USER_AGENT, LoginManager.USER_AGENT_STRING).setBooleanParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true);
 		HttpConnectionParams.setConnectionTimeout(p, LoginManager.HTTP_TIMEOUT);
 		HttpConnectionParams.setSoTimeout(p, LoginManager.HTTP_TIMEOUT);
@@ -139,5 +154,37 @@ final class LoginManager extends DefaultHttpClient {
 			rc = Constants.CRC_CREDENTIALS_ERROR;
 		}
 		return new LoginResult(rc, rm);
+	}
+
+	@Override
+	public void process(final HttpRequest r, final HttpContext c) throws HttpException, IOException {
+		if (!r.containsHeader(LoginManager.HEADER_ACCEPT_ENCODING)) {
+			r.addHeader(LoginManager.HEADER_ACCEPT_ENCODING, LoginManager.ENCODING_GZIP);
+		}
+	}
+
+	@Override
+	public void process(final HttpResponse r, final HttpContext c) throws HttpException, IOException {
+		final Header enc = r.getEntity().getContentEncoding();
+		if (enc != null) {
+			final HeaderElement[] els = enc.getElements();
+			for (final HeaderElement el : els) {
+				if (el.getName().equals(LoginManager.ENCODING_GZIP)) {
+					r.setEntity(new HttpEntityWrapper(r.getEntity()) {
+
+						@Override
+						public InputStream getContent() throws IOException {
+							return new GZIPInputStream(wrappedEntity.getContent());
+						}
+
+						@Override
+						public long getContentLength() {
+							return -1;
+						}
+					});
+					break;
+				}
+			}
+		}
 	}
 }
