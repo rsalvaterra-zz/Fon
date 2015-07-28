@@ -55,7 +55,7 @@ interface Constants {
 
 	static final String APP_ID = "org.rsalvaterra.fon";
 
-	static final String ACT_CANCEL = "0";
+	static final String ACT_CLEANUP = "0";
 	static final String ACT_CHECK = "1";
 	static final String ACT_CONNECT = "2";
 	static final String ACT_LOGIN = "3";

@@ -42,7 +42,7 @@ public final class FonManService extends Service implements Callback, Comparator
 
 	private static volatile WakeLock WAKELOCK;
 
-	private final HashMap<String, Long> blacklist = new HashMap<String, Long>();
+	private static final HashMap<String, Long> BLACKLIST = new HashMap<String, Long>();
 
 	private final LoginManager loginManager = new LoginManager();
 
@@ -52,6 +52,10 @@ public final class FonManService extends Service implements Callback, Comparator
 		final HandlerThread ht = new HandlerThread(Constants.APP_ID);
 		ht.start();
 		messageHandler = new Handler(ht.getLooper(), this);
+	}
+
+	private static void addToBlacklist(final String bssid) {
+		FonManService.BLACKLIST.put(bssid, Long.valueOf(SystemClock.elapsedRealtime() + FonManService.BLACKLIST_PERIOD));
 	}
 
 	private static WifiConfiguration[] getConfiguredNetworks(final WifiManager wm) {
@@ -71,6 +75,17 @@ public final class FonManService extends Service implements Callback, Comparator
 
 	private static SharedPreferences getPreferences(final Context c) {
 		return PreferenceManager.getDefaultSharedPreferences(c);
+	}
+
+	private static boolean isBlacklisted(final String bssid) {
+		final Long t = FonManService.BLACKLIST.get(bssid);
+		if (t != null) {
+			if (t.longValue() > SystemClock.elapsedRealtime()) {
+				return true;
+			}
+			FonManService.BLACKLIST.remove(bssid);
+		}
+		return false;
 	}
 
 	private static boolean isBt(final String ssid) {
@@ -227,22 +242,18 @@ public final class FonManService extends Service implements Callback, Comparator
 		return FonManService.getPreference(c, R.string.kautoconnect, true);
 	}
 
-	private void addToBlacklist(final String bssid) {
-		blacklist.put(bssid, Long.valueOf(SystemClock.elapsedRealtime() + FonManService.BLACKLIST_PERIOD));
-	}
-
 	private boolean areNotificationsEnabled() {
 		return FonManService.getPreference(this, R.string.knotify, true);
 	}
 
-	private void cancel() {
+	private void check(final WifiManager wm) {
+		login(wm, true);
+	}
+
+	private void cleanUp() {
 		stopPeriodicConnectivityCheck();
 		stopPeriodicScan();
 		removeNotification();
-	}
-
-	private void check(final WifiManager wm) {
-		login(wm, true);
 	}
 
 	private void connect(final WifiManager wm) {
@@ -276,7 +287,7 @@ public final class FonManService extends Service implements Callback, Comparator
 			if (sr.level < mr) {
 				break;
 			}
-			if (FonManService.isSupported(sr.SSID) && FonManService.isInsecure(sr) && !isBlacklisted(sr.BSSID)) {
+			if (FonManService.isSupported(sr.SSID) && FonManService.isInsecure(sr) && !FonManService.isBlacklisted(sr.BSSID)) {
 				return FonManService.updateOrAddFonConfiguration(wca, wm, sr);
 			}
 		}
@@ -338,7 +349,7 @@ public final class FonManService extends Service implements Callback, Comparator
 
 	private void handleError(final WifiManager wm, final WifiInfo wi, final LoginResult lr) {
 		if (FonManService.isAutoConnectEnabled(this)) {
-			addToBlacklist(wi.getBSSID());
+			FonManService.addToBlacklist(wi.getBSSID());
 			wm.removeNetwork(wi.getNetworkId());
 		} else {
 			notifyFonError(lr);
@@ -351,17 +362,6 @@ public final class FonManService extends Service implements Callback, Comparator
 		}
 		notify(getString(R.string.started), FonManService.VIBRATE_PATTERN_SUCCESS, Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_ONGOING_EVENT, getSuccessTone(), getString(R.string.connected, ssid), PendingIntent.getActivity(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT));
 		startPeriodicConnectivityCheck();
-	}
-
-	private boolean isBlacklisted(final String bssid) {
-		final Long t = blacklist.get(bssid);
-		if (t != null) {
-			if (t.longValue() > SystemClock.elapsedRealtime()) {
-				return true;
-			}
-			blacklist.remove(bssid);
-		}
-		return false;
 	}
 
 	private boolean isReconnectEnabled() {
@@ -478,8 +478,8 @@ public final class FonManService extends Service implements Callback, Comparator
 	@Override
 	public boolean handleMessage(final Message m) {
 		final String s = (String) m.obj;
-		if (s.equals(Constants.ACT_CANCEL)) {
-			cancel();
+		if (s.equals(Constants.ACT_CLEANUP)) {
+			cleanUp();
 		} else {
 			final WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 			if (s.equals(Constants.ACT_CHECK)) {
@@ -504,6 +504,7 @@ public final class FonManService extends Service implements Callback, Comparator
 	@Override
 	public void onDestroy() {
 		messageHandler.getLooper().quit();
+		cleanUp();
 	}
 
 	@Override
