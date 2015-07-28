@@ -142,7 +142,7 @@ public final class FonManService extends Service implements Callback, Comparator
 	}
 
 	private static boolean isOi(final String ssid) {
-		return ssid.equals("Oi WiFi Fon") || ssid.equals("OI_WIFI_FON");
+		return ssid.equals("Oi WiFi Fon") || ssid.equals("OI_WIFI_FON") || ssid.equals("Coca-Cola WiFi");
 	}
 
 	private static boolean isOte(final String ssid) {
