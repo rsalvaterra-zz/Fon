@@ -40,9 +40,9 @@ public final class FonManService extends Service implements Callback, Comparator
 	private static final long[] VIBRATE_PATTERN_FAILURE = { 100, 250, 100, 250 };
 	private static final long[] VIBRATE_PATTERN_SUCCESS = { 100, 250 };
 
-	private static volatile WakeLock WAKELOCK;
-
 	private static final HashMap<String, Long> BLACKLIST = new HashMap<String, Long>();
+
+	private static volatile WakeLock WAKELOCK;
 
 	private final LoginManager loginManager = new LoginManager();
 
