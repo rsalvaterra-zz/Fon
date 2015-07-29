@@ -101,7 +101,7 @@ public final class FonManService extends Service implements Callback, Comparator
 	}
 
 	private static boolean isDowntownBrooklyn(final String ssid) {
-		return ssid.equals("DowntownBrooklynWifi_Fon");
+		return ssid.equals("DowntownBrooklynWiFi_Fon");
 	}
 
 	private static boolean isDt(final String ssid) {
