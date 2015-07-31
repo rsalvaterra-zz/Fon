@@ -504,7 +504,6 @@ public final class FonManService extends Service implements Callback, Comparator
 	@Override
 	public void onDestroy() {
 		messageHandler.getLooper().quit();
-		cleanUp();
 	}
 
 	@Override
