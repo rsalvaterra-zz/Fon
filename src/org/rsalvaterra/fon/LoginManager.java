@@ -79,17 +79,21 @@ final class LoginManager extends DefaultHttpClient {
 	private String postCredentials(final String url, final String user, final String pass) {
 		if (url.startsWith(LoginManager.SAFE_PROTOCOL)) {
 			for (final String s : LoginManager.VALID_SUFFIX) {
-				final String h = url.substring(LoginManager.SAFE_PROTOCOL.length(), url.indexOf("/", LoginManager.SAFE_PROTOCOL.length()));
-				if (h.endsWith(s)) {
-					try {
-						final ArrayList<BasicNameValuePair> p = new ArrayList<BasicNameValuePair>();
-						p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_USERNAME, LoginManager.getPrefixedUserName(h, user)));
-						p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_PASSWORD, pass));
-						final HttpPost r = new HttpPost(LoginManager.replaceAmpEntities(url));
-						r.setEntity(new UrlEncodedFormEntity(p, LoginManager.UTF_8));
-						return request(r);
-					} catch (final IOException e) {
-						break;
+				final int b = LoginManager.SAFE_PROTOCOL.length();
+				final int e = url.indexOf("/", b);
+				if (e > b) {
+					final String h = url.substring(b, e);
+					if (h.endsWith(s)) {
+						try {
+							final ArrayList<BasicNameValuePair> p = new ArrayList<BasicNameValuePair>();
+							p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_USERNAME, LoginManager.getPrefixedUserName(h, user)));
+							p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_PASSWORD, pass));
+							final HttpPost r = new HttpPost(LoginManager.replaceAmpEntities(url));
+							r.setEntity(new UrlEncodedFormEntity(p, LoginManager.UTF_8));
+							return request(r);
+						} catch (final IOException x) {
+							break;
+						}
 					}
 				}
 			}
