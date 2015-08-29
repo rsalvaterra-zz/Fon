@@ -508,9 +508,11 @@ public final class FonManService extends Service implements Callback, Comparator
 
 	@Override
 	public int onStartCommand(final Intent i, final int f, final int id) {
-		final Message m = Message.obtain();
-		m.obj = i.getAction();
-		messageHandler.sendMessage(m);
+		if (i != null) {
+			final Message m = Message.obtain();
+			m.obj = i.getAction();
+			messageHandler.sendMessage(m);
+		}
 		return Service.START_STICKY;
 	}
 }
