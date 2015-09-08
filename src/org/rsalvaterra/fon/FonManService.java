@@ -306,7 +306,7 @@ public final class FonManService extends Service implements Callback, Comparator
 			final HashMap<String, Integer> wcm = new HashMap<String, Integer>();
 			for (final WifiConfiguration wc : wca) {
 				final String ssid = FonManService.stripQuotes(wc.SSID);
-				if ((!secure || (secure && !FonManService.isInsecure(wc))) && !FonManService.isSupported(ssid)) {
+				if (!((secure && FonManService.isInsecure(wc)) || FonManService.isSupported(ssid))) {
 					wcm.put(ssid, Integer.valueOf(wc.networkId));
 				}
 			}
