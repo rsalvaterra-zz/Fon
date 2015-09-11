@@ -1,28 +1,25 @@
 package org.rsalvaterra.fon;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.params.ClientPNames;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.util.EntityUtils;
+final class LoginManager {
 
-final class LoginManager extends DefaultHttpClient {
-
+	private static final int MAX_RETRIES = 5;
 	private static final int HTTP_TIMEOUT = 30 * 1000;
 
 	private static final String CONNECTED = "CONNECTED";
 	private static final String CONNECTION_TEST_URL = "http://cm.fon.mobi/android.txt";
+	private static final String CONTENT_LENGTH = "Content-Length";
+	private static final String CONTENT_TYPE = "Content-Type";
+	private static final String CONTENT_TYPE_STRING = "application/x-www-form-urlencoded";
 	private static final String FON_USERNAME_PREFIX = "FON_WISPR/";
+	private static final String LOCATION = "Location";
 	private static final String SAFE_PROTOCOL = "https://";
 	private static final String TAG_FON_RESPONSE_CODE = "FONResponseCode";
 	private static final String TAG_LOGIN_URL = "LoginURL";
@@ -30,20 +27,33 @@ final class LoginManager extends DefaultHttpClient {
 	private static final String TAG_REPLY_MESSAGE = "ReplyMessage";
 	private static final String TAG_RESPONSE_CODE = "ResponseCode";
 	private static final String TAG_WISPR = "WISPAccessGatewayParam";
-	private static final String TAG_WISPR_PASSWORD = "Password";
-	private static final String TAG_WISPR_USERNAME = "UserName";
 	private static final String USER_AGENT = "User-Agent";
 	private static final String USER_AGENT_STRING = "FONAccess; wispr; (Linux; U; Android)";
+	private static final String USER_NAME = "UserName=";
 	private static final String UTF_8 = "UTF-8";
+	private static final String PASSWORD = "&Password=";
 
 	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
 
-	{
-		setCookieStore(null);
-		final HttpParams p = new BasicHttpParams().setParameter(LoginManager.USER_AGENT, LoginManager.USER_AGENT_STRING).setBooleanParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true);
-		HttpConnectionParams.setConnectionTimeout(p, LoginManager.HTTP_TIMEOUT);
-		HttpConnectionParams.setSoTimeout(p, LoginManager.HTTP_TIMEOUT);
-		setParams(p);
+	private static String get(final String url) {
+		HttpURLConnection uc;
+		try {
+			uc = (HttpURLConnection) new URL(url).openConnection();
+			LoginManager.setCommonParameters(uc);
+			int retries = 0;
+			while (LoginManager.isRedirect(uc.getResponseCode()) && (retries != LoginManager.MAX_RETRIES)) {
+				uc = (HttpURLConnection) new URL(uc.getHeaderField(LoginManager.LOCATION)).openConnection();
+				LoginManager.setCommonParameters(uc);
+				++retries;
+			}
+			if (retries == LoginManager.MAX_RETRIES) {
+				uc.disconnect();
+				return null;
+			}
+		} catch (final IOException e) {
+			return null;
+		}
+		return LoginManager.readConnectionStream(uc);
 	}
 
 	private static String getElementText(final String s, final String e) {
@@ -68,15 +78,66 @@ final class LoginManager extends DefaultHttpClient {
 		return user;
 	}
 
-	private static String replaceAmpEntities(final String s) {
-		return s.replace("&amp;", "&");
+	private static String getTestUrl() {
+		return LoginManager.get(LoginManager.CONNECTION_TEST_URL);
 	}
 
-	private String getTestUrl() {
-		return request(new HttpGet(LoginManager.CONNECTION_TEST_URL));
+	private static boolean isRedirect(final int rc) {
+		return (rc == HttpURLConnection.HTTP_MOVED_PERM) || (rc == HttpURLConnection.HTTP_MOVED_TEMP) || (rc == HttpURLConnection.HTTP_SEE_OTHER);
 	}
 
-	private String postCredentials(final String url, final String user, final String pass) {
+	private static String post(final String url, final String username, final String password) {
+		HttpURLConnection uc;
+		final byte[] pc;
+		try {
+			uc = (HttpURLConnection) new URL(url).openConnection();
+			LoginManager.setCommonParameters(uc);
+			uc.setDoOutput(true);
+			pc = (LoginManager.USER_NAME + URLEncoder.encode(username, LoginManager.UTF_8) + LoginManager.PASSWORD + URLEncoder.encode(password, LoginManager.UTF_8)).getBytes();
+			uc.setRequestProperty(LoginManager.CONTENT_LENGTH, Integer.toString(pc.length));
+			uc.setRequestProperty(LoginManager.CONTENT_TYPE, LoginManager.CONTENT_TYPE_STRING);
+		} catch (final IOException e) {
+			return null;
+		}
+		final OutputStream os;
+		try {
+			os = uc.getOutputStream();
+		} catch (final IOException e) {
+			return null;
+		}
+		boolean error = false;
+		try {
+			os.write(pc);
+		} catch (final IOException e) {
+			error = true;
+		} finally {
+			try {
+				os.close();
+			} catch (final IOException e) {
+				// Nothing can be done.
+			}
+			if (error) {
+				return null;
+			}
+		}
+		try {
+			int retries = 0;
+			while (LoginManager.isRedirect(uc.getResponseCode()) && (retries != LoginManager.MAX_RETRIES)) {
+				uc = (HttpURLConnection) new URL(uc.getHeaderField(LoginManager.LOCATION)).openConnection();
+				LoginManager.setCommonParameters(uc);
+				++retries;
+			}
+			if (retries == LoginManager.MAX_RETRIES) {
+				uc.disconnect();
+				return null;
+			}
+		} catch (final IOException e) {
+			return null;
+		}
+		return LoginManager.readConnectionStream(uc);
+	}
+
+	private static String postCredentials(final String url, final String user, final String pass) {
 		if (url.startsWith(LoginManager.SAFE_PROTOCOL)) {
 			for (final String s : LoginManager.VALID_SUFFIX) {
 				final int b = LoginManager.SAFE_PROTOCOL.length();
@@ -84,16 +145,7 @@ final class LoginManager extends DefaultHttpClient {
 				if (e > b) {
 					final String h = url.substring(b, e);
 					if (h.endsWith(s)) {
-						try {
-							final ArrayList<BasicNameValuePair> p = new ArrayList<BasicNameValuePair>();
-							p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_USERNAME, LoginManager.getPrefixedUserName(h, user)));
-							p.add(new BasicNameValuePair(LoginManager.TAG_WISPR_PASSWORD, pass));
-							final HttpPost r = new HttpPost(LoginManager.replaceAmpEntities(url));
-							r.setEntity(new UrlEncodedFormEntity(p, LoginManager.UTF_8));
-							return request(r);
-						} catch (final IOException x) {
-							break;
-						}
+						return LoginManager.post(LoginManager.replaceAmpEntities(url), LoginManager.getPrefixedUserName(h, user), pass);
 					}
 				}
 			}
@@ -101,24 +153,54 @@ final class LoginManager extends DefaultHttpClient {
 		return null;
 	}
 
-	private String request(final HttpUriRequest r) {
+	private static String readConnectionStream(final HttpURLConnection uc) {
+		final BufferedReader br;
 		try {
-			return EntityUtils.toString(execute(r, new BasicHttpContext()).getEntity()).trim();
+			br = new BufferedReader(new InputStreamReader(uc.getInputStream()));
 		} catch (final IOException e) {
 			return null;
 		}
+		String s;
+		try {
+			final StringBuilder sb = new StringBuilder();
+			while ((s = br.readLine()) != null) {
+				sb.append(s);
+			}
+			s = sb.toString();
+		} catch (final IOException e) {
+			s = null;
+		} finally {
+			try {
+				br.close();
+			} catch (final IOException e) {
+				// Nothing can be done.
+			} finally {
+				uc.disconnect();
+			}
+		}
+		return s;
 	}
 
-	LoginResult login(final String user, final String pass) {
+	private static String replaceAmpEntities(final String s) {
+		return s.replace("&amp;", "&");
+	}
+
+	private static void setCommonParameters(final HttpURLConnection uc) {
+		uc.setRequestProperty(LoginManager.USER_AGENT, LoginManager.USER_AGENT_STRING);
+		uc.setConnectTimeout(LoginManager.HTTP_TIMEOUT);
+		uc.setReadTimeout(LoginManager.HTTP_TIMEOUT);
+	}
+
+	static LoginResult login(final String user, final String pass) {
 		int rc = Constants.WRC_ACCESS_GATEWAY_INTERNAL_ERROR;
 		String rm = "";
 		if ((user.length() != 0) && (pass.length() != 0)) {
-			String c = getTestUrl();
+			String c = LoginManager.getTestUrl();
 			if (c != null) {
 				if (!c.equals(LoginManager.CONNECTED)) {
 					c = LoginManager.getElementText(c, LoginManager.TAG_WISPR);
 					if ((c != null) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE) == Constants.WMT_INITIAL_REDIRECT) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE) == Constants.WRC_NO_ERROR)) {
-						c = postCredentials(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL), user, pass);
+						c = LoginManager.postCredentials(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL), user, pass);
 						if (c != null) {
 							c = LoginManager.getElementText(c, LoginManager.TAG_WISPR);
 							if (c != null) {

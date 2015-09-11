@@ -44,8 +44,6 @@ public final class FonManService extends Service implements Callback, Comparator
 
 	private static volatile WakeLock WAKELOCK;
 
-	private final LoginManager loginManager = new LoginManager();
-
 	private final Handler messageHandler;
 
 	{
@@ -390,7 +388,7 @@ public final class FonManService extends Service implements Callback, Comparator
 		if (!FonManService.isSupported(ssid)) {
 			return;
 		}
-		final LoginResult lr = loginManager.login(getUsername(), getPassword());
+		final LoginResult lr = LoginManager.login(getUsername(), getPassword());
 		switch (lr.getResponseCode()) {
 			case Constants.WRC_LOGIN_SUCCEEDED:
 			case Constants.CRC_ALREADY_AUTHORISED:
