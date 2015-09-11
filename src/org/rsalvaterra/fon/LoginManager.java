@@ -10,7 +10,7 @@ import java.net.URLEncoder;
 
 final class LoginManager {
 
-	private static final int MAX_RETRIES = 5;
+	private static final int MAX_REDIRECTS = 5;
 	private static final int HTTP_TIMEOUT = 30 * 1000;
 
 	private static final String CONNECTED = "CONNECTED";
@@ -36,24 +36,21 @@ final class LoginManager {
 	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
 
 	private static String get(final String url) {
-		HttpURLConnection uc;
 		try {
-			uc = (HttpURLConnection) new URL(url).openConnection();
-			LoginManager.setCommonParameters(uc);
-			int retries = 0;
-			while (LoginManager.isRedirect(uc.getResponseCode()) && (retries != LoginManager.MAX_RETRIES)) {
-				uc = (HttpURLConnection) new URL(uc.getHeaderField(LoginManager.LOCATION)).openConnection();
-				LoginManager.setCommonParameters(uc);
-				++retries;
-			}
-			if (retries == LoginManager.MAX_RETRIES) {
-				uc.disconnect();
-				return null;
-			}
+			String target = url;
+			int redirects = 0;
+			do {
+				final HttpURLConnection conn = LoginManager.openConnection(target);
+				if (!LoginManager.isRedirect(conn.getResponseCode())) {
+					return LoginManager.readStream(conn);
+				}
+				target = conn.getHeaderField(LoginManager.LOCATION);
+				conn.disconnect();
+			} while (++redirects != LoginManager.MAX_REDIRECTS);
 		} catch (final IOException e) {
-			return null;
+			// Nothing to do.
 		}
-		return LoginManager.readConnectionStream(uc);
+		return null;
 	}
 
 	private static String getElementText(final String s, final String e) {
@@ -86,55 +83,38 @@ final class LoginManager {
 		return (rc == HttpURLConnection.HTTP_MOVED_PERM) || (rc == HttpURLConnection.HTTP_MOVED_TEMP) || (rc == HttpURLConnection.HTTP_SEE_OTHER);
 	}
 
+	private static HttpURLConnection openConnection(final String url) throws IOException {
+		final HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+		conn.setRequestProperty(LoginManager.USER_AGENT, LoginManager.USER_AGENT_STRING);
+		conn.setConnectTimeout(LoginManager.HTTP_TIMEOUT);
+		conn.setReadTimeout(LoginManager.HTTP_TIMEOUT);
+		return conn;
+	}
+
 	private static String post(final String url, final String username, final String password) {
-		HttpURLConnection uc;
-		final byte[] pc;
 		try {
-			uc = (HttpURLConnection) new URL(url).openConnection();
-			LoginManager.setCommonParameters(uc);
-			uc.setDoOutput(true);
-			pc = (LoginManager.USER_NAME + URLEncoder.encode(username, LoginManager.UTF_8) + LoginManager.PASSWORD + URLEncoder.encode(password, LoginManager.UTF_8)).getBytes();
-			uc.setRequestProperty(LoginManager.CONTENT_LENGTH, Integer.toString(pc.length));
-			uc.setRequestProperty(LoginManager.CONTENT_TYPE, LoginManager.CONTENT_TYPE_STRING);
-		} catch (final IOException e) {
-			return null;
-		}
-		final OutputStream os;
-		try {
-			os = uc.getOutputStream();
-		} catch (final IOException e) {
-			return null;
-		}
-		boolean error = false;
-		try {
+			HttpURLConnection conn = LoginManager.openConnection(url);
+			conn.setDoOutput(true);
+			final byte[] pc = (LoginManager.USER_NAME + URLEncoder.encode(username, LoginManager.UTF_8) + LoginManager.PASSWORD + URLEncoder.encode(password, LoginManager.UTF_8)).getBytes();
+			conn.setRequestProperty(LoginManager.CONTENT_LENGTH, Integer.toString(pc.length));
+			conn.setRequestProperty(LoginManager.CONTENT_TYPE, LoginManager.CONTENT_TYPE_STRING);
+			final OutputStream os = conn.getOutputStream();
 			os.write(pc);
+			os.close();
+			int redirects = 0;
+			do {
+				if (!LoginManager.isRedirect(conn.getResponseCode())) {
+					return LoginManager.readStream(conn);
+				}
+				final String target = conn.getHeaderField(LoginManager.LOCATION);
+				conn.disconnect();
+				conn = LoginManager.openConnection(target);
+			} while (++redirects != LoginManager.MAX_REDIRECTS);
+			conn.disconnect();
 		} catch (final IOException e) {
-			error = true;
-		} finally {
-			try {
-				os.close();
-			} catch (final IOException e) {
-				// Nothing can be done.
-			}
-			if (error) {
-				return null;
-			}
+			// Nothing to do.
 		}
-		try {
-			int retries = 0;
-			while (LoginManager.isRedirect(uc.getResponseCode()) && (retries != LoginManager.MAX_RETRIES)) {
-				uc = (HttpURLConnection) new URL(uc.getHeaderField(LoginManager.LOCATION)).openConnection();
-				LoginManager.setCommonParameters(uc);
-				++retries;
-			}
-			if (retries == LoginManager.MAX_RETRIES) {
-				uc.disconnect();
-				return null;
-			}
-		} catch (final IOException e) {
-			return null;
-		}
-		return LoginManager.readConnectionStream(uc);
+		return null;
 	}
 
 	private static String postCredentials(final String url, final String user, final String pass) {
@@ -153,42 +133,20 @@ final class LoginManager {
 		return null;
 	}
 
-	private static String readConnectionStream(final HttpURLConnection uc) {
-		final BufferedReader br;
-		try {
-			br = new BufferedReader(new InputStreamReader(uc.getInputStream()));
-		} catch (final IOException e) {
-			return null;
-		}
+	private static String readStream(final HttpURLConnection conn) throws IOException {
+		final BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 		String s;
-		try {
-			final StringBuilder sb = new StringBuilder();
-			while ((s = br.readLine()) != null) {
-				sb.append(s);
-			}
-			s = sb.toString();
-		} catch (final IOException e) {
-			s = null;
-		} finally {
-			try {
-				br.close();
-			} catch (final IOException e) {
-				// Nothing can be done.
-			} finally {
-				uc.disconnect();
-			}
+		final StringBuilder sb = new StringBuilder();
+		while ((s = br.readLine()) != null) {
+			sb.append(s);
 		}
-		return s;
+		br.close();
+		conn.disconnect();
+		return sb.toString();
 	}
 
 	private static String replaceAmpEntities(final String s) {
 		return s.replace("&amp;", "&");
-	}
-
-	private static void setCommonParameters(final HttpURLConnection uc) {
-		uc.setRequestProperty(LoginManager.USER_AGENT, LoginManager.USER_AGENT_STRING);
-		uc.setConnectTimeout(LoginManager.HTTP_TIMEOUT);
-		uc.setReadTimeout(LoginManager.HTTP_TIMEOUT);
 	}
 
 	static LoginResult login(final String user, final String pass) {
