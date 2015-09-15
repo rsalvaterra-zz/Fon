@@ -35,22 +35,12 @@ final class LoginManager {
 
 	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
 
-	private static String get(final String url) {
-		try {
-			String target = url;
-			int redirects = 0;
-			do {
-				final HttpURLConnection conn = LoginManager.openConnection(target);
-				if (!LoginManager.isRedirect(conn.getResponseCode())) {
-					return LoginManager.readStream(conn);
-				}
-				target = conn.getHeaderField(LoginManager.LOCATION);
-				conn.disconnect();
-			} while (++redirects != LoginManager.MAX_REDIRECTS);
-		} catch (final IOException e) {
-			// Nothing to do.
-		}
-		return null;
+	private static HttpURLConnection buildConnection(final String url) throws IOException {
+		final HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+		conn.setRequestProperty(LoginManager.USER_AGENT, LoginManager.USER_AGENT_STRING);
+		conn.setConnectTimeout(LoginManager.HTTP_TIMEOUT);
+		conn.setReadTimeout(LoginManager.HTTP_TIMEOUT);
+		return conn;
 	}
 
 	private static String getElementText(final String s, final String e) {
@@ -76,48 +66,28 @@ final class LoginManager {
 	}
 
 	private static String getTestUrl() {
-		return LoginManager.get(LoginManager.CONNECTION_TEST_URL);
-	}
-
-	private static boolean isRedirect(final int rc) {
-		return (rc == HttpURLConnection.HTTP_MOVED_PERM) || (rc == HttpURLConnection.HTTP_MOVED_TEMP) || (rc == HttpURLConnection.HTTP_SEE_OTHER);
-	}
-
-	private static HttpURLConnection openConnection(final String url) throws IOException {
-		final HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
-		conn.setRequestProperty(LoginManager.USER_AGENT, LoginManager.USER_AGENT_STRING);
-		conn.setConnectTimeout(LoginManager.HTTP_TIMEOUT);
-		conn.setReadTimeout(LoginManager.HTTP_TIMEOUT);
-		return conn;
-	}
-
-	private static String post(final String url, final String username, final String password) {
 		try {
-			HttpURLConnection conn = LoginManager.openConnection(url);
-			conn.setDoOutput(true);
-			final byte[] pc = (LoginManager.USER_NAME + URLEncoder.encode(username, LoginManager.UTF_8) + LoginManager.PASSWORD + URLEncoder.encode(password, LoginManager.UTF_8)).getBytes();
-			conn.setRequestProperty(LoginManager.CONTENT_LENGTH, Integer.toString(pc.length));
-			conn.setRequestProperty(LoginManager.CONTENT_TYPE, LoginManager.CONTENT_TYPE_STRING);
-			final OutputStream os = conn.getOutputStream();
-			os.write(pc);
-			os.close();
+			String target = LoginManager.CONNECTION_TEST_URL;
 			int redirects = 0;
 			do {
+				final HttpURLConnection conn = LoginManager.buildConnection(target);
 				if (!LoginManager.isRedirect(conn.getResponseCode())) {
 					return LoginManager.readStream(conn);
 				}
-				final String target = conn.getHeaderField(LoginManager.LOCATION);
+				target = conn.getHeaderField(LoginManager.LOCATION);
 				conn.disconnect();
-				conn = LoginManager.openConnection(target);
 			} while (++redirects != LoginManager.MAX_REDIRECTS);
-			conn.disconnect();
 		} catch (final IOException e) {
 			// Nothing to do.
 		}
 		return null;
 	}
 
-	private static String postCredentials(final String url, final String user, final String pass) {
+	private static boolean isRedirect(final int rc) {
+		return (rc == HttpURLConnection.HTTP_MOVED_PERM) || (rc == HttpURLConnection.HTTP_MOVED_TEMP) || (rc == HttpURLConnection.HTTP_SEE_OTHER);
+	}
+
+	private static String login(final String url, final String user, final String pass) {
 		if (url.startsWith(LoginManager.SAFE_PROTOCOL)) {
 			for (final String s : LoginManager.VALID_SUFFIX) {
 				final int b = LoginManager.SAFE_PROTOCOL.length();
@@ -125,7 +95,28 @@ final class LoginManager {
 				if (e > b) {
 					final String h = url.substring(b, e);
 					if (h.endsWith(s)) {
-						return LoginManager.post(LoginManager.replaceAmpEntities(url), LoginManager.getPrefixedUserName(h, user), pass);
+						try {
+							HttpURLConnection conn = LoginManager.buildConnection(LoginManager.replaceAmpEntities(url));
+							conn.setDoOutput(true);
+							final byte[] pc = (LoginManager.USER_NAME + URLEncoder.encode(LoginManager.getPrefixedUserName(h, user), LoginManager.UTF_8) + LoginManager.PASSWORD + URLEncoder.encode(pass, LoginManager.UTF_8)).getBytes();
+							conn.setRequestProperty(LoginManager.CONTENT_LENGTH, Integer.toString(pc.length));
+							conn.setRequestProperty(LoginManager.CONTENT_TYPE, LoginManager.CONTENT_TYPE_STRING);
+							final OutputStream os = conn.getOutputStream();
+							os.write(pc);
+							os.close();
+							int redirects = 0;
+							do {
+								if (!LoginManager.isRedirect(conn.getResponseCode())) {
+									return LoginManager.readStream(conn);
+								}
+								final String target = conn.getHeaderField(LoginManager.LOCATION);
+								conn.disconnect();
+								conn = LoginManager.buildConnection(target);
+							} while (++redirects != LoginManager.MAX_REDIRECTS);
+							conn.disconnect();
+						} catch (final IOException e1) {
+							// Nothing to do.
+						}
 					}
 				}
 			}
@@ -158,7 +149,7 @@ final class LoginManager {
 				if (!c.equals(LoginManager.CONNECTED)) {
 					c = LoginManager.getElementText(c, LoginManager.TAG_WISPR);
 					if ((c != null) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_MESSAGE_TYPE) == Constants.WMT_INITIAL_REDIRECT) && (LoginManager.getElementTextAsInt(c, LoginManager.TAG_RESPONSE_CODE) == Constants.WRC_NO_ERROR)) {
-						c = LoginManager.postCredentials(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL), user, pass);
+						c = LoginManager.login(LoginManager.getElementText(c, LoginManager.TAG_LOGIN_URL), user, pass);
 						if (c != null) {
 							c = LoginManager.getElementText(c, LoginManager.TAG_WISPR);
 							if (c != null) {
