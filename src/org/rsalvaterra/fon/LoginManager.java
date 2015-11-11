@@ -33,7 +33,7 @@ final class LoginManager {
 	private static final String UTF_8 = "UTF-8";
 	private static final String PASSWORD = "&Password=";
 
-	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".wifi.sfr.fr", ".hotspotsvankpn.com" };
+	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".wifi.sfr.fr", ".hotspotsvankpn.com", ".vodafone-wifi.com" };
 
 	private static HttpURLConnection buildConnection(final String url) throws IOException {
 		final HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
