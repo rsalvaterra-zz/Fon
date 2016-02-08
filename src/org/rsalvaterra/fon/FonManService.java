@@ -87,7 +87,7 @@ public final class FonManService extends Service implements Callback, Comparator
 	}
 
 	private static boolean isBt(final String ssid) {
-		return ssid.equals("BTFON") || ssid.equals("BTWiFi") || ssid.equals("BTWiFi-with-FON") || ssid.startsWith("BTOpenzone");
+		return ssid.equals("BTFON") || ssid.equals("BTWiFi") || ssid.equals("BTWifi-with-FON") || ssid.equals("BTWiFi-with-FON") || ssid.startsWith("BTOpenzone");
 	}
 
 	private static boolean isConnected(final SupplicantState ss) {
