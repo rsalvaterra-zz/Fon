@@ -7,7 +7,7 @@
 	<string name="about">Acerca</string>
 	<string name="accept">Aceitar</string>
 	<string name="username">Nome de utilizador</string>
-	<string name="usernameSummary">O seu nome de utilizador (email).</string>
+	<string name="usernameSummary">O seu nome de utilizador.</string>
 	<string name="password">Palavra-chave</string>
 	<string name="passwordSummary">A sua palavra-chave.</string>
 	<string name="autoconnect">Ligação automática</string>

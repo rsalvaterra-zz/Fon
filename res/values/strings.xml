@@ -22,7 +22,7 @@
 		name="kusername"
 		translatable="false">username</string>
 	<string name="username">User name</string>
-	<string name="usernameSummary">Your user name (email).</string>
+	<string name="usernameSummary">Your user name.</string>
 	<string
 		name="kpassword"
 		translatable="false">password</string>
