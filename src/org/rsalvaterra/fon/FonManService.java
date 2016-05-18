@@ -135,6 +135,10 @@ public final class FonManService extends Service implements Callback, Comparator
 		return ssid.equals("KPN Fon");
 	}
 
+	private static boolean isMt(final String ssid) {
+		return ssid.equals("Telekom Fon");
+	}
+
 	private static boolean isMweb(final String ssid) {
 		return ssid.equals("@MWEB FON");
 	}
@@ -168,7 +172,7 @@ public final class FonManService extends Service implements Callback, Comparator
 	}
 
 	private static boolean isSupported(final String ssid) {
-		return FonManService.isGenericFon(ssid) || FonManService.isVodafoneSpain(ssid) || FonManService.isBt(ssid) || FonManService.isJt(ssid) || FonManService.isSfr(ssid) || FonManService.isVodafoneItaly(ssid) || FonManService.isProximus(ssid) || FonManService.isKpn(ssid) || FonManService.isDt(ssid) || FonManService.isHt(ssid) || FonManService.isOte(ssid) || FonManService.isRomtelecom(ssid) || FonManService.isOi(ssid) || FonManService.isDowntownBrooklyn(ssid) || FonManService.isMweb(ssid) || FonManService.isOtherFon(ssid) || FonManService.isSoftbank(ssid) || FonManService.isTelstra(ssid);
+		return FonManService.isGenericFon(ssid) || FonManService.isVodafoneSpain(ssid) || FonManService.isBt(ssid) || FonManService.isJt(ssid) || FonManService.isSfr(ssid) || FonManService.isVodafoneItaly(ssid) || FonManService.isProximus(ssid) || FonManService.isKpn(ssid) || FonManService.isDt(ssid) || FonManService.isHt(ssid) || FonManService.isMt(ssid) || FonManService.isOte(ssid) || FonManService.isRomtelecom(ssid) || FonManService.isOi(ssid) || FonManService.isDowntownBrooklyn(ssid) || FonManService.isMweb(ssid) || FonManService.isOtherFon(ssid) || FonManService.isSoftbank(ssid) || FonManService.isTelstra(ssid);
 	}
 
 	private static boolean isTelstra(final String ssid) {
