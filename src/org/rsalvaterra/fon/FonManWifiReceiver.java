@@ -17,7 +17,7 @@ public final class FonManWifiReceiver extends BroadcastReceiver {
 			FonManService.execute(c, Constants.ACT_CONNECT);
 		} else if (a.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
 			final NetworkInfo ni = (NetworkInfo) i.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
-			if ((ni.getType() == ConnectivityManager.TYPE_WIFI)) {
+			if (ni.getType() == ConnectivityManager.TYPE_WIFI) {
 				final State s = ni.getState();
 				if (s == State.CONNECTED) {
 					FonManService.execute(c, Constants.ACT_LOGIN);
