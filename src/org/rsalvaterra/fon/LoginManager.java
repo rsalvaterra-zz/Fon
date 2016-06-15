@@ -18,7 +18,8 @@ final class LoginManager {
 	private static final String CONTENT_LENGTH = "Content-Length";
 	private static final String CONTENT_TYPE = "Content-Type";
 	private static final String CONTENT_TYPE_STRING = "application/x-www-form-urlencoded";
-	private static final String FON_USERNAME_PREFIX = "FON_WISPR/";
+	private static final String FON_WISPR_PREFIX = "FON_WISPR/";
+	private static final String FON_ROAM_PREFIX = "FON_ROAM/";
 	private static final String LOCATION = "Location";
 	private static final String SAFE_PROTOCOL = "https://";
 	private static final String TAG_FON_RESPONSE_CODE = "FONResponseCode";
@@ -33,7 +34,7 @@ final class LoginManager {
 	private static final String UTF_8 = "UTF-8";
 	private static final String PASSWORD = "&Password=";
 
-	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".wifi.sfr.fr", ".hotspotsvankpn.com", ".vodafone-wifi.com" };
+	private static final String[] VALID_SUFFIX = { ".fon.com", ".btopenzone.com", ".btfon.com", ".wifi.sfr.fr", ".hotspotsvankpn.com", ".portal.vodafone-wifi.com" };
 
 	private static HttpURLConnection buildConnection(final String url) throws IOException {
 		final HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
@@ -59,8 +60,12 @@ final class LoginManager {
 	}
 
 	private static String getPrefixedUserName(final String host, final String user) {
-		if ((host.contains("portal.fon.com") || host.contains("wifi.sfr.fr") || host.equals("www.btopenzone.com")) && !(host.contains("belgacom") || host.contains("telekom"))) {
-			return LoginManager.FON_USERNAME_PREFIX + user;
+		if (!(host.contains("belgacom") || host.contains("telekom"))) {
+			if ((host.contains("portal.fon.com") || host.contains("wifi.sfr.fr") || host.equals("www.btopenzone.com"))) {
+				return LoginManager.FON_WISPR_PREFIX + user;
+			} else if (host.contains("portal.vodafone-wifi.com")) {
+				return LoginManager.FON_WISPR_PREFIX + LoginManager.FON_ROAM_PREFIX + user;
+			}
 		}
 		return user;
 	}
